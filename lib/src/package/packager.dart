@@ -72,6 +72,7 @@ class Packager {
           .writeAsStringSync(WordStylesXml().getWordStylesXml());
 
       final File docxFile = File(destination);
+      docxFile.createSync(recursive: true);
       await ZipFile.createFromDirectory(
         sourceDir: sourceDirectory,
         zipFile: docxFile,
