@@ -41,7 +41,7 @@ class Rpr {
           ? '<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontNameComplexScript" />'
           : '<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" />');
     }
-    if (rtlText) {
+    if (rtlText != null) {
       r.write('<w:rtl w:val="$rtlText" />');
     }
     if (effect != null) {
