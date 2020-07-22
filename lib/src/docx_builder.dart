@@ -7,9 +7,6 @@ import 'builders/index.dart' as _b;
 import 'package/packager.dart' as _p;
 import 'utils/constants/constants.dart' as _c;
 
-export './styles/style_classes/index.dart';
-export './styles/styles.dart';
-
 /// DocXBuilder is used to construct and create .docx files.
 ///
 /// Add global styling with setGlobalDocxTextStyle, setGlobalDocxPageStyle and setDocumentBackgroundColor.
