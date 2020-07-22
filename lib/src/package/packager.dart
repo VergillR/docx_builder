@@ -47,6 +47,8 @@ class Packager {
       final String filename = 'D${DateTime.now().millisecondsSinceEpoch}.docx';
       final String destination =
           '${cacheDirectory.path}/$cacheDocXBuilder/$dest/$filename';
+      Directory('${cacheDirectory.path}/$cacheDocXBuilder/$dest')
+          .createSync(recursive: true);
       final Directory sourceDirectory =
           Directory('${cacheDirectory.path}/$cacheDocXBuilder/$src');
 
@@ -71,7 +73,11 @@ class Packager {
 
       final File docxFile = File(destination);
       await ZipFile.createFromDirectory(
-          sourceDir: sourceDirectory, zipFile: docxFile, recurseSubDirs: true);
+        sourceDir: sourceDirectory,
+        zipFile: docxFile,
+        recurseSubDirs: true,
+        includeBaseDirectory: false,
+      );
       return docxFile;
     } catch (e) {
       throw StateError('DOCX BUILDER ERROR: $e');
