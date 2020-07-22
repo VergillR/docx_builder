@@ -17,13 +17,13 @@ class Packager {
 
   Packager(this.cacheDirectory) {
     _dirPathToDocProps =
-        '${cacheDirectory.path}/$src/$cacheDocXBuilder/docProps';
-    _dirPathToRels = '${cacheDirectory.path}/$src/$cacheDocXBuilder/_rels';
-    _dirPathToWord = '${cacheDirectory.path}/$src/$cacheDocXBuilder/word';
+        '${cacheDirectory.path}/$cacheDocXBuilder/$src/docProps';
+    _dirPathToRels = '${cacheDirectory.path}/$cacheDocXBuilder/$src/_rels';
+    _dirPathToWord = '${cacheDirectory.path}/$cacheDocXBuilder/$src/word';
     _dirPathToWordMedia =
-        '${cacheDirectory.path}/$src/$cacheDocXBuilder/word/media';
+        '${cacheDirectory.path}/$cacheDocXBuilder/$src/word/media';
     _dirPathToWordRels =
-        '${cacheDirectory.path}/$src/$cacheDocXBuilder/word/_rels';
+        '${cacheDirectory.path}/$cacheDocXBuilder/$src/word/_rels';
     _initPackager();
   }
 
@@ -50,31 +50,26 @@ class Packager {
       final Directory sourceDirectory =
           Directory('${cacheDirectory.path}/$cacheDocXBuilder/$src');
 
-      final File a = File(
-          '${cacheDirectory.path}/$cacheDocXBuilder/$src/[Content_Types].xml')
-        ..createSync();
-      a.writeAsStringSync(ContentTypes().getContentsTypesXml());
-      final File b = File('$_dirPathToDocProps/app.xml')..createSync();
-      b.writeAsStringSync(AppXml(
+      File('${cacheDirectory.path}/$cacheDocXBuilder/$src/[Content_Types].xml')
+          .writeAsStringSync(ContentTypes().getContentsTypesXml());
+      File('$_dirPathToDocProps/app.xml').writeAsStringSync(AppXml(
         chars: chars,
         charsWithSpaces: charsWithSpaces,
         paragraphs: paragraphs,
       ).getAppXml());
-      final File c = File('$_dirPathToDocProps/core.xml')..createSync();
-      c.writeAsStringSync(CoreXml().getCoreXml());
-      final File d = File('$_dirPathToWordRels/document.xml.rels')
-        ..createSync();
-      d.writeAsStringSync(DocumentXmlRels().getDocumentXmlRels());
-      final File e = File('$_dirPathToWord/document.xml')..createSync();
-      e.writeAsStringSync(documentXml);
-      final File f = File('$_dirPathToWord/fontTable.xml')..createSync();
-      f.writeAsStringSync(FontTable().getFontTableXml());
-      final File g = File('$_dirPathToWord/settings.xml')..createSync();
-      g.writeAsStringSync(SettingsXml().getSettingsXml());
-      final File h = File('$_dirPathToWord/styles.xml')..createSync();
-      h.writeAsStringSync(WordStylesXml().getWordStylesXml());
+      File('$_dirPathToDocProps/core.xml')
+          .writeAsStringSync(CoreXml().getCoreXml());
+      File('$_dirPathToWordRels/document.xml.rels')
+          .writeAsStringSync(DocumentXmlRels().getDocumentXmlRels());
+      File('$_dirPathToWord/document.xml').writeAsStringSync(documentXml);
+      File('$_dirPathToWord/fontTable.xml')
+          .writeAsStringSync(FontTable().getFontTableXml());
+      File('$_dirPathToWord/settings.xml')
+          .writeAsStringSync(SettingsXml().getSettingsXml());
+      File('$_dirPathToWord/styles.xml')
+          .writeAsStringSync(WordStylesXml().getWordStylesXml());
 
-      final File docxFile = File(destination)..createSync();
+      final File docxFile = File(destination);
       await ZipFile.createFromDirectory(
           sourceDir: sourceDirectory, zipFile: docxFile, recurseSubDirs: true);
       return docxFile;
