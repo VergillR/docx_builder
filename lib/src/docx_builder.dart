@@ -7,6 +7,16 @@ import 'builders/index.dart' as _b;
 import 'package/packager.dart' as _p;
 import 'utils/constants/constants.dart' as _c;
 
+/// DocXBuilder is used to construct and create .docx files.
+///
+/// Add global styling with setGlobalDocxTextStyle, setGlobalDocxPageStyle and setDocumentBackgroundColor.
+///
+/// Add text to the document with addText or addMixedText.
+/// AddText uses the global styling.
+/// AddMixedText overrides global styles with its own custom styling rules (if provided).
+///
+/// CreateDocXFile() is used to create the .docx file.
+/// When done, clear() is used to destroy the cache.
 class DocXBuilder {
   _p.Packager _packager;
   final StringBuffer _docxstring = StringBuffer();
@@ -23,17 +33,6 @@ class DocXBuilder {
   DocxPageStyle _globalDocxPageStyle;
   DocxPageStyle get globalDocxPageStyle => _globalDocxPageStyle;
 
-  /// DocXBuilder is used to construct and create .docx files.
-  ///
-  /// Add global styling with setGlobalDocxTextStyle, setGlobalDocxPageStyle and setDocumentBackgroundColor.
-  ///
-  /// Add text to the document with addText or addMixedText.
-  /// AddText uses the global styling.
-  /// AddMixedText overrides global styles with its own custom styling rules (if provided).
-  ///
-  /// CreateDocXFile() is used to create the .docx file.
-  /// When done, clear() is used to destroy the cache.
-  ///
   /// Assign a [cacheDirectory] that DocXBuilder can use to store temporary files.
   DocXBuilder(Directory cacheDirectory) {
     _packager = _p.Packager(cacheDirectory);
