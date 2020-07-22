@@ -154,8 +154,48 @@ class DocXBuilder {
   void setGlobalDocxTextStyle(DocxTextStyle textStyle) =>
       _globalDocxTextStyle = textStyle;
 
+  /// Obtain the XML string of the paragraph style, such as text alignment.
+  /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
+  String _getParagraphStyleAsString(
+      {DocxTextStyle textStyle, bool doNotUseGlobalStyle = false}) {
+    final DocxTextStyle style = textStyle ?? DocxTextStyle();
+    return _b.Ppr.getPpr(
+      keepLines: doNotUseGlobalStyle
+          ? style.keepLines
+          : style.keepLines ?? _globalDocxTextStyle.keepLines,
+      keepNext: doNotUseGlobalStyle
+          ? style.keepNext
+          : style.keepNext ?? _globalDocxTextStyle.keepNext,
+      paragraphBorderOnAllSides: doNotUseGlobalStyle
+          ? style.paragraphBorderOnAllSides
+          : style.paragraphBorderOnAllSides ??
+              _globalDocxTextStyle.paragraphBorderOnAllSides,
+      paragraphBorders: doNotUseGlobalStyle
+          ? style.paragraphBorders
+          : style.paragraphBorders ?? _globalDocxTextStyle.paragraphBorders,
+      paragraphIndent: doNotUseGlobalStyle
+          ? style.paragraphIndent
+          : style.paragraphIndent ?? _globalDocxTextStyle.paragraphIndent,
+      paragraphShading: doNotUseGlobalStyle
+          ? style.paragraphShading
+          : style.paragraphShading ?? _globalDocxTextStyle.paragraphShading,
+      spacing: doNotUseGlobalStyle
+          ? style.paragraphSpacing
+          : style.paragraphSpacing ?? _globalDocxTextStyle.paragraphSpacing,
+      tabs: doNotUseGlobalStyle
+          ? style.tabs
+          : style.tabs ?? _globalDocxTextStyle.tabs,
+      textAlignment: doNotUseGlobalStyle
+          ? style.textAlignment
+          : style.textAlignment ?? _globalDocxTextStyle.textAlignment,
+      vAlign: doNotUseGlobalStyle
+          ? style.vAlign
+          : style.vAlign ?? _globalDocxTextStyle.vAlign,
+    );
+  }
+
   /// Obtain the XML string of the text style.
-  /// If no style is given, then the globalDocxTextStyle is used.
+  /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
   String _getTextStyleAsString(
       {DocxTextStyle style, bool doNotUseGlobalStyle = false}) {
     final DocxTextStyle textStyle = style ?? DocxTextStyle();
@@ -240,7 +280,7 @@ class DocXBuilder {
   void addText(String text) {
     if (!_bufferClosed) {
       _docxstring.writeAll(<String>[
-        '<w:p>',
+        '<w:p>${_getParagraphStyleAsString()}',
         '<w:r>${_getTextStyleAsString()}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r></w:p>'
       ]);
       _addToCharCounters(text);
@@ -270,7 +310,9 @@ class DocXBuilder {
         _docxstring.write(_getDocxPageStyleAsString(
             style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
       }
-      _docxstring.write('</w:pPr>');
+      _docxstring
+          .write(_getParagraphStyleAsString().replaceFirst('<w:pPr>', ''));
+
       for (int i = 0; i < text.length; i++) {
         final String t = text[i] ?? '';
         _docxstring.writeAll(<String>[
