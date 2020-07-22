@@ -59,6 +59,7 @@ class Packager {
         charsWithSpaces: charsWithSpaces,
         paragraphs: paragraphs,
       ).getAppXml());
+      File('$_dirPathToRels/.rels').writeAsStringSync(DotRels().getDotRels());
       File('$_dirPathToDocProps/core.xml')
           .writeAsStringSync(CoreXml().getCoreXml());
       File('$_dirPathToWordRels/document.xml.rels')
