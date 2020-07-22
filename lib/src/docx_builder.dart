@@ -47,7 +47,7 @@ class DocXBuilder {
 
   void _initDocX() {
     _bufferClosed = false;
-    _docxstring.writeln(_c.startDoc);
+    _docxstring.write(_c.startDoc);
   }
 
   /// Add a counter for characters; These values are written to the app.xml file.
@@ -68,13 +68,13 @@ class DocXBuilder {
         _docxstring.clear();
         final String docWithBgColor =
             _c.startDoc.replaceAll('<w:body>', _documentBackgroundColor);
-        _docxstring.writeln(docWithBgColor);
+        _docxstring.write(docWithBgColor);
       }
     }
   }
 
   // Blank page can also be achieved with sectPr, sectType.nextPage and then create a new section which prompts a new page
-  // void addBlankPageA4() => _docxstring.writeln(_c.blankPageA4);
+  // void addBlankPageA4() => _docxstring.write(_c.blankPageA4);
 
   // ignore: use_setters_to_change_properties
   /// Sets the global page style, such as orientation, size, and page borders.
@@ -246,8 +246,8 @@ class DocXBuilder {
         final String lastSectPr = _getDocxPageStyleAsString(
             style:
                 _globalDocxPageStyle ?? DocxPageStyle().getDefaultPageStyle());
-        _docxstring.writeln(lastSectPr);
-        _docxstring.writeln('</w:body></w:document>');
+        _docxstring.write(lastSectPr);
+        _docxstring.write('</w:body></w:document>');
         _bufferClosed = true;
       }
 
