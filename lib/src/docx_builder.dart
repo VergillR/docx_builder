@@ -115,29 +115,9 @@ class DocXBuilder {
 
   /// Obtain the XML string of the text style.
   /// If no style is given, then the globalDocxTextStyle is used.
-  String _getTextStyleAsString({DocxTextStyle style, DocxPageStyle pageStyle}) {
+  String _getTextStyleAsString({DocxTextStyle style}) {
     final DocxTextStyle textStyle = style ?? _globalDocxTextStyle;
-    final String sectPr = pageStyle == null
-        ? null
-        : _b.SectPr.getSpr(
-            cols: pageStyle.cols,
-            colsHaveEqualWidth: pageStyle.colsHaveEqualWidth,
-            colsHaveSeparator: pageStyle.colsHaveSeparator,
-            lineNumbering: pageStyle.lineNumbering,
-            pageBorderDisplay: pageStyle.pageBorderDisplay,
-            pageBorderIsRenderedAboveText:
-                pageStyle.pageBorderIsRenderedAboveText,
-            pageBorderOffsetBasedOnText: pageStyle.pageBorderOffsetBasedOnText,
-            pageBorders: pageStyle.pageBorders,
-            pageMargin: pageStyle.pageMargin,
-            pageNumberingFormat: pageStyle.pageNumberingFormat,
-            pageNumberingStart: pageStyle.pageNumberingStart,
-            pageOrientation: pageStyle.pageOrientation,
-            pageSzHeight: pageStyle.pageSzHeight,
-            pageSzWidth: pageStyle.pageSzWidth,
-          );
     return _b.Ppr.getPpr(
-      sectPrString: sectPr,
       rprString: _b.Rpr.getRpr(
         bold: textStyle.bold,
         caps: textStyle.caps,
@@ -183,8 +163,7 @@ class DocXBuilder {
     if (!_bufferClosed) {
       _docxstring.writeAll(<String>[
         '<w:p>',
-        _getTextStyleAsString(),
-        '<w:r>${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r></w:p>'
+        '<w:r>${_getTextStyleAsString()}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r></w:p>'
       ]);
       _addToCharCounters(text);
       _parCount++;
@@ -192,26 +171,24 @@ class DocXBuilder {
   }
 
   /// AddMixedText adds lines of text that do NOT have the same styling as each other or with the global text style.
-  /// Given lists should have equal lengths. Page styles is optional and is used for custom section styling.
+  /// Given lists should have equal lengths. Page style is optional and is used for custom section styling.
   /// Note that the last paragraph of the document should NOT have any custom section styling!
   ///
   /// Lists can hold null values. For text: null implies no text, for textStyles: null implies use of globalDocxTextStyle, for pageStyles: null implies no custom styling.
   ///
   /// This function always adds a new paragraph to the document.
   void addMixedText(List<String> text, List<DocxTextStyle> textStyles,
-      {List<DocxPageStyle> pageStyles}) {
+      {DocxPageStyle pageStyle}) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
-      final List<DocxPageStyle> pageStyleList =
-          pageStyles == null || pageStyles.length != text.length
-              ? List<DocxPageStyle>.generate(text.length, (index) => null)
-              : pageStyles;
       _docxstring.write('<w:p>');
+      if (pageStyle != null) {
+        _docxstring.write(_getDocxPageStyleAsString(style: pageStyle));
+      }
       for (int i = 0; i < text.length; i++) {
         final String t = text[i] ?? '';
         _docxstring.writeAll(<String>[
           '<w:r>',
-          _getTextStyleAsString(
-              style: textStyles[i], pageStyle: pageStyleList[i]),
+          _getTextStyleAsString(style: textStyles[i]),
           '<w:t xml:space="preserve">$t</w:t></w:r>',
         ]);
         _addToCharCounters(t);
