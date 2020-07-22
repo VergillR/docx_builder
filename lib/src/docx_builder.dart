@@ -250,7 +250,7 @@ class DocXBuilder {
 
   /// AddMixedText adds lines of text that do NOT have the same styling as each other or with the global text style.
   /// Unless [doNotUseTextGlobalStyle] is set to true, global text styling will be used for any values not provided (i.e. null values) by custom styling rules.
-  /// Given lists should have equal lengths. Page style is optional and is used for custom section styling. Unless [doNotUsePageGlobalStyle] is set to true, global page styling will be used for any values not provided (i.e. null values) by the custom page styling.
+  /// Given lists should have equal lengths. Page style is optional and is used for custom section styling. If [doNotUsePageGlobalStyle] is set to false, global page styling will be used for any values not provided (i.e. null values) by the custom page styling.
   /// Note that the last paragraph of the document should NOT have any custom section styling!
   /// Except for HighlightColor, colors are always 'RRGGBB' format.
   ///
@@ -262,14 +262,15 @@ class DocXBuilder {
     List<DocxTextStyle> textStyles, {
     DocxPageStyle pageStyle,
     bool doNotUseGlobalTextStyle = false,
-    bool doNotUseGlobalPageStyle = false,
+    bool doNotUseGlobalPageStyle = true,
   }) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
-      _docxstring.write('<w:p>');
+      _docxstring.write('<w:p><w:pPr>');
       if (pageStyle != null) {
         _docxstring.write(_getDocxPageStyleAsString(
             style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
       }
+      _docxstring.write('</w:pPr>');
       for (int i = 0; i < text.length; i++) {
         final String t = text[i] ?? '';
         _docxstring.writeAll(<String>[
