@@ -108,7 +108,7 @@ class DocXBuilder {
   }
 
   // ignore: use_setters_to_change_properties
-  /// Sets the global style for all following text.
+  /// Sets the global style for text. Except for HighlightColor, colors are always 'RRGGBB' format.
   /// The global text style can be overridden by addMixedText with its own styling rules.
   void setGlobalDocxTextStyle(DocxTextStyle textStyle) =>
       _globalDocxTextStyle = textStyle;
@@ -173,8 +173,9 @@ class DocXBuilder {
   /// AddMixedText adds lines of text that do NOT have the same styling as each other or with the global text style.
   /// Given lists should have equal lengths. Page style is optional and is used for custom section styling.
   /// Note that the last paragraph of the document should NOT have any custom section styling!
+  /// Except for HighlightColor, colors are always 'RRGGBB' format.
   ///
-  /// Lists can hold null values. For text: null implies no text, for textStyles: null implies use of globalDocxTextStyle, for pageStyles: null implies no custom styling.
+  /// Lists can hold null values. For text: null implies no text; for textStyles: null implies use of globalDocxTextStyle.
   ///
   /// This function always adds a new paragraph to the document.
   void addMixedText(List<String> text, List<DocxTextStyle> textStyles,
