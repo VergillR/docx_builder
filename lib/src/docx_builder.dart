@@ -36,6 +36,9 @@ class DocXBuilder {
   DocxPageStyle _globalDocxPageStyle;
   DocxPageStyle get globalDocxPageStyle => _globalDocxPageStyle;
 
+  static String mimetype =
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
   /// Assign a [cacheDirectory] that DocXBuilder can use to store temporary files.
   DocXBuilder(Directory cacheDirectory) {
     _packager = _p.Packager(cacheDirectory);
