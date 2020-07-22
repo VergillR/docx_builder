@@ -48,7 +48,7 @@ class Packager {
       final String destination =
           '${cacheDirectory.path}/$cacheDocXBuilder/$dest/$filename';
       Directory('${cacheDirectory.path}/$cacheDocXBuilder/$dest')
-          .createSync(recursive: true);
+          .createSync(recursive: false);
       final Directory sourceDirectory =
           Directory('${cacheDirectory.path}/$cacheDocXBuilder/$src');
 
@@ -72,7 +72,7 @@ class Packager {
           .writeAsStringSync(WordStylesXml().getWordStylesXml());
 
       final File docxFile = File(destination);
-      docxFile.createSync(recursive: true);
+      docxFile.createSync(recursive: false);
       await ZipFile.createFromDirectory(
         sourceDir: sourceDirectory,
         zipFile: docxFile,
