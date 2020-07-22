@@ -31,9 +31,9 @@ class DocXBuilder {
   String _documentBackgroundColor;
   String get documentBackgroundColor => _documentBackgroundColor;
 
-  DocxTextStyle _globalDocxTextStyle;
+  DocxTextStyle _globalDocxTextStyle = DocxTextStyle();
   DocxTextStyle get globalDocxTextStyle => _globalDocxTextStyle;
-  DocxPageStyle _globalDocxPageStyle;
+  DocxPageStyle _globalDocxPageStyle = DocxPageStyle().getDefaultPageStyle();
   DocxPageStyle get globalDocxPageStyle => _globalDocxPageStyle;
 
   static String mimetype =
@@ -308,9 +308,8 @@ class DocXBuilder {
   Future<File> createDocXFile() async {
     try {
       if (!_bufferClosed) {
-        final String lastSectPr = _getDocxPageStyleAsString(
-            style:
-                _globalDocxPageStyle ?? DocxPageStyle().getDefaultPageStyle());
+        final String lastSectPr =
+            _getDocxPageStyleAsString(style: _globalDocxPageStyle);
         _docxstring.write(lastSectPr);
         _docxstring.write('</w:body></w:document>');
         _bufferClosed = true;
