@@ -184,7 +184,7 @@ class DocXBuilder {
       _docxstring.writeAll(<String>[
         '<w:p>',
         _getTextStyleAsString(),
-        '<w:r><w:t xml:space="preserve">$text</w:t></w:r></w:p>'
+        '<w:r>${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r></w:p>'
       ]);
       _addToCharCounters(text);
       _parCount++;
