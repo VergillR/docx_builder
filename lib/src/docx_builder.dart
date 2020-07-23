@@ -396,7 +396,7 @@ class DocXBuilder {
         textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
 
     final String openParagraphWithPpr =
-        '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}';
+        '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:r>';
     _docxstring.write(openParagraphWithPpr);
     for (int i = 0; i < imageFiles.length; i++) {
       _insertImage(
@@ -415,7 +415,7 @@ class DocXBuilder {
       _docxstring.write(
           '<w:t xml:space="preserve">${List<String>.generate(spaces, (index) => ' ').join()}</w:t>');
     }
-    _docxstring.write('</w:p>');
+    _docxstring.write('</w:r></w:p>');
   }
 
   void _insertImage(
@@ -453,10 +453,12 @@ class DocXBuilder {
         final String openPpr = encloseInParagraph
             ? '${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}'
             : '';
+        final String openR = encloseInParagraph ? '<w:r>' : '';
+        final String closeR = encloseInParagraph ? '</w:r>' : '';
 
         if (saved) {
           _docxstring.write(
-              '$openParagraph$openPpr<w:r><w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="1" t="1" r="1" b="1"/><wp:docPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${_packager.rIdCount - 1}"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>$closeParagraph');
+              '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="1" t="1" r="1" b="1"/><wp:docPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${_packager.rIdCount - 1}"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
         }
       }
     }
