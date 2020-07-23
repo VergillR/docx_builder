@@ -6,6 +6,7 @@ import 'package:docx_builder/src/package/package_builders/index.dart';
 const String cacheDocXBuilder = '_cacheDocxBuilder';
 const String src = 'source';
 const String dest = 'output';
+const int startIdCount = 4;
 
 class Packager {
   final Directory cacheDirectory;
@@ -14,6 +15,11 @@ class Packager {
   String _dirPathToWord;
   String _dirPathToWordMedia;
   String _dirPathToWordRels;
+
+  int _rIdCount = startIdCount;
+  int get rIdCount => _rIdCount;
+
+  final Map<String, String> _references = <String, String>{};
 
   Packager(this.cacheDirectory) {
     _dirPathToDocProps =
@@ -33,6 +39,20 @@ class Packager {
     Directory(_dirPathToWord).createSync(recursive: true);
     Directory(_dirPathToWordMedia).createSync(recursive: true);
     Directory(_dirPathToWordRels).createSync(recursive: true);
+  }
+
+  bool addImageFile(File file, String suffix) {
+    try {
+      final String rId = 'rId$_rIdCount';
+      final String fileName = 'image$_rIdCount.$suffix';
+      final String fullPathFile = '$_dirPathToWordMedia/$fileName';
+      file.copySync(fullPathFile);
+      _references[rId] = 'media/$fileName';
+      _rIdCount++;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Bundles all files and outputs the file if successful.
@@ -63,7 +83,7 @@ class Packager {
       File('$_dirPathToDocProps/core.xml')
           .writeAsStringSync(CoreXml().getCoreXml());
       File('$_dirPathToWordRels/document.xml.rels')
-          .writeAsStringSync(DocumentXmlRels().getDocumentXmlRels());
+          .writeAsStringSync(DocumentXmlRels().getDocumentXmlRels(_references));
       File('$_dirPathToWord/document.xml').writeAsStringSync(documentXml);
       File('$_dirPathToWord/fontTable.xml')
           .writeAsStringSync(FontTable().getFontTableXml());
@@ -87,6 +107,8 @@ class Packager {
   }
 
   void destroyCache() {
+    _rIdCount = startIdCount;
+    _references.clear();
     if (Directory('${cacheDirectory.path}/$cacheDocXBuilder').existsSync()) {
       Directory('${cacheDirectory.path}/$cacheDocXBuilder')
           .deleteSync(recursive: true);
