@@ -15,13 +15,13 @@ class Ppr {
     String rprString,
     String sectPrString,
     TextAlignment textAlignment,
-    PBorder paragraphBorderOnAllSides,
-    List<PBorder> paragraphBorders,
+    ParagraphBorder paragraphBorderOnAllSides,
+    List<ParagraphBorder> paragraphBorders,
     PIndent paragraphIndent,
     Shading paragraphShading,
     PSpacing spacing,
     List<Tab> tabs,
-    VerticalTextAlignment vAlign,
+    VerticalTextAlignment verticalTextAlignment,
     bool keepLines,
     bool keepNext,
   }) {
@@ -54,8 +54,9 @@ class Ppr {
       p.write('<w:ind ${ind.toString()}/>');
     }
 
-    if (vAlign != null) {
-      p.write('<w:textAlignment w:val="${getValueFromEnum(vAlign)}" />');
+    if (verticalTextAlignment != null) {
+      p.write(
+          '<w:textAlignment w:val="${getValueFromEnum(verticalTextAlignment)}" />');
     }
     if (paragraphBorderOnAllSides != null) {
       // 'between' and 'bar' can be omitted when all borders are identical
@@ -82,7 +83,7 @@ class Ppr {
       ];
       p.write('<w:pBdr>');
       for (int i = 0; i < paragraphBorders.length; i++) {
-        final PBorder border = paragraphBorders[i];
+        final ParagraphBorder border = paragraphBorders[i];
         final String borderColor =
             isValidColor(border.color) ? border.color : '000000';
         p.write(

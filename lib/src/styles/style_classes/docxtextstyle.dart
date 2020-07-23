@@ -28,13 +28,13 @@ class DocxTextStyle {
   final TextEffect textEffect;
   // ppr (Paragraph properties: paragraph styling)
   final TextAlignment textAlignment;
-  final PBorder paragraphBorderOnAllSides;
-  final List<PBorder> paragraphBorders;
+  final ParagraphBorder paragraphBorderOnAllSides;
+  final List<ParagraphBorder> paragraphBorders;
   final PIndent paragraphIndent;
   final Shading paragraphShading;
   final PSpacing paragraphSpacing;
   final List<Tab> tabs;
-  final VerticalTextAlignment vAlign;
+  final VerticalTextAlignment verticalTextAlignment;
   final bool keepLines;
   final bool keepNext;
 
@@ -71,7 +71,7 @@ class DocxTextStyle {
     this.paragraphShading,
     this.paragraphSpacing,
     this.tabs,
-    this.vAlign,
+    this.verticalTextAlignment,
     this.keepLines,
     this.keepNext,
   });

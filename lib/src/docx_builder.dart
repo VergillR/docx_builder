@@ -190,9 +190,10 @@ class DocXBuilder {
       textAlignment: doNotUseGlobalStyle
           ? style.textAlignment
           : style.textAlignment ?? _globalDocxTextStyle.textAlignment,
-      vAlign: doNotUseGlobalStyle
-          ? style.vAlign
-          : style.vAlign ?? _globalDocxTextStyle.vAlign,
+      verticalTextAlignment: doNotUseGlobalStyle
+          ? style.verticalTextAlignment
+          : style.verticalTextAlignment ??
+              _globalDocxTextStyle.verticalTextAlignment,
     );
   }
 
@@ -346,7 +347,7 @@ class DocXBuilder {
   /// Width and height should be provided in EMU and should be between 1 and 27273042316900.
   /// You can use convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
   ///
-  /// Text styling that affects the paragraph's appearance also affects the appearance of the image, for example: textAlignment, vAlign, paragraphShading, paragraphBorders and paragraphBorderOnAllSides.
+  /// Text styling that affects the paragraph's appearance also affects the appearance of the image, for example: textAlignment, verticalTextAlignment, paragraphShading, paragraphBorders and paragraphBorderOnAllSides.
   ///
   /// The dimensions of A4:
   ///

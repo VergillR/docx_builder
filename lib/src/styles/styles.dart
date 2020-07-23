@@ -41,6 +41,8 @@ enum PageNumberingFormat {
   upperRoman,
 }
 
+enum ParagraphBorderSide { top, bottom, left, right, between, bar }
+
 enum ParagraphBorderStyle {
   nil,
   none,
@@ -234,8 +236,6 @@ enum ParagraphBorderStyle {
   zigZag,
   zigZagStitch,
 }
-
-enum PBorderSide { top, bottom, left, right, between, bar }
 
 enum ReferenceType { first, defaultType, even }
 
