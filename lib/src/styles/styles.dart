@@ -310,15 +310,7 @@ enum TabLeader {
   underscore,
 }
 
-enum TabStyle {
-  bar,
-  center,
-  clear,
-  decimal,
-  end,
-  num,
-  start,
-}
+enum TabStyle { bar, center, clear, decimal, end, num, start, left, right }
 
 enum TextAlignment { left, right, center, distribute, justify, start, end }
 
