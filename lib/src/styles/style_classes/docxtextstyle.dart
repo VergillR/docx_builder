@@ -33,7 +33,7 @@ class DocxTextStyle {
   final PIndent paragraphIndent;
   final Shading paragraphShading;
   final PSpacing paragraphSpacing;
-  final List<Tab> tabs;
+  final List<DocxTab> tabs;
   final VerticalTextAlignment verticalTextAlignment;
   final bool keepLines;
   final bool keepNext;

@@ -20,7 +20,7 @@ class Ppr {
     PIndent paragraphIndent,
     Shading paragraphShading,
     PSpacing spacing,
-    List<Tab> tabs,
+    List<DocxTab> tabs,
     VerticalTextAlignment verticalTextAlignment,
     bool keepLines,
     bool keepNext,
@@ -143,7 +143,7 @@ class Ppr {
       ];
       final StringBuffer tab = StringBuffer();
       for (int i = 0; i < tabs.length; i++) {
-        final Tab target = tabs[i];
+        final DocxTab target = tabs[i];
         tab.write(
             '<w:tab w:val="${tStyle[target.style.index]}" w:leader="${tLeader[target.leader.index]}" pos="${target.position}" />');
       }
