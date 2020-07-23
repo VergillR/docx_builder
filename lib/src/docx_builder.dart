@@ -277,14 +277,21 @@ class DocXBuilder {
     );
   }
 
+  String _getLineOrPageBreak(LineBreak b) =>
+      '<w:r><w:br w:type="${b.lineBreakType != null ? getValueFromEnum(b.lineBreakType) : "textWrapping"}" w:clear="${b.lineBreakClearLocation != null ? getValueFromEnum(b.lineBreakClearLocation) : "none"}" /></w:r>';
+
   /// AddText adds lines of text to the document.
   /// It uses the global text styling defined by setGlobalDocxTextStyle.
   /// This function always adds a new paragraph to the document.
-  void addText(String text) {
+  ///
+  /// If [lineOrPageBreak] is given, then a LineBreak will be added at the end of the text.
+  void addText(String text, {LineBreak lineOrPageBreak}) {
+    final String lineBreak =
+        lineOrPageBreak != null ? _getLineOrPageBreak(lineOrPageBreak) : '';
     if (!_bufferClosed) {
       _docxstring.writeAll(<String>[
         '<w:p>${_getParagraphStyleAsString()}',
-        '<w:r>${_getTextStyleAsString()}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r></w:p>'
+        '<w:r>${_getTextStyleAsString()}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak</w:p>'
       ]);
       _addToCharCounters(text);
       _parCount++;
@@ -300,12 +307,16 @@ class DocXBuilder {
   /// Lists can hold null values. For text: null implies no text; for textStyles: null implies use of globalDocxTextStyle.
   ///
   /// This function always adds a new paragraph to the document.
+  ///
+  /// If [lineOrPageBreak] is given, then a LineBreak will be added after every item (if [addBreakAfterEveryItem] is true) or only after the last item on the [text] list (if [addBreakAfterEveryItem] is false, which is default).
   void addMixedText(
     List<String> text,
     List<DocxTextStyle> textStyles, {
     DocxPageStyle pageStyle,
     bool doNotUseGlobalTextStyle = false,
     bool doNotUseGlobalPageStyle = true,
+    LineBreak lineOrPageBreak,
+    bool addBreakAfterEveryItem = false,
   }) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
       _docxstring.write('<w:p><w:pPr>');
@@ -316,6 +327,11 @@ class DocXBuilder {
       _docxstring
           .write(_getParagraphStyleAsString().replaceFirst('<w:pPr>', ''));
 
+      final String multiBreak =
+          lineOrPageBreak != null && addBreakAfterEveryItem
+              ? _getLineOrPageBreak(lineOrPageBreak)
+              : '';
+
       for (int i = 0; i < text.length; i++) {
         final String t = text[i] ?? '';
         _docxstring.writeAll(<String>[
@@ -323,11 +339,17 @@ class DocXBuilder {
           _getTextStyleAsString(
               style: textStyles[i],
               doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-          '<w:t xml:space="preserve">$t</w:t></w:r>',
+          '<w:t xml:space="preserve">$t</w:t></w:r>$multiBreak',
         ]);
         _addToCharCounters(t);
       }
-      _docxstring.write('</w:p>');
+
+      final String singleBreak =
+          lineOrPageBreak != null && !addBreakAfterEveryItem
+              ? _getLineOrPageBreak(lineOrPageBreak)
+              : '';
+
+      _docxstring.write('$singleBreak</w:p>');
       _parCount++;
     }
   }

@@ -1,5 +1,6 @@
 export './docxpagestyle.dart';
 export './docxtextstyle.dart';
+export './linebreak.dart';
 export './linenumbering.dart';
 export './p_border.dart';
 export './p_indent.dart';

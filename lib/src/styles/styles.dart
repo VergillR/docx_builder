@@ -18,6 +18,10 @@ enum HighlightColor {
   yellow,
 }
 
+enum LineBreakClearLocation { all, left, none, right }
+
+enum LineBreakType { column, page, textWrapping }
+
 enum LineRule { auto, exact, atLeast }
 
 enum PageBorderDisplay { allPages, firstPage, notFirstPage }
