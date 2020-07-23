@@ -451,7 +451,7 @@ class DocXBuilder {
         final String openParagraph = encloseInParagraph ? '<w:p>' : '';
         final String closeParagraph = encloseInParagraph ? '</w:p>' : '';
         final String openPpr = encloseInParagraph
-            ? '${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)})}'
+            ? '${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}'
             : '';
 
         if (saved) {
