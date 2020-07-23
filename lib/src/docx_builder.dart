@@ -313,7 +313,7 @@ class DocXBuilder {
   /// This function always adds a new paragraph to the document.
   ///
   /// If [lineOrPageBreak] is given, then a LineBreak will be added after every item (if [addBreakAfterEveryItem] is true) or only after the last item on the [text] list (if [addBreakAfterEveryItem] is false, which is default).
-  /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the text by setting [addTab] to true. Set [addTabBeforeEveryItem] to true to apply a tab for every text item.
+  /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the first text item by setting [addTab] to true.
   void addMixedText(
     List<String> text,
     List<DocxTextStyle> textStyles, {
@@ -323,7 +323,6 @@ class DocXBuilder {
     LineBreak lineOrPageBreak,
     bool addBreakAfterEveryItem = false,
     bool addTab = false,
-    bool addTabBeforeEveryItem = false,
   }) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
       _docxstring.write('<w:p><w:pPr>');
@@ -339,22 +338,13 @@ class DocXBuilder {
               ? _getLineOrPageBreak(lineOrPageBreak)
               : '';
 
-      final String multiTab =
-          globalDocxTextStyle.tabs != null && addTab && addTabBeforeEveryItem
-              ? '<w:r><w:tab/></w:r>'
-              : '';
-
-      if (multiTab.isEmpty &&
-          globalDocxTextStyle.tabs != null &&
-          addTab &&
-          !addTabBeforeEveryItem) {
+      if (globalDocxTextStyle.tabs != null && addTab) {
         _docxstring.write('<w:r><w:tab/></w:r>');
       }
 
       for (int i = 0; i < text.length; i++) {
         final String t = text[i] ?? '';
         _docxstring.writeAll(<String>[
-          multiTab,
           '<w:r>',
           _getTextStyleAsString(
               style: textStyles[i],
