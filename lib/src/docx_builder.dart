@@ -41,12 +41,6 @@ class DocXBuilder {
   static String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-  static int convertInchesToEMU(int inches) => inches * 914400;
-
-  static int convertCentimetersToEMU(int cm) => cm * 360000;
-
-  static int convertMillimetersToEMU(int mm) => mm * 36000;
-
   /// Assign a [cacheDirectory] that DocXBuilder can use to store temporary files.
   DocXBuilder(Directory cacheDirectory) {
     _packager = _p.Packager(cacheDirectory);
@@ -337,11 +331,20 @@ class DocXBuilder {
     }
   }
 
+  /// Convert inches to EMU; A4 format is 8.3 x 11.7 inches.
+  int convertInchesToEMU(int inches) => inches * 914400;
+
+  /// Convert centimeters to EMU; A4 format is 21x29.7cm.
+  int convertCentimetersToEMU(int cm) => cm * 360000;
+
+  /// Convert millimeters to EMU; A4 format is 210x297mm.
+  int convertMillimetersToEMU(int mm) => mm * 36000;
+
   /// InsertImage inserts an inline image from a file at the current position in the buffer.
   /// Ensure that the image is compressed to minimize the size of the docx file.
   ///
   /// Width and height should be provided in EMU and should be between 1 and 27273042316900.
-  /// You can use the static methods convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
+  /// You can use convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
   ///
   /// Text styling that affect the paragraph also affects the appearance of the image.
   ///
