@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:docx_builder/docx_builder.dart';
 import 'package:docx_builder/src/utils/constants/mimetypes.dart';
 import 'package:docx_builder/src/utils/utils.dart';
 import 'package:docx_builder/src/styles/style_classes/index.dart';
@@ -39,6 +40,12 @@ class DocXBuilder {
 
   static String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+  static int convertInchesToEMU(int inches) => inches * 914400;
+
+  static int convertCentimetersToEMU(int cm) => cm * 360000;
+
+  static int convertMillimetersToEMU(int mm) => mm * 36000;
 
   /// Assign a [cacheDirectory] that DocXBuilder can use to store temporary files.
   DocXBuilder(Directory cacheDirectory) {
@@ -331,16 +338,38 @@ class DocXBuilder {
   }
 
   /// InsertImage inserts an inline image from a file at the current position in the buffer.
+  /// Ensure that the image is compressed to minimize the size of the docx file.
   ///
-  /// Ensure that the image is already compressed and resized so it fits properly in the document.
+  /// Width and height should be provided in EMU and should be between 1 and 27273042316900.
+  /// You can use the static methods convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
+  ///
+  /// Text styling that affect the paragraph also affects the appearance of the image.
+  ///
+  /// The dimensions of A4:
+  ///
+  /// width: 210mm/21cm/8.3 inches
+  ///
+  /// height: 297mm/29.7cm/11.7 inches
+  ///
   void insertImage(
-    File imageFile, {
+    File imageFile,
+    int widthEMU,
+    int heightEMU, {
     String description = '',
     bool noChangeAspect = true,
     bool noMove = true,
     bool noResize = true,
     bool noSelect = false,
+    DocxTextStyle textStyle,
+    bool doNotUseGlobalStyle = true,
   }) {
+    const int max = 27273042316900;
+    final style =
+        textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
+    if (widthEMU < 1 || widthEMU > max || heightEMU < 1 || heightEMU > max) {
+      return;
+    }
+
     if (!_bufferClosed) {
       final String path = imageFile.path;
       final String suffix = path.substring(path.lastIndexOf('.') + 1);
@@ -350,9 +379,13 @@ class DocXBuilder {
         final String _noMove = noMove ? '1' : '0';
         final String _noResize = noResize ? '1' : '0';
         final String _noSelect = noSelect ? '1' : '0';
+
+        final String openParagraph =
+            '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)})}';
+
         if (saved) {
           _docxstring.write(
-              '<w:p><w:r><w:drawing><wp:inline><wp:extent cx="3044825" cy="3044825"/><wp:effectExtent l="1" t="1" r="1" b="1"/><wp:docPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${_packager.rIdCount - 1}"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>');
+              '$openParagraph<w:r><w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="1" t="1" r="1" b="1"/><wp:docPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${_packager.rIdCount - 1}"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>');
         }
       }
     }
