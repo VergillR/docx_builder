@@ -396,7 +396,7 @@ class DocXBuilder {
         textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
 
     final String openParagraphWithPpr =
-        '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)})}';
+        '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}';
     _docxstring.write(openParagraphWithPpr);
     for (int i = 0; i < imageFiles.length; i++) {
       _insertImage(
