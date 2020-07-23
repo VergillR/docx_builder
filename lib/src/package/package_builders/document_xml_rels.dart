@@ -13,7 +13,7 @@ class DocumentXmlRels {
       final StringBuffer mediaRels = StringBuffer();
       references.forEach((k, v) {
         mediaRels.write(
-            '<Relationship Id="$k" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/$v"/>');
+            '<Relationship Id="$k" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="$v"/>');
       });
       return '$wordRelsDocumentXmlRels${mediaRels.toString()}$closeTag';
     } else {
