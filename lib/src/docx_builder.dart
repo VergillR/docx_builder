@@ -379,6 +379,8 @@ class DocXBuilder {
 
   /// Add multiple images inside the same paragraph.
   /// All given images will be placed with the same widthEMU and heightEMU.
+  ///
+  /// [spaces] mimic spacebar presses and can be set to create distance between the images.
   void addImages(
     List<File> imageFiles,
     int widthEMU,
@@ -390,7 +392,7 @@ class DocXBuilder {
     bool noSelect = false,
     DocxTextStyle textStyle,
     bool doNotUseGlobalStyle = true,
-    int spaces = 1,
+    int spaces = 0,
   }) {
     final style =
         textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
@@ -398,6 +400,9 @@ class DocXBuilder {
     final String openParagraphWithPpr =
         '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:r>';
     _docxstring.write(openParagraphWithPpr);
+    final String addSpaces = spaces > 0
+        ? '<w:t xml:space="preserve">${List<String>.generate(spaces, (index) => ' ').join()}</w:t>'
+        : '';
     for (int i = 0; i < imageFiles.length; i++) {
       _insertImage(
         imageFiles[i],
@@ -412,8 +417,9 @@ class DocXBuilder {
         doNotUseGlobalStyle: doNotUseGlobalStyle,
         encloseInParagraph: false,
       );
-      _docxstring.write(
-          '<w:t xml:space="preserve">${List<String>.generate(spaces, (index) => ' ').join()}</w:t>');
+      if (addSpaces.isNotEmpty) {
+        _docxstring.write(addSpaces);
+      }
     }
     _docxstring.write('</w:r></w:p>');
   }
