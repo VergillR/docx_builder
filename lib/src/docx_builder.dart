@@ -515,16 +515,20 @@ class DocXBuilder {
         ? '<w:t xml:space="preserve">${List<String>.generate(spaces, (index) => ' ').join()}</w:t>'
         : '';
     for (int i = 0; i < imageFiles.length; i++) {
-      _insertImage(imageFiles[i], widthEMU, heightEMU,
-          description: desc[i] ?? '',
-          noChangeAspect: noChangeAspect,
-          noMove: noMove,
-          noResize: noResize,
-          noSelect: noSelect,
-          textStyle: textStyle,
-          doNotUseGlobalStyle: doNotUseGlobalStyle,
-          encloseInParagraph: false,
-          hyperlinkTo: hyperlinks[i]);
+      _insertImage(
+        imageFiles[i],
+        widthEMU,
+        heightEMU,
+        description: desc[i] ?? '',
+        noChangeAspect: noChangeAspect,
+        noMove: noMove,
+        noResize: noResize,
+        noSelect: noSelect,
+        textStyle: textStyle,
+        doNotUseGlobalStyle: doNotUseGlobalStyle,
+        encloseInParagraph: false,
+        hyperlinkTo: hyperlinks[i] ?? '',
+      );
       if (addSpaces.isNotEmpty) {
         _docxstring.write(addSpaces);
       }
