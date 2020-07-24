@@ -41,6 +41,7 @@ class DocXBuilder {
   static String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
+  final int emuWidthA4Pct05 = 378000;
   final int emuWidthA4Pct10 = 756000;
   final int emuWidthA4Pct20 = 1512000;
   final int emuWidthA4Pct30 = 2268000;
@@ -52,6 +53,7 @@ class DocXBuilder {
   final int emuWidthA4Pct90 = 6804000;
   final int emuWidthA4Pct100 = 7560000;
 
+  final int emuHeightA4Pct05 = 534600;
   final int emuHeightA4Pct10 = 1069200;
   final int emuHeightA4Pct20 = 2138400;
   final int emuHeightA4Pct30 = 3207600;
