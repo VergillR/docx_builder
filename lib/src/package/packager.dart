@@ -41,14 +41,16 @@ class Packager {
     Directory(_dirPathToWordRels).createSync(recursive: true);
   }
 
+  void addHyperlink(String target) => _references['rId${_rIdCount++}'] =
+      'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="$target" TargetMode="External"';
+
   bool addImageFile(File file, String suffix) {
     try {
-      final String rId = 'rId$_rIdCount';
       final String fileName = 'image$_rIdCount.$suffix';
       final String fullPathFile = '$_dirPathToWordMedia/$fileName';
       file.copySync(fullPathFile);
-      _references[rId] = 'media/$fileName';
-      _rIdCount++;
+      _references['rId${_rIdCount++}'] =
+          'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/$fileName"';
       return true;
     } catch (e) {
       return false;

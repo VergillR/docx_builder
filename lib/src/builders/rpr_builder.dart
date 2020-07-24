@@ -34,8 +34,12 @@ class Rpr {
     int kern,
     int fitText,
     TextEffect effect,
+    bool styleAsHyperlink = false,
   }) {
     final StringBuffer r = StringBuffer()..write('<w:rPr>');
+    if (styleAsHyperlink) {
+      r.write('<w:rStyle w:val="Hyperlink" />');
+    }
     if (fontName != null) {
       r.write(fontNameComplexScript != null
           ? '<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontNameComplexScript" />'

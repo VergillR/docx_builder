@@ -3,6 +3,7 @@ import 'index.dart';
 
 class DocxTextStyle {
   // rpr (Run properties: text styling)
+  final String hyperlinkTo;
   final bool bold;
   final bool caps;
   final bool doubleStrike;
@@ -40,6 +41,7 @@ class DocxTextStyle {
 
   DocxTextStyle({
     // rpr (Run properties: text styling)
+    this.hyperlinkTo,
     this.bold,
     this.caps,
     this.doubleStrike,

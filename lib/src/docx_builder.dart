@@ -41,6 +41,28 @@ class DocXBuilder {
   static String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
+  final int emuWidthA4Pct10 = 756000;
+  final int emuWidthA4Pct20 = 1512000;
+  final int emuWidthA4Pct30 = 2268000;
+  final int emuWidthA4Pct40 = 3024000;
+  final int emuWidthA4Pct50 = 3780000;
+  final int emuWidthA4Pct60 = 4536000;
+  final int emuWidthA4Pct70 = 5292000;
+  final int emuWidthA4Pct80 = 6048000;
+  final int emuWidthA4Pct90 = 6804000;
+  final int emuWidthA4Pct100 = 7560000;
+
+  final int emuHeightA4Pct10 = 1069200;
+  final int emuHeightA4Pct20 = 2138400;
+  final int emuHeightA4Pct30 = 3207600;
+  final int emuHeightA4Pct40 = 4276800;
+  final int emuHeightA4Pct50 = 5346000;
+  final int emuHeightA4Pct60 = 6415200;
+  final int emuHeightA4Pct70 = 7484400;
+  final int emuHeightA4Pct80 = 8553600;
+  final int emuHeightA4Pct90 = 9622800;
+  final int emuHeightA4Pct100 = 10692000;
+
   /// Assign a [cacheDirectory] that DocXBuilder can use to store temporary files.
   DocXBuilder(Directory cacheDirectory) {
     _packager = _p.Packager(cacheDirectory);
@@ -153,6 +175,7 @@ class DocXBuilder {
   // ignore: use_setters_to_change_properties
   /// Sets the global style for text. Except for HighlightColor, colors are always 'RRGGBB' format.
   /// The global text style can be overridden by addMixedText with its own styling rules.
+  /// The hyperlinkTo property of the global text style is not used by addText or addMixedText.
   void setGlobalDocxTextStyle(DocxTextStyle textStyle) =>
       _globalDocxTextStyle = textStyle;
 
@@ -200,9 +223,12 @@ class DocXBuilder {
   /// Obtain the XML string of the text style.
   /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
   String _getTextStyleAsString(
-      {DocxTextStyle style, bool doNotUseGlobalStyle = false}) {
+      {DocxTextStyle style,
+      bool doNotUseGlobalStyle = false,
+      bool styleAsHyperlink = false}) {
     final DocxTextStyle textStyle = style ?? DocxTextStyle();
     return _b.Rpr.getRpr(
+      styleAsHyperlink: styleAsHyperlink,
       bold: doNotUseGlobalStyle
           ? textStyle.bold
           : textStyle.bold ?? _globalDocxTextStyle.bold,
@@ -286,16 +312,29 @@ class DocXBuilder {
   ///
   /// If [lineOrPageBreak] is given, then a LineBreak will be added at the end of the text.
   /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the text by setting [addTab] to true.
-  void addText(String text, {LineBreak lineOrPageBreak, bool addTab = false}) {
+  ///
+  /// If [hyperlinkTo] is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
+  void addText(String text,
+      {LineBreak lineOrPageBreak, bool addTab = false, String hyperlinkTo}) {
     final String tab =
         globalDocxTextStyle.tabs != null && addTab ? '<w:r><w:tab/></w:r>' : '';
     final String lineBreak =
         lineOrPageBreak != null ? _getLineOrPageBreak(lineOrPageBreak) : '';
+
+    String closeHyperlink = '';
+    String openHyperlink = '';
+    if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
+      _packager.addHyperlink(hyperlinkTo);
+      closeHyperlink = '</w:hyperlink>';
+      openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+    }
+
     if (!_bufferClosed) {
       _docxstring.writeAll(<String>[
         '<w:p>${_getParagraphStyleAsString()}',
         tab,
-        '<w:r>${_getTextStyleAsString()}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak</w:p>'
+        openHyperlink,
+        '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$closeHyperlink$lineBreak</w:p>'
       ]);
       _addToCharCounters(text);
       _parCount++;
@@ -314,6 +353,8 @@ class DocXBuilder {
   ///
   /// If [lineOrPageBreak] is given, then a LineBreak will be added after every item (if [addBreakAfterEveryItem] is true) or only after the last item on the [text] list (if [addBreakAfterEveryItem] is false, which is default).
   /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the first text item by setting [addTab] to true.
+  ///
+  /// If the custom textstyles contain a hyperlinkTo value that is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
   void addMixedText(
     List<String> text,
     List<DocxTextStyle> textStyles, {
@@ -344,12 +385,23 @@ class DocXBuilder {
 
       for (int i = 0; i < text.length; i++) {
         final String t = text[i] ?? '';
+        String closeHyperlink = '';
+        String openHyperlink = '';
+        if (textStyles[i].hyperlinkTo != null &&
+            textStyles[i].hyperlinkTo.isNotEmpty) {
+          _packager.addHyperlink(textStyles[i].hyperlinkTo);
+          closeHyperlink = '</w:hyperlink>';
+          openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+        }
         _docxstring.writeAll(<String>[
+          openHyperlink,
           '<w:r>',
           _getTextStyleAsString(
+              styleAsHyperlink: textStyles[i].hyperlinkTo != null &&
+                  textStyles[i].hyperlinkTo.isNotEmpty,
               style: textStyles[i],
               doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-          '<w:t xml:space="preserve">$t</w:t></w:r>$multiBreak',
+          '<w:t xml:space="preserve">$t</w:t></w:r>$closeHyperlink$multiBreak',
         ]);
         _addToCharCounters(t);
       }
@@ -377,7 +429,9 @@ class DocXBuilder {
   /// Ensure that the image is compressed to minimize the size of the docx file.
   ///
   /// Width and height should be provided in EMU and should be between 1 and 27273042316900.
+  /// The width and height should respect the aspect ratio (width / height) of your image to prevent distortion.
   /// You can use convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
+  /// The constant emuWidthA4Pct and emuHeightA4Pct values can also be used.
   ///
   /// Text styling that affects the paragraph's appearance also affects the appearance of the image, for example: textAlignment, verticalTextAlignment, paragraphShading, paragraphBorders and paragraphBorderOnAllSides.
   ///
@@ -411,13 +465,19 @@ class DocXBuilder {
 
   /// Add multiple images inside the same paragraph.
   /// All given images will be placed with the same widthEMU and heightEMU.
+  /// Ensure that all images are compressed to minimize the size of the docx file.
   ///
+  /// The width and height should respect the aspect ratio (width / height) of your images to prevent distortion.
+  /// You can use convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
+  /// The constant emuWidthA4Pct and emuHeightA4Pct values can also be used.
+  ///
+  /// If given, the [descriptions] for the images should have the same length as imageFiles.
   /// [spaces] mimic spacebar presses and can be set to create distance between the images.
   void addImages(
     List<File> imageFiles,
     int widthEMU,
     int heightEMU, {
-    String description = '',
+    List<String> descriptions,
     bool noChangeAspect = true,
     bool noMove = true,
     bool noResize = true,
@@ -428,6 +488,11 @@ class DocXBuilder {
   }) {
     final style =
         textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
+
+    final List<String> desc =
+        descriptions != null && descriptions.length == imageFiles.length
+            ? descriptions
+            : List.generate(imageFiles.length, (index) => '');
 
     final String openParagraphWithPpr =
         '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:r>';
@@ -440,7 +505,7 @@ class DocXBuilder {
         imageFiles[i],
         widthEMU,
         heightEMU,
-        description: description,
+        description: desc[i] ?? '',
         noChangeAspect: noChangeAspect,
         noMove: noMove,
         noResize: noResize,
