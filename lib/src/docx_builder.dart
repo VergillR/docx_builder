@@ -427,7 +427,126 @@ class DocXBuilder {
   /// Convert millimeters to EMU; A4 format is 210x297mm.
   int convertMillimetersToEMU(int mm) => mm * 36000;
 
-  /// AddImage inserts an inline image from a file at the current position in the buffer.
+  /// AddImageWithText inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU). [text] is optional and will wrap as determined by [wrappingAroundImage] and [textWrapping].
+  /// There are a lot of options for anchor images, for example an anchor image can look like a background image by setting [behindDoc] to true.
+  /// Ensure that the image is compressed to minimize the size of the docx file.
+  ///
+  /// The image can act like a hyperlink, by setting a destination in [hyperlinkTo]. A [description] can be attached also.
+  ///
+  /// The dimensions of A4:
+  ///
+  /// width: 210mm/21cm/8.3 inches
+  ///
+  /// height: 297mm/29.7cm/11.7 inches
+  ///
+  void addImageWithText(
+    File imageFile,
+    int widthEMU,
+    int heightEMU,
+    int horizontalOffsetEMU,
+    int verticalOffsetEMU, {
+    // behindDoc="0" distT="0" distB="0" distL="0" distR="0" simplePos="0" locked="0" layoutInCell="1" allowOverlap="1" relativeHeight="2"
+    int distT = 0,
+    int distB = 0,
+    int distL = 0,
+    int distR = 0,
+    bool simplePos = false,
+    bool locked = false,
+    bool layoutInCell = true,
+    bool allowOverlap = true,
+    bool behindDoc = false,
+    int relativeHeight = 2,
+    int simplePosX = 0,
+    int simplePosY = 0,
+    AnchorImageAreaWrap anchorImageAreaWrap = AnchorImageAreaWrap.wrapSquare,
+    AnchorImageTextWrap anchorImageTextWrap = AnchorImageTextWrap.largest,
+    HorizontalPositionRelativeBase horizontalPositionRelativeBase =
+        HorizontalPositionRelativeBase.column,
+    VerticalPositionRelativeBase verticalPositionRelativeBase =
+        VerticalPositionRelativeBase.paragraph,
+    AnchorImageHorizontalAlignment anchorImageHorizontalAlignment,
+    String description = '',
+    bool noChangeAspect = true,
+    bool noChangeArrowheads = true,
+    bool noMove = true,
+    bool noResize = true,
+    bool noSelect = false,
+    String hyperlinkTo,
+    List<String> text,
+    DocxTextStyle imageTextStyle,
+    List<DocxTextStyle> textStyles,
+    DocxPageStyle pageStyle,
+    bool doNotUseGlobalTextStyle = false,
+    bool doNotUseGlobalPageStyle = true,
+    LineBreak lineOrPageBreak,
+    bool addBreakAfterEveryItem = false,
+    bool addTab = false,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
+  }) {
+    const int max = 27273042316900;
+    final style =
+        imageTextStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
+    if (widthEMU < 1 || widthEMU > max || heightEMU < 1 || heightEMU > max) {
+      return;
+    }
+
+    if (!_bufferClosed) {
+      final String path = imageFile.path;
+      final String suffix = path.substring(path.lastIndexOf('.') + 1);
+      if (mimeTypes.containsKey(suffix)) {
+        final bool saved = _packager.addImageFile(imageFile, suffix);
+        final String _noChangeAspect = noChangeAspect ? '1' : '0';
+        final String _noChangeArrowheads = noChangeArrowheads ? '1' : '0';
+        final String _noMove = noMove ? '1' : '0';
+        final String _noResize = noResize ? '1' : '0';
+        final String _noSelect = noSelect ? '1' : '0';
+
+        final int mediaIdCount = _packager.rIdCount - 1;
+
+        String hyperlink = '';
+        if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
+          hyperlink =
+              '<a:hlinkClick xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" r:id="rId${_packager.rIdCount}"/>';
+          _packager.addHyperlink(hyperlinkTo);
+        }
+
+        const String openParagraph = '<w:p>';
+        const String closeParagraph = '</w:p>';
+        final String openPpr =
+            '${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalTextStyle)}';
+        const String openR = '<w:r>';
+        const String closeR = '</w:r>';
+
+        if (saved) {
+          _docxstring.write(
+              '$openParagraph$openPpr$openR<w:drawing><wp:anchor behindDoc="$behindDoc" distT="$distT" distB="$distB" distL="$distL" distR="$distR" simplePos="$simplePos" locked="$locked" layoutInCell="$layoutInCell" allowOverlap="$allowOverlap" relativeHeight="$relativeHeight"><wp:simplePos x="$simplePosX" y="$simplePosY" /><wp:positionH relativeFrom="${getValueFromEnum(horizontalPositionRelativeBase)}"><wp:posOffset>$horizontalOffsetEMU</wp:posOffset></wp:positionH><wp:positionV relativeFrom="${getValueFromEnum(verticalPositionRelativeBase)}"><wp:posOffset>$verticalOffsetEMU</wp:posOffset></wp:positionV><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:${getValueFromEnum(anchorImageAreaWrap)} wrapText="${getValueFromEnum(anchorImageTextWrap)}"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="$_noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>$closeR$closeParagraph');
+          addMixedText(
+            text,
+            textStyles,
+            pageStyle: pageStyle,
+            doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+            doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+            lineOrPageBreak: lineOrPageBreak,
+            addBreakAfterEveryItem: addBreakAfterEveryItem,
+            addTab: addTab,
+          );
+          addText(
+            '',
+            lineOrPageBreak: LineBreak(
+                lineBreakType: LineBreakType.textWrapping,
+                lineBreakClearLocation: LineBreakClearLocation.all),
+          );
+        }
+      }
+    }
+  }
+
+  /// AddImage inserts an inline image from a file at the current position in the buffer. AddImage is useful for stand-alone images that do not have accompanying text.
+  /// If you want multiple images in the same paragraph, use AddImages. If you need text around the image, use addImageWithText. You can also use tables to create a grid of images and/or text.
+  ///
   /// Ensure that the image is compressed to minimize the size of the docx file.
   ///
   /// Width and height should be provided in EMU and should be between 1 and 27273042316900.
@@ -457,8 +576,12 @@ class DocXBuilder {
     DocxTextStyle textStyle,
     bool doNotUseGlobalStyle = true,
     String hyperlinkTo,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
   }) =>
-      _insertImage(
+      _insertInlineImage(
         imageFile,
         widthEMU,
         heightEMU,
@@ -482,7 +605,7 @@ class DocXBuilder {
   /// The constant emuWidthA4Pct and emuHeightA4Pct values can also be used.
   ///
   /// If given, the [descriptions] and [hyperlinksTo] lists for the images should have the same length as imageFiles.
-  /// [spaces] mimic spacebar presses and can be set to create distance between the images.
+  /// You can add distance between the images with [spaces] which mimic spacebar presses.
   void addImages(
     List<File> imageFiles,
     int widthEMU,
@@ -496,6 +619,10 @@ class DocXBuilder {
     DocxTextStyle textStyle,
     bool doNotUseGlobalStyle = true,
     int spaces = 0,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
   }) {
     final style =
         textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
@@ -517,7 +644,7 @@ class DocXBuilder {
         ? '<w:t xml:space="preserve">${List<String>.generate(spaces, (index) => ' ').join()}</w:t>'
         : '';
     for (int i = 0; i < imageFiles.length; i++) {
-      _insertImage(
+      _insertInlineImage(
         imageFiles[i],
         widthEMU,
         heightEMU,
@@ -530,6 +657,10 @@ class DocXBuilder {
         doNotUseGlobalStyle: doNotUseGlobalStyle,
         encloseInParagraph: false,
         hyperlinkTo: hyperlinks[i] ?? '',
+        effectExtentL: effectExtentL,
+        effectExtentT: effectExtentT,
+        effectExtentR: effectExtentR,
+        effectExtentB: effectExtentB,
       );
       if (addSpaces.isNotEmpty) {
         _docxstring.write(addSpaces);
@@ -538,7 +669,7 @@ class DocXBuilder {
     _docxstring.write('</w:r></w:p>');
   }
 
-  void _insertImage(
+  void _insertInlineImage(
     File imageFile,
     int widthEMU,
     int heightEMU, {
@@ -551,6 +682,10 @@ class DocXBuilder {
     bool doNotUseGlobalStyle = true,
     bool encloseInParagraph = true,
     String hyperlinkTo,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
   }) {
     const int max = 27273042316900;
     final style =
@@ -588,7 +723,7 @@ class DocXBuilder {
 
         if (saved) {
           _docxstring.write(
-              '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="1" t="1" r="1" b="1"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
+              '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
         }
       }
     }

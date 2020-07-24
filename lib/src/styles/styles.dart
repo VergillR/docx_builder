@@ -1,3 +1,15 @@
+enum AnchorImageAreaWrap {
+  wrapNone,
+  wrapSquare,
+  wrapTight,
+  wrapThrough,
+  wrapTopAndBottom,
+}
+
+enum AnchorImageHorizontalAlignment { left, right, center, inside, outside }
+
+enum AnchorImageTextWrap { bothSides, left, right, largest }
+
 enum HighlightColor {
   black,
   blue,
@@ -16,6 +28,17 @@ enum HighlightColor {
   red,
   white,
   yellow,
+}
+
+enum HorizontalPositionRelativeBase {
+  margin,
+  page,
+  column,
+  character,
+  leftMargin,
+  rightMargin,
+  insideMargin,
+  outsideMargin,
 }
 
 enum LineBreakClearLocation { all, left, none, right }
@@ -353,6 +376,17 @@ enum UnderlineStyle {
 }
 
 enum VerticalAlignStyle { baseline, subscript, superscript }
+
+enum VerticalPositionRelativeBase {
+  margin,
+  page,
+  paragraph,
+  line,
+  topMargin,
+  bottomMargin,
+  insideMargin,
+  outsideMargin,
+}
 
 enum VerticalTextAlignment {
   auto,
