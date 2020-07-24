@@ -435,6 +435,8 @@ class DocXBuilder {
   /// You can use convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
   /// The constant emuWidthA4Pct and emuHeightA4Pct values can also be used.
   ///
+  /// The image can act like a hyperlink, by setting [hyperlinkTo]. A [description] can be attached also.
+  ///
   /// Text styling that affects the paragraph's appearance also affects the appearance of the image, for example: textAlignment, verticalTextAlignment, paragraphShading, paragraphBorders and paragraphBorderOnAllSides.
   ///
   /// The dimensions of A4:
@@ -479,7 +481,7 @@ class DocXBuilder {
   /// You can use convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
   /// The constant emuWidthA4Pct and emuHeightA4Pct values can also be used.
   ///
-  /// If given, the [descriptions] for the images should have the same length as imageFiles.
+  /// If given, the [descriptions] and [hyperlinksTo] lists for the images should have the same length as imageFiles.
   /// [spaces] mimic spacebar presses and can be set to create distance between the images.
   void addImages(
     List<File> imageFiles,
