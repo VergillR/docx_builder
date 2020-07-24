@@ -38,7 +38,7 @@ class DocXBuilder {
   DocxPageStyle _globalDocxPageStyle = DocxPageStyle().getDefaultPageStyle();
   DocxPageStyle get globalDocxPageStyle => _globalDocxPageStyle;
 
-  static String mimetype =
+  final String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
   final int emuWidthA4Pct05 = 378000;
