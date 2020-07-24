@@ -454,16 +454,22 @@ class DocXBuilder {
     bool noSelect = false,
     DocxTextStyle textStyle,
     bool doNotUseGlobalStyle = true,
+    String hyperlinkTo,
   }) =>
-      _insertImage(imageFile, widthEMU, heightEMU,
-          description: description,
-          noChangeAspect: noChangeAspect,
-          noMove: noMove,
-          noResize: noResize,
-          noSelect: noSelect,
-          textStyle: textStyle,
-          doNotUseGlobalStyle: doNotUseGlobalStyle,
-          encloseInParagraph: true);
+      _insertImage(
+        imageFile,
+        widthEMU,
+        heightEMU,
+        description: description,
+        noChangeAspect: noChangeAspect,
+        noMove: noMove,
+        noResize: noResize,
+        noSelect: noSelect,
+        textStyle: textStyle,
+        doNotUseGlobalStyle: doNotUseGlobalStyle,
+        encloseInParagraph: true,
+        hyperlinkTo: hyperlinkTo,
+      );
 
   /// Add multiple images inside the same paragraph.
   /// All given images will be placed with the same widthEMU and heightEMU.
@@ -480,6 +486,7 @@ class DocXBuilder {
     int widthEMU,
     int heightEMU, {
     List<String> descriptions,
+    List<String> hyperlinksTo,
     bool noChangeAspect = true,
     bool noMove = true,
     bool noResize = true,
@@ -496,6 +503,11 @@ class DocXBuilder {
             ? descriptions
             : List.generate(imageFiles.length, (index) => '');
 
+    final List<String> hyperlinks =
+        hyperlinksTo != null && hyperlinksTo.length == imageFiles.length
+            ? hyperlinksTo
+            : List.generate(imageFiles.length, (index) => '');
+
     final String openParagraphWithPpr =
         '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:r>';
     _docxstring.write(openParagraphWithPpr);
@@ -503,19 +515,16 @@ class DocXBuilder {
         ? '<w:t xml:space="preserve">${List<String>.generate(spaces, (index) => ' ').join()}</w:t>'
         : '';
     for (int i = 0; i < imageFiles.length; i++) {
-      _insertImage(
-        imageFiles[i],
-        widthEMU,
-        heightEMU,
-        description: desc[i] ?? '',
-        noChangeAspect: noChangeAspect,
-        noMove: noMove,
-        noResize: noResize,
-        noSelect: noSelect,
-        textStyle: textStyle,
-        doNotUseGlobalStyle: doNotUseGlobalStyle,
-        encloseInParagraph: false,
-      );
+      _insertImage(imageFiles[i], widthEMU, heightEMU,
+          description: desc[i] ?? '',
+          noChangeAspect: noChangeAspect,
+          noMove: noMove,
+          noResize: noResize,
+          noSelect: noSelect,
+          textStyle: textStyle,
+          doNotUseGlobalStyle: doNotUseGlobalStyle,
+          encloseInParagraph: false,
+          hyperlinkTo: hyperlinks[i]);
       if (addSpaces.isNotEmpty) {
         _docxstring.write(addSpaces);
       }
@@ -535,6 +544,7 @@ class DocXBuilder {
     DocxTextStyle textStyle,
     bool doNotUseGlobalStyle = true,
     bool encloseInParagraph = true,
+    String hyperlinkTo,
   }) {
     const int max = 27273042316900;
     final style =
@@ -553,6 +563,15 @@ class DocXBuilder {
         final String _noResize = noResize ? '1' : '0';
         final String _noSelect = noSelect ? '1' : '0';
 
+        final int mediaIdCount = _packager.rIdCount - 1;
+
+        String hyperlink = '';
+        if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
+          hyperlink =
+              '<a:hlinkClick xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" r:id="rId${_packager.rIdCount}"/>';
+          _packager.addHyperlink(hyperlinkTo);
+        }
+
         final String openParagraph = encloseInParagraph ? '<w:p>' : '';
         final String closeParagraph = encloseInParagraph ? '</w:p>' : '';
         final String openPpr = encloseInParagraph
@@ -563,7 +582,7 @@ class DocXBuilder {
 
         if (saved) {
           _docxstring.write(
-              '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="1" t="1" r="1" b="1"/><wp:docPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${_packager.rIdCount - 1}" name="Image${_packager.rIdCount - 1}" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${_packager.rIdCount - 1}"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
+              '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="1" t="1" r="1" b="1"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
         }
       }
     }
