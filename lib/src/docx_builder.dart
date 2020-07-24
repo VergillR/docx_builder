@@ -334,7 +334,7 @@ class DocXBuilder {
         '<w:p>${_getParagraphStyleAsString()}',
         tab,
         openHyperlink,
-        '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$closeHyperlink$lineBreak</w:p>'
+        '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
       ]);
       _addToCharCounters(text);
       _parCount++;
@@ -403,7 +403,7 @@ class DocXBuilder {
                   textStyles[i].hyperlinkTo.isNotEmpty,
               style: textStyles[i],
               doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-          '<w:t xml:space="preserve">$t</w:t></w:r>$closeHyperlink$multiBreak',
+          '<w:t xml:space="preserve">$t</w:t></w:r>$multiBreak$closeHyperlink',
         ]);
         _addToCharCounters(t);
       }
