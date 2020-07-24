@@ -387,7 +387,8 @@ class DocXBuilder {
         final String t = text[i] ?? '';
         String closeHyperlink = '';
         String openHyperlink = '';
-        if (textStyles[i].hyperlinkTo != null &&
+        if (textStyles[i] != null &&
+            textStyles[i].hyperlinkTo != null &&
             textStyles[i].hyperlinkTo.isNotEmpty) {
           _packager.addHyperlink(textStyles[i].hyperlinkTo);
           closeHyperlink = '</w:hyperlink>';
@@ -397,7 +398,8 @@ class DocXBuilder {
           openHyperlink,
           '<w:r>',
           _getTextStyleAsString(
-              styleAsHyperlink: textStyles[i].hyperlinkTo != null &&
+              styleAsHyperlink: textStyles[i] != null &&
+                  textStyles[i].hyperlinkTo != null &&
                   textStyles[i].hyperlinkTo.isNotEmpty,
               style: textStyles[i],
               doNotUseGlobalStyle: doNotUseGlobalTextStyle),
