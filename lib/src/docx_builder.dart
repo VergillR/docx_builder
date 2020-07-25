@@ -10,7 +10,7 @@ import 'package/packager.dart' as _p;
 import 'utils/constants/constants.dart' as _c;
 
 export './styles/style_classes/index.dart';
-export './styles/styles.dart';
+export 'styles/style_enums.dart';
 
 /// DocXBuilder is used to construct and create .docx files.
 ///
@@ -429,11 +429,16 @@ class DocXBuilder {
   /// Convert millimeters to EMU; A4 format is 210x297mm.
   int convertMillimetersToEMU(int mm) => mm * 36000;
 
-  /// AddImageWithText inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU). [text] is optional and will wrap as determined by [wrappingAroundImage] and [textWrapping].
+  /// AddImageWithText inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU). [text] is optional and is styled with [textStyles] and will wrap as determined by [anchorImageAreaWrap] and [anchorImageTextWrap].
   /// There are a lot of options for anchor images, for example an anchor image can look like a background image by setting [behindDoc] to true.
+  ///
+  /// Width and height are measured in EMU (English Metric Unit) and should be between 1 and 27273042316900.
+  /// The width and height should respect the aspect ratio (width / height) of your image to prevent distortion.
+  /// You can use convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
+  /// The constant emuWidthA4Pct and emuHeightA4Pct values can also be used.
   /// Ensure that the image is compressed to minimize the size of the docx file.
   ///
-  /// The image can act like a hyperlink, by setting a destination in [hyperlinkTo]. A [description] can be attached also.
+  /// The image can act like a hyperlink, by setting a destination in [hyperlinkTo]. A [description] can be attached also which serves as metadata (it is NOT a caption).
   ///
   /// The dimensions of A4:
   ///
@@ -447,7 +452,6 @@ class DocXBuilder {
     int heightEMU,
     int horizontalOffsetEMU,
     int verticalOffsetEMU, {
-    // behindDoc="0" distT="0" distB="0" distL="0" distR="0" simplePos="0" locked="0" layoutInCell="1" allowOverlap="1" relativeHeight="2"
     int distT = 0,
     int distB = 0,
     int distL = 0,
@@ -551,12 +555,12 @@ class DocXBuilder {
   ///
   /// Ensure that the image is compressed to minimize the size of the docx file.
   ///
-  /// Width and height should be provided in EMU and should be between 1 and 27273042316900.
+  /// Width and height are measured in EMU (English Metric Unit) and should be between 1 and 27273042316900.
   /// The width and height should respect the aspect ratio (width / height) of your image to prevent distortion.
   /// You can use convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
   /// The constant emuWidthA4Pct and emuHeightA4Pct values can also be used.
   ///
-  /// The image can act like a hyperlink, by setting [hyperlinkTo]. A [description] can be attached also.
+  /// The image can act like a hyperlink, by setting [hyperlinkTo]. A [description] can be attached also which serves as metadata (it is NOT a caption).
   ///
   /// Text styling that affects the paragraph's appearance also affects the appearance of the image, for example: textAlignment, verticalTextAlignment, paragraphShading, paragraphBorders and paragraphBorderOnAllSides.
   ///
@@ -599,6 +603,7 @@ class DocXBuilder {
       );
 
   /// Add multiple images inside the same paragraph.
+  /// Width and height are measured in EMU (English Metric Unit) and should be between 1 and 27273042316900.
   /// All given images will be placed with the same widthEMU and heightEMU.
   /// Ensure that all images are compressed to minimize the size of the docx file.
   ///

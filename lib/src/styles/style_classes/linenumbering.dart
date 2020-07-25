@@ -1,4 +1,4 @@
-import '../styles.dart';
+import '../style_enums.dart';
 
 class LineNumbering {
   final int countBy;

@@ -1,4 +1,4 @@
-import 'package:docx_builder/src/styles/styles.dart';
+import 'package:docx_builder/src/styles/style_enums.dart';
 
 /// LineBreakClearLocation only has meaning if LineBreakType is set to 'textWrapping'
 class LineBreak {

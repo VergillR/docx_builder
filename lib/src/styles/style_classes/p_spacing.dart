@@ -1,4 +1,4 @@
-import 'package:docx_builder/src/styles/styles.dart';
+import 'package:docx_builder/src/styles/style_enums.dart';
 
 class PSpacing {
   final List<int> spaces;
