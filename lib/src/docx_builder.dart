@@ -429,8 +429,10 @@ class DocXBuilder {
   /// Convert millimeters to EMU; A4 format is 210x297mm.
   int convertMillimetersToEMU(int mm) => mm * 36000;
 
-  /// AddImageWithText inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU). [text] is optional and is styled with [textStyles] and will wrap as determined by [anchorImageAreaWrap] and [anchorImageTextWrap].
-  /// There are a lot of options for anchor images, for example an anchor image can look like a background image by setting [behindDoc] to true.
+  /// AddImageWithText inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU), indicated by [horizontalOffsetEMU] and [verticalOffsetEMU]. If both offsets are 0, the anchor image will be placed at the start (left side of the line) of the cursor's current position in the document. Positive offsets push the image to the right and bottom. Negative offsets push the image to the left and top.
+  /// Text is inserted with the function addMixedText, so [text] is a list of text and is styled with [textStyles].
+  /// Given text will behave and wrap as determined by [anchorImageAreaWrap] and [anchorImageTextWrap].
+  /// There are a lot of options for anchor images, for example an anchor image can look like a background image by setting anchorImageAreaWrap to AnchorImageAreaWrap.wrapThrough and [behindDocument] to true.
   ///
   /// Width and height are measured in EMU (English Metric Unit) and should be between 1 and 27273042316900.
   /// The width and height should respect the aspect ratio (width / height) of your image to prevent distortion.
@@ -438,7 +440,7 @@ class DocXBuilder {
   /// The constant emuWidthA4Pct and emuHeightA4Pct values can also be used.
   /// Ensure that the image is compressed to minimize the size of the docx file.
   ///
-  /// The image can act like a hyperlink, by setting a destination in [hyperlinkTo]. A [description] can be attached also which serves as metadata (it is NOT a caption).
+  /// The image can work like a hyperlink, by setting a URL target in [hyperlinkTo]. A [description] can be attached also which serves as metadata (it is NOT a caption).
   ///
   /// The dimensions of A4:
   ///
@@ -460,7 +462,7 @@ class DocXBuilder {
     bool locked = false,
     bool layoutInCell = true,
     bool allowOverlap = true,
-    bool behindDoc = false,
+    bool behindDocument = false,
     int relativeHeight = 2,
     int simplePosX = 0,
     int simplePosY = 0,
@@ -491,6 +493,9 @@ class DocXBuilder {
     int effectExtentT = 0,
     int effectExtentR = 0,
     int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotate = 0,
   }) {
     const int max = 27273042316900;
     final style =
@@ -510,6 +515,12 @@ class DocXBuilder {
         final String _noResize = noResize ? '1' : '0';
         final String _noSelect = noSelect ? '1' : '0';
 
+        final String xfrm = rotate > 0 ||
+                flipImageHorizontal ||
+                flipImageVertical
+            ? '<a:xfrm rot="$rotate" flipH="$flipImageHorizontal" flipV="$flipImageVertical"></a:xfrm>'
+            : '';
+
         final int mediaIdCount = _packager.rIdCount - 1;
 
         String hyperlink = '';
@@ -528,7 +539,7 @@ class DocXBuilder {
 
         if (saved) {
           _docxstring.write(
-              '$openParagraph$openPpr$openR<w:drawing><wp:anchor behindDoc="$behindDoc" distT="$distT" distB="$distB" distL="$distL" distR="$distR" simplePos="$simplePos" locked="$locked" layoutInCell="$layoutInCell" allowOverlap="$allowOverlap" relativeHeight="$relativeHeight"><wp:simplePos x="$simplePosX" y="$simplePosY" /><wp:positionH relativeFrom="${getValueFromEnum(horizontalPositionRelativeBase)}"><wp:posOffset>$horizontalOffsetEMU</wp:posOffset></wp:positionH><wp:positionV relativeFrom="${getValueFromEnum(verticalPositionRelativeBase)}"><wp:posOffset>$verticalOffsetEMU</wp:posOffset></wp:positionV><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:${getValueFromEnum(anchorImageAreaWrap)} wrapText="${getValueFromEnum(anchorImageTextWrap)}"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="$_noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>$closeR$closeParagraph');
+              '$openParagraph$openPpr$openR<w:drawing><wp:anchor behindDoc="$behindDocument" distT="$distT" distB="$distB" distL="$distL" distR="$distR" simplePos="$simplePos" locked="$locked" layoutInCell="$layoutInCell" allowOverlap="$allowOverlap" relativeHeight="$relativeHeight"><wp:simplePos x="$simplePosX" y="$simplePosY" /><wp:positionH relativeFrom="${getValueFromEnum(horizontalPositionRelativeBase)}"><wp:posOffset>$horizontalOffsetEMU</wp:posOffset></wp:positionH><wp:positionV relativeFrom="${getValueFromEnum(verticalPositionRelativeBase)}"><wp:posOffset>$verticalOffsetEMU</wp:posOffset></wp:positionV><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:${getValueFromEnum(anchorImageAreaWrap)} wrapText="${getValueFromEnum(anchorImageTextWrap)}"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="$_noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip>$xfrm<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>$closeR$closeParagraph');
           addMixedText(
             text,
             textStyles,
@@ -542,8 +553,9 @@ class DocXBuilder {
           addText(
             '',
             lineOrPageBreak: LineBreak(
-                lineBreakType: LineBreakType.textWrapping,
-                lineBreakClearLocation: LineBreakClearLocation.all),
+              lineBreakType: LineBreakType.textWrapping,
+              lineBreakClearLocation: LineBreakClearLocation.all,
+            ),
           );
         }
       }
@@ -560,7 +572,7 @@ class DocXBuilder {
   /// You can use convertMillimetersToEMU, convertCentimetersToEMU and convertInchesToEMU to calculate EMU.
   /// The constant emuWidthA4Pct and emuHeightA4Pct values can also be used.
   ///
-  /// The image can act like a hyperlink, by setting [hyperlinkTo]. A [description] can be attached also which serves as metadata (it is NOT a caption).
+  /// The image can work like a hyperlink, by setting a URL target in [hyperlinkTo]. A [description] can be attached also which serves as metadata (it is NOT a caption).
   ///
   /// Text styling that affects the paragraph's appearance also affects the appearance of the image, for example: textAlignment, verticalTextAlignment, paragraphShading, paragraphBorders and paragraphBorderOnAllSides.
   ///
@@ -586,6 +598,9 @@ class DocXBuilder {
     int effectExtentT = 0,
     int effectExtentR = 0,
     int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotate = 0,
   }) =>
       _insertInlineImage(
         imageFile,
@@ -600,9 +615,12 @@ class DocXBuilder {
         doNotUseGlobalStyle: doNotUseGlobalStyle,
         encloseInParagraph: true,
         hyperlinkTo: hyperlinkTo,
+        flipImageHorizontal: flipImageHorizontal,
+        flipImageVertical: flipImageVertical,
+        rotate: rotate,
       );
 
-  /// Add multiple images inside the same paragraph.
+  /// Add multiple inline images uniformly inside the same paragraph.
   /// Width and height are measured in EMU (English Metric Unit) and should be between 1 and 27273042316900.
   /// All given images will be placed with the same widthEMU and heightEMU.
   /// Ensure that all images are compressed to minimize the size of the docx file.
@@ -630,6 +648,9 @@ class DocXBuilder {
     int effectExtentT = 0,
     int effectExtentR = 0,
     int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotate = 0,
   }) {
     final style =
         textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
@@ -668,6 +689,9 @@ class DocXBuilder {
         effectExtentT: effectExtentT,
         effectExtentR: effectExtentR,
         effectExtentB: effectExtentB,
+        flipImageHorizontal: flipImageHorizontal,
+        flipImageVertical: flipImageVertical,
+        rotate: rotate,
       );
       if (addSpaces.isNotEmpty) {
         _docxstring.write(addSpaces);
@@ -693,6 +717,9 @@ class DocXBuilder {
     int effectExtentT = 0,
     int effectExtentR = 0,
     int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotate = 0,
   }) {
     const int max = 27273042316900;
     final style =
@@ -710,6 +737,12 @@ class DocXBuilder {
         final String _noMove = noMove ? '1' : '0';
         final String _noResize = noResize ? '1' : '0';
         final String _noSelect = noSelect ? '1' : '0';
+
+        final String xfrm = rotate > 0 ||
+                flipImageHorizontal ||
+                flipImageVertical
+            ? '<a:xfrm rot="$rotate" flipH="$flipImageHorizontal" flipV="$flipImageVertical"></a:xfrm>'
+            : '';
 
         final int mediaIdCount = _packager.rIdCount - 1;
 
@@ -730,7 +763,7 @@ class DocXBuilder {
 
         if (saved) {
           _docxstring.write(
-              '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
+              '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$description"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip>$xfrm<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
         }
       }
     }
