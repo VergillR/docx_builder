@@ -495,7 +495,7 @@ class DocXBuilder {
     int effectExtentB = 0,
     bool flipImageHorizontal = false,
     bool flipImageVertical = false,
-    int rotate = 0,
+    int rotateInEMU = 0,
   }) {
     const int max = 27273042316900;
     final style =
@@ -515,10 +515,10 @@ class DocXBuilder {
         final String _noResize = noResize ? '1' : '0';
         final String _noSelect = noSelect ? '1' : '0';
 
-        final String xfrm = rotate > 0 ||
+        final String xfrm = rotateInEMU > 0 ||
                 flipImageHorizontal ||
                 flipImageVertical
-            ? '<a:xfrm rot="$rotate" flipH="$flipImageHorizontal" flipV="$flipImageVertical"><a:off x="0" y="0"/><a:ext cx="$widthEMU" cy="$heightEMU"/></a:xfrm>'
+            ? '<a:xfrm rot="$rotateInEMU" flipH="$flipImageHorizontal" flipV="$flipImageVertical"><a:off x="0" y="0"/><a:ext cx="$widthEMU" cy="$heightEMU"/></a:xfrm>'
             : '';
 
         final int mediaIdCount = _packager.rIdCount - 1;
@@ -600,7 +600,7 @@ class DocXBuilder {
     int effectExtentB = 0,
     bool flipImageHorizontal = false,
     bool flipImageVertical = false,
-    int rotate = 0,
+    int rotateInEMU = 0,
   }) =>
       _insertInlineImage(
         imageFile,
@@ -617,7 +617,7 @@ class DocXBuilder {
         hyperlinkTo: hyperlinkTo,
         flipImageHorizontal: flipImageHorizontal,
         flipImageVertical: flipImageVertical,
-        rotate: rotate,
+        rotateInEMU: rotateInEMU,
       );
 
   /// Add multiple inline images uniformly inside the same paragraph.
@@ -650,7 +650,7 @@ class DocXBuilder {
     int effectExtentB = 0,
     bool flipImageHorizontal = false,
     bool flipImageVertical = false,
-    int rotate = 0,
+    int rotateInEMU = 0,
   }) {
     final style =
         textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
@@ -691,7 +691,7 @@ class DocXBuilder {
         effectExtentB: effectExtentB,
         flipImageHorizontal: flipImageHorizontal,
         flipImageVertical: flipImageVertical,
-        rotate: rotate,
+        rotateInEMU: rotateInEMU,
       );
       if (addSpaces.isNotEmpty) {
         _docxstring.write(addSpaces);
@@ -719,7 +719,7 @@ class DocXBuilder {
     int effectExtentB = 0,
     bool flipImageHorizontal = false,
     bool flipImageVertical = false,
-    int rotate = 0,
+    int rotateInEMU = 0,
   }) {
     const int max = 27273042316900;
     final style =
@@ -738,10 +738,10 @@ class DocXBuilder {
         final String _noResize = noResize ? '1' : '0';
         final String _noSelect = noSelect ? '1' : '0';
 
-        final String xfrm = rotate > 0 ||
+        final String xfrm = rotateInEMU > 0 ||
                 flipImageHorizontal ||
                 flipImageVertical
-            ? '<a:xfrm rot="$rotate" flipH="$flipImageHorizontal" flipV="$flipImageVertical"><a:off x="0" y="0"/><a:ext cx="$widthEMU" cy="$heightEMU"/></a:xfrm>'
+            ? '<a:xfrm rot="$rotateInEMU" flipH="$flipImageHorizontal" flipV="$flipImageVertical"><a:off x="0" y="0"/><a:ext cx="$widthEMU" cy="$heightEMU"/></a:xfrm>'
             : '';
 
         final int mediaIdCount = _packager.rIdCount - 1;
