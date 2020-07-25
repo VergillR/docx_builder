@@ -518,7 +518,7 @@ class DocXBuilder {
         final String xfrm = rotate > 0 ||
                 flipImageHorizontal ||
                 flipImageVertical
-            ? '<a:xfrm rot="$rotate" flipH="$flipImageHorizontal" flipV="$flipImageVertical"></a:xfrm>'
+            ? '<a:xfrm rot="$rotate" flipH="$flipImageHorizontal" flipV="$flipImageVertical"><a:off x="0" y="0"/><a:ext cx="$widthEMU" cy="$heightEMU"/></a:xfrm>'
             : '';
 
         final int mediaIdCount = _packager.rIdCount - 1;
@@ -741,7 +741,7 @@ class DocXBuilder {
         final String xfrm = rotate > 0 ||
                 flipImageHorizontal ||
                 flipImageVertical
-            ? '<a:xfrm rot="$rotate" flipH="$flipImageHorizontal" flipV="$flipImageVertical"></a:xfrm>'
+            ? '<a:xfrm rot="$rotate" flipH="$flipImageHorizontal" flipV="$flipImageVertical"><a:off x="0" y="0"/><a:ext cx="$widthEMU" cy="$heightEMU"/></a:xfrm>'
             : '';
 
         final int mediaIdCount = _packager.rIdCount - 1;
