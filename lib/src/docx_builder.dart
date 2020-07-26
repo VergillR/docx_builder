@@ -44,7 +44,8 @@ class DocXBuilder {
   Footer _firstPageFooter;
   Footer _oddPageFooter;
   Footer _evenPageFooter;
-  bool _headersAndFootersAttached = false;
+  // bool _headersAndFootersAttached = false;
+  bool _insertHeadersAndFootersInThisSection = false;
 
   final String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -124,8 +125,7 @@ class DocXBuilder {
       HeaderType headerType, List<String> text, List<DocxTextStyle> textStyles,
       {bool doNotUseGlobalTextStyle = false}) {
     // changing a header is not allowed
-    if (_headersAndFootersAttached ||
-        _bufferClosed ||
+    if (_bufferClosed ||
         (headerType == HeaderType.evenPage && _evenPageHeader != null) ||
         (headerType == HeaderType.oddPage && _oddPageHeader != null) ||
         (headerType == HeaderType.firstPage && _firstPageHeader != null)) {
@@ -145,8 +145,7 @@ class DocXBuilder {
       FooterType footerType, List<String> text, List<DocxTextStyle> textStyles,
       {bool doNotUseGlobalTextStyle = false}) {
     // changing a footer is not allowed
-    if (_headersAndFootersAttached ||
-        _bufferClosed ||
+    if (_bufferClosed ||
         (footerType == FooterType.evenPage && _evenPageFooter != null) ||
         (footerType == FooterType.oddPage && _oddPageFooter != null) ||
         (footerType == FooterType.firstPage && _firstPageFooter != null)) {
@@ -166,11 +165,15 @@ class DocXBuilder {
   /// After being attached, headers and footers cannot be changed or removed, so call this function only after all required headers and footers have been set.
   void appendHeadersAndFooters() {
     // <w:p><w:pPr><w:sectPr><w:headerReference r:id="rId4" w:type="default"/><w:footerReference r:id="rId5" w:type="first"/><w:titlePg/></w:sectPr></w:pPr></w:p>
-    if (!_bufferClosed && !_headersAndFootersAttached) {
-      _docxstring.write(_addHeadersAndFootersToSectPr(
-          _getDocxPageStyleAsString(doNotUseGlobalStyle: true)));
-      _headersAndFootersAttached = true;
+    if (!_insertHeadersAndFootersInThisSection) {
+      _insertHeadersAndFootersInThisSection = true;
     }
+
+    // if (!_bufferClosed && !_headersAndFootersAttached) {
+    //   _docxstring.write(_addHeadersAndFootersToSectPr(
+    //       _getDocxPageStyleAsString(doNotUseGlobalStyle: true)));
+    //   _headersAndFootersAttached = true;
+    // }
   }
 
   void _initHeaderOrFooter(
@@ -250,7 +253,7 @@ class DocXBuilder {
     _packager.addHeaderOrFooter(counter, contents, isHeader: isHeader);
   }
 
-  /// Should only be called once after all headers and footers are set to insert the references of headers and footers to a SectPr segment in the document.
+  /// Should only be called once after all headers and footers are set, to insert the references of headers and footers to a SectPr segment in the document.
   String _addHeadersAndFootersToSectPr(String sectPr) {
     if (_firstPageHeader != null ||
         _firstPageFooter != null ||
@@ -306,7 +309,7 @@ class DocXBuilder {
   String _getDocxPageStyleAsString(
       {DocxPageStyle style, bool doNotUseGlobalStyle = false}) {
     final DocxPageStyle pageStyle = style ?? DocxPageStyle();
-    return _b.SectPr.getSpr(
+    String spr = _b.SectPr.getSpr(
       cols: doNotUseGlobalStyle
           ? pageStyle.cols
           : pageStyle.cols ?? _globalDocxPageStyle.cols,
@@ -364,6 +367,11 @@ class DocXBuilder {
           ? pageStyle.pageMargin
           : pageStyle.pageMargin ?? _globalDocxPageStyle.pageMargin,
     );
+    if (_insertHeadersAndFootersInThisSection) {
+      spr = _addHeadersAndFootersToSectPr(spr);
+      _insertHeadersAndFootersInThisSection = false;
+    }
+    return spr;
   }
 
   // ignore: use_setters_to_change_properties
@@ -1020,7 +1028,7 @@ class DocXBuilder {
     _firstPageFooter = null;
     _oddPageFooter = null;
     _evenPageFooter = null;
-    _headersAndFootersAttached = false;
+    _insertHeadersAndFootersInThisSection = false;
     _packager.destroyCache();
     if (resetDocX) {
       _initDocX();
