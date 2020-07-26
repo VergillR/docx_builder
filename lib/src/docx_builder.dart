@@ -183,7 +183,8 @@ class DocXBuilder {
     final StringBuffer b = StringBuffer();
     if (text.isNotEmpty && text.length == textStyles.length) {
       b.write('<w:p><w:pPr>');
-      b.write(_getParagraphStyleAsString().replaceFirst('<w:pPr>', ''));
+      b.write(_getParagraphStyleAsString(doNotUseGlobalStyle: true)
+          .replaceFirst('<w:pPr>', ''));
 
       for (int i = 0; i < text.length; i++) {
         final String t = text[i] ?? '';
