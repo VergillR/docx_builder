@@ -44,6 +44,7 @@ class DocXBuilder {
   Footer _firstPageFooter;
   Footer _oddPageFooter;
   Footer _evenPageFooter;
+  bool _headersAndFootersAttached = false;
 
   final String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -117,42 +118,62 @@ class DocXBuilder {
       _globalDocxPageStyle = pageStyle;
 
   /// The [type] determines where the header will appear: for odd pages (also called default header), first page (also called title page header) or even pages. When a header is set, additional files and references are created and thus, headers are NOT allowed to be changed afterwards.
+  ///
+  /// Headers are not visible until they have been attached to the document by calling appendHeadersAndFooters.
   void setHeader(
-      HeaderType type, List<String> text, List<DocxTextStyle> textStyles,
+      HeaderType headerType, List<String> text, List<DocxTextStyle> textStyles,
       {bool doNotUseGlobalTextStyle = false}) {
     // changing a header is not allowed
-    if (_bufferClosed ||
-        (type == HeaderType.evenPage && _evenPageHeader != null) ||
-        (type == HeaderType.oddPage && _oddPageHeader != null) ||
-        (type == HeaderType.firstPage && _firstPageHeader != null)) {
+    if (_headersAndFootersAttached ||
+        _bufferClosed ||
+        (headerType == HeaderType.evenPage && _evenPageHeader != null) ||
+        (headerType == HeaderType.oddPage && _oddPageHeader != null) ||
+        (headerType == HeaderType.firstPage && _firstPageHeader != null)) {
       return;
     }
-    _appendHeaderOrFooter(
-        headerType: type,
+    _initHeaderOrFooter(
+        headerType: headerType,
         text: text,
         textStyles: textStyles,
         doNotUseGlobalTextStyle: doNotUseGlobalTextStyle);
   }
 
   /// The [type] determines where the footer will appear: for odd pages (also called default footer), first page (also called title page footer) or even pages. When a footer is set, additional files and references are created and thus, footers are NOT allowed to be changed afterwards.
+  ///
+  /// Footers are not visible until they have been attached to the document by calling appendHeadersAndFooters.
   void setFooter(
-      FooterType type, List<String> text, List<DocxTextStyle> textStyles,
+      FooterType footerType, List<String> text, List<DocxTextStyle> textStyles,
       {bool doNotUseGlobalTextStyle = false}) {
     // changing a footer is not allowed
-    if (_bufferClosed ||
-        (type == FooterType.evenPage && _evenPageFooter != null) ||
-        (type == FooterType.oddPage && _oddPageFooter != null) ||
-        (type == FooterType.firstPage && _firstPageFooter != null)) {
+    if (_headersAndFootersAttached ||
+        _bufferClosed ||
+        (footerType == FooterType.evenPage && _evenPageFooter != null) ||
+        (footerType == FooterType.oddPage && _oddPageFooter != null) ||
+        (footerType == FooterType.firstPage && _firstPageFooter != null)) {
       return;
     }
-    _appendHeaderOrFooter(
-        footerType: type,
+    _initHeaderOrFooter(
+        footerType: footerType,
         text: text,
         textStyles: textStyles,
         doNotUseGlobalTextStyle: doNotUseGlobalTextStyle);
   }
 
-  void _appendHeaderOrFooter(
+  /// Permanently attach all given headers and footers to the document by including them in the SectionProperties.
+  /// Only when attached are headers and footers actually visible in the document.
+  /// Preferably, call this function at the start of the document and immediately after all required headers and footers have been set.
+  ///
+  /// After being attached, headers and footers cannot be changed or removed, so call this function only after all required headers and footers have been set.
+  void appendHeadersAndFooters() {
+    // <w:p><w:pPr><w:sectPr><w:headerReference r:id="rId4" w:type="default"/><w:footerReference r:id="rId5" w:type="first"/><w:titlePg/></w:sectPr></w:pPr></w:p>
+    if (!_bufferClosed && !_headersAndFootersAttached) {
+      _docxstring.write(_addHeadersAndFootersToSectPr(
+          _getDocxPageStyleAsString(doNotUseGlobalStyle: true)));
+      _headersAndFootersAttached = true;
+    }
+  }
+
+  void _initHeaderOrFooter(
       {HeaderType headerType,
       FooterType footerType,
       List<String> text,
@@ -160,7 +181,7 @@ class DocXBuilder {
       bool doNotUseGlobalTextStyle = false}) {
     final bool isHeader = headerType != null;
     final StringBuffer b = StringBuffer();
-    if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
+    if (text.isNotEmpty && text.length == textStyles.length) {
       b.write('<w:p><w:pPr>');
       b.write(_getParagraphStyleAsString().replaceFirst('<w:pPr>', ''));
 
@@ -228,7 +249,7 @@ class DocXBuilder {
     _packager.addHeaderOrFooter(counter, contents, isHeader: isHeader);
   }
 
-  /// Should only be called once at the end to append references of headers and footers to the final SectPr in the document.
+  /// Should only be called once after all headers and footers are set to insert the references of headers and footers to a SectPr segment in the document.
   String _addHeadersAndFootersToSectPr(String sectPr) {
     final List<Header> h = <Header>[
       _firstPageHeader,
@@ -952,10 +973,8 @@ class DocXBuilder {
   }) async {
     try {
       if (!_bufferClosed) {
-        String lastSectPr =
-            _getDocxPageStyleAsString(style: _globalDocxPageStyle);
-        lastSectPr = _addHeadersAndFootersToSectPr(lastSectPr);
-        _docxstring.write(lastSectPr);
+        _docxstring
+            .write(_getDocxPageStyleAsString(style: _globalDocxPageStyle));
         _docxstring.write('</w:body></w:document>');
         _bufferClosed = true;
       }
@@ -989,6 +1008,7 @@ class DocXBuilder {
     _firstPageFooter = null;
     _oddPageFooter = null;
     _evenPageFooter = null;
+    _headersAndFootersAttached = false;
     _packager.destroyCache();
     if (resetDocX) {
       _initDocX();
