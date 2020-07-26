@@ -38,6 +38,13 @@ class DocXBuilder {
   DocxPageStyle _globalDocxPageStyle = DocxPageStyle().getDefaultPageStyle();
   DocxPageStyle get globalDocxPageStyle => _globalDocxPageStyle;
 
+  Header _firstPageHeader;
+  Header _oddPageHeader;
+  Header _evenPageHeader;
+  Footer _firstPageFooter;
+  Footer _oddPageFooter;
+  Footer _evenPageFooter;
+
   final String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
@@ -108,6 +115,158 @@ class DocXBuilder {
   /// When adding custom section properties to a paragraph, make sure that paragraph is NOT the last paragraph of the document or else the document will be malformed.
   void setGlobalDocxPageStyle(DocxPageStyle pageStyle) =>
       _globalDocxPageStyle = pageStyle;
+
+  /// The [type] determines where the header will appear: for odd pages (also called default header), first page (also called title page header) or even pages. When a header is set, additional files and references are created and thus, headers are NOT allowed to be changed afterwards.
+  void setHeader(
+      HeaderType type, List<String> text, List<DocxTextStyle> textStyles,
+      {bool doNotUseGlobalTextStyle = false}) {
+    // changing a header is not allowed
+    if (_bufferClosed ||
+        (type == HeaderType.evenPage && _evenPageHeader != null) ||
+        (type == HeaderType.oddPage && _oddPageHeader != null) ||
+        (type == HeaderType.firstPage && _firstPageHeader != null)) {
+      return;
+    }
+    _appendHeaderOrFooter(
+        headerType: type,
+        text: text,
+        textStyles: textStyles,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle);
+  }
+
+  /// The [type] determines where the footer will appear: for odd pages (also called default footer), first page (also called title page footer) or even pages. When a footer is set, additional files and references are created and thus, footers are NOT allowed to be changed afterwards.
+  void setFooter(
+      FooterType type, List<String> text, List<DocxTextStyle> textStyles,
+      {bool doNotUseGlobalTextStyle = false}) {
+    // changing a footer is not allowed
+    if (_bufferClosed ||
+        (type == FooterType.evenPage && _evenPageFooter != null) ||
+        (type == FooterType.oddPage && _oddPageFooter != null) ||
+        (type == FooterType.firstPage && _firstPageFooter != null)) {
+      return;
+    }
+    _appendHeaderOrFooter(
+        footerType: type,
+        text: text,
+        textStyles: textStyles,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle);
+  }
+
+  void _appendHeaderOrFooter(
+      {HeaderType headerType,
+      FooterType footerType,
+      List<String> text,
+      List<DocxTextStyle> textStyles,
+      bool doNotUseGlobalTextStyle = false}) {
+    final bool isHeader = headerType != null;
+    final StringBuffer b = StringBuffer();
+    if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
+      b.write('<w:p><w:pPr>');
+      b.write(_getParagraphStyleAsString().replaceFirst('<w:pPr>', ''));
+
+      for (int i = 0; i < text.length; i++) {
+        final String t = text[i] ?? '';
+        String closeHyperlink = '';
+        String openHyperlink = '';
+        if (textStyles[i] != null &&
+            textStyles[i].hyperlinkTo != null &&
+            textStyles[i].hyperlinkTo.isNotEmpty) {
+          _packager.addHyperlink(textStyles[i].hyperlinkTo);
+          closeHyperlink = '</w:hyperlink>';
+          openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+        }
+        b.writeAll(<String>[
+          openHyperlink,
+          '<w:r>',
+          _getTextStyleAsString(
+              styleAsHyperlink: textStyles[i] != null &&
+                  textStyles[i].hyperlinkTo != null &&
+                  textStyles[i].hyperlinkTo.isNotEmpty,
+              style: textStyles[i],
+              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+          '<w:t xml:space="preserve">$t</w:t></w:r>$closeHyperlink',
+        ]);
+        _addToCharCounters(t);
+      }
+
+      b.write('</w:p>');
+      _parCount++;
+    }
+
+    int counter = 0;
+    final String contents = b.toString();
+
+    if (isHeader) {
+      if (headerType == HeaderType.firstPage) {
+        counter = 1;
+        _firstPageHeader = FirstPageHeader(
+            rId: 'rId${_packager.rIdCount}', taggedText: contents);
+      } else if (headerType == HeaderType.oddPage) {
+        counter = 2;
+        _oddPageHeader = OddPageHeader(
+            rId: 'rId${_packager.rIdCount}', taggedText: contents);
+      } else {
+        counter = 3;
+        _evenPageHeader = EvenPageHeader(
+            rId: 'rId${_packager.rIdCount}', taggedText: contents);
+      }
+    } else {
+      if (footerType == FooterType.firstPage) {
+        counter = 1;
+        _firstPageFooter = FirstPageFooter(
+            rId: 'rId${_packager.rIdCount}', taggedText: contents);
+      } else if (footerType == FooterType.oddPage) {
+        counter = 2;
+        _oddPageFooter = OddPageFooter(
+            rId: 'rId${_packager.rIdCount}', taggedText: contents);
+      } else {
+        counter = 3;
+        _evenPageFooter = EvenPageFooter(
+            rId: 'rId${_packager.rIdCount}', taggedText: contents);
+      }
+    }
+    _packager.addHeaderOrFooter(counter, contents, isHeader: isHeader);
+  }
+
+  /// Should only be called once at the end to append references of headers and footers to the final SectPr in the document.
+  String _addHeadersAndFootersToSectPr(String sectPr) {
+    final List<Header> h = <Header>[
+      _firstPageHeader,
+      _oddPageHeader,
+      _evenPageHeader
+    ];
+    final List<Footer> f = <Footer>[
+      _firstPageFooter,
+      _oddPageFooter,
+      _evenPageFooter
+    ];
+    final StringBuffer hf = StringBuffer();
+    bool titlePageHasOwnHeaderFooter = false;
+    for (int i = 0; i < h.length; i++) {
+      if (h[i] != null) {
+        if (i == 0) {
+          titlePageHasOwnHeaderFooter = true;
+        }
+        hf.write(
+            '<w:headerReference r:id="${h[i].rId}" w:type="${i == 0 ? "first" : i == 1 ? "default" : "even"}"/>');
+      }
+    }
+    for (int i = 0; i < f.length; i++) {
+      if (f[i] != null) {
+        if (i == 0) {
+          titlePageHasOwnHeaderFooter = true;
+        }
+        hf.write(
+            '<w:footerReference r:id="${f[i].rId}" w:type="${i == 0 ? "first" : i == 1 ? "default" : "even"}"/>');
+      }
+    }
+    if (titlePageHasOwnHeaderFooter) {
+      hf.write('<w:titlePg/>');
+    }
+    return hf.isNotEmpty
+        ? sectPr.replaceFirst('<w:sectPr>', '<w:sectPr>${hf.toString()}')
+        : sectPr;
+  }
 
   /// Obtain the XML string of the page style.
   /// If no style is given, then the globalDocxPageStyle is used.
@@ -432,7 +591,7 @@ class DocXBuilder {
   /// AddImageWithText inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU), indicated by [horizontalOffsetEMU] and [verticalOffsetEMU]. If both offsets are 0, the anchor image will be placed at the start (left side of the line) of the cursor's current position in the document. Positive offsets push the image to the right and bottom. Negative offsets push the image to the left and top.
   /// Text is inserted with the function addMixedText, so [text] is a list of text and is styled with [textStyles].
   /// Given text will behave and wrap as determined by [anchorImageAreaWrap] and [anchorImageTextWrap].
-  /// There are a lot of options for anchor images, for example an anchor image can look like a background image by setting anchorImageAreaWrap to AnchorImageAreaWrap.wrapThrough and [behindDocument] to true.
+  /// For example, an anchor image can look like a background image by setting [behindDocument] to true and anchorImageAreaWrap to AnchorImageAreaWrap.wrapNone.
   ///
   /// Width and height are measured in EMU (English Metric Unit) and should be between 1 and 27273042316900.
   /// The width and height should respect the aspect ratio (width / height) of your image to prevent distortion.
@@ -780,14 +939,22 @@ class DocXBuilder {
     if (!_bufferClosed) {}
   }
 
-  /// Create the .docx file with the content stored in the buffer of DocXBuilder.
-  /// This also closes the buffer.
+  /// Create the .docx file with the content stored in the buffer of DocXBuilder. This also closes the buffer.
+  ///
+  /// If provided, [documentTitle], [documentSubject], [documentDescription] and [documentCreator] can be registered in the document.
+  ///
   /// After processing the .docx file, do not forget to call clear to free resources and reopen the buffer.
-  Future<File> createDocXFile() async {
+  Future<File> createDocXFile({
+    String documentTitle = '',
+    String documentSubject = '',
+    String documentDescription = '',
+    String documentCreator = '',
+  }) async {
     try {
       if (!_bufferClosed) {
-        final String lastSectPr =
+        String lastSectPr =
             _getDocxPageStyleAsString(style: _globalDocxPageStyle);
+        lastSectPr = _addHeadersAndFootersToSectPr(lastSectPr);
         _docxstring.write(lastSectPr);
         _docxstring.write('</w:body></w:document>');
         _bufferClosed = true;
@@ -798,6 +965,10 @@ class DocXBuilder {
         chars: _charCount,
         charsWithSpaces: _charCountWithSpaces,
         paragraphs: _parCount,
+        documentTitle: documentTitle ?? '',
+        documentSubject: documentSubject ?? '',
+        documentDescription: documentDescription ?? '',
+        documentCreator: documentCreator ?? '',
       );
       return f;
     } catch (e) {
@@ -812,6 +983,12 @@ class DocXBuilder {
     _documentBackgroundColor = null;
     _globalDocxPageStyle = null;
     _globalDocxTextStyle = null;
+    _firstPageHeader = null;
+    _oddPageHeader = null;
+    _evenPageHeader = null;
+    _firstPageFooter = null;
+    _oddPageFooter = null;
+    _evenPageFooter = null;
     _packager.destroyCache();
     if (resetDocX) {
       _initDocX();

@@ -2,22 +2,22 @@ import 'package:docx_builder/src/styles/style_enums.dart';
 import 'package:docx_builder/src/styles/style_classes/index.dart';
 import 'package:docx_builder/src/utils/utils.dart';
 
-abstract class Reference {
-  final String id;
-  final ReferenceType referenceType;
+// abstract class Reference {
+//   final String id;
+//   final ReferenceType referenceType;
 
-  Reference({this.id, this.referenceType});
-}
+//   Reference({this.id, this.referenceType});
+// }
 
-class HeaderReference extends Reference {
-  HeaderReference({String id, ReferenceType referenceType})
-      : super(id: id, referenceType: referenceType);
-}
+// class HeaderReference extends Reference {
+//   HeaderReference({String id, ReferenceType referenceType})
+//       : super(id: id, referenceType: referenceType);
+// }
 
-class FooterReference extends Reference {
-  FooterReference({String id, ReferenceType referenceType})
-      : super(id: id, referenceType: referenceType);
-}
+// class FooterReference extends Reference {
+//   FooterReference({String id, ReferenceType referenceType})
+//       : super(id: id, referenceType: referenceType);
+// }
 
 class SectPr {
   SectPr();
@@ -37,7 +37,6 @@ class SectPr {
     bool pageBorderIsRenderedAboveText = false,
     PageNumberingFormat pageNumberingFormat,
     int pageNumberingStart,
-    // bool titlePageHasOwnHeader = false,
     LineNumbering lineNumbering,
     PageMargin pageMargin,
   }) {

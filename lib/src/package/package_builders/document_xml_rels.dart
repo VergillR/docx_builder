@@ -10,6 +10,10 @@ class DocumentXmlRels {
   /* Hyperlink example: 
     <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="http://www.ns.nl/" TargetMode="External"/>
   */
+  /* Header and footer example (files header.xml and footer.xml go in the same folder as document.xml):
+    <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header3.xml"/>
+    <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>
+  */
   String getDocumentXmlRels(Map<String, String> references) {
     const String closeTag = '</Relationships>';
     if (references.isNotEmpty) {

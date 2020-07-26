@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:docx_builder/src/utils/constants/constants.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:docx_builder/src/package/package_builders/index.dart';
 
@@ -41,6 +42,24 @@ class Packager {
     Directory(_dirPathToWordRels).createSync(recursive: true);
   }
 
+  bool addHeaderOrFooter(int counter, String contents, {bool isHeader = true}) {
+    try {
+      final String type = isHeader ? 'header' : 'footer';
+      final String fileName = '$type$counter.xml';
+      final String fullPathFile = '$_dirPathToWord/$fileName';
+
+      final String totalContent = isHeader
+          ? '$headerXml$contents</w:hdr>'
+          : '$footerXml$contents</w:ftr>';
+      File(fullPathFile).writeAsStringSync(totalContent);
+      _references['rId${_rIdCount++}'] =
+          'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/$type" Target="$fileName"';
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   void addHyperlink(String target) => _references['rId${_rIdCount++}'] =
       'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="$target" TargetMode="External"';
 
@@ -64,6 +83,10 @@ class Packager {
     int chars,
     int charsWithSpaces,
     int paragraphs,
+    String documentTitle,
+    String documentSubject,
+    String documentDescription,
+    String documentCreator,
   }) async {
     try {
       final String filename = 'D${DateTime.now().millisecondsSinceEpoch}.docx';
@@ -82,8 +105,14 @@ class Packager {
         paragraphs: paragraphs,
       ).getAppXml());
       File('$_dirPathToRels/.rels').writeAsStringSync(DotRels().getDotRels());
-      File('$_dirPathToDocProps/core.xml')
-          .writeAsStringSync(CoreXml().getCoreXml());
+      File('$_dirPathToDocProps/core.xml').writeAsStringSync(
+        CoreXml().getCoreXml(
+          documentTitle: documentTitle ?? '',
+          documentSubject: documentSubject ?? '',
+          documentDescription: documentDescription ?? '',
+          documentCreator: documentCreator ?? '',
+        ),
+      );
       File('$_dirPathToWordRels/document.xml.rels')
           .writeAsStringSync(DocumentXmlRels().getDocumentXmlRels(_references));
       File('$_dirPathToWord/document.xml').writeAsStringSync(documentXml);

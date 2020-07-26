@@ -10,6 +10,20 @@ enum AnchorImageHorizontalAlignment { left, right, center, inside, outside }
 
 enum AnchorImageTextWrap { bothSides, left, right, largest }
 
+/// Default footer is used when firstPageFooter and evenPageFooter are not used. EvenPageFooter and OddPageFooter are not used at the same time (only OddPageFooter) unless useEvenAndOddHeaders (despite its name, it also applies to footers) is set to true.
+enum FooterType {
+  evenPage,
+  oddPage,
+  firstPage,
+}
+
+/// Default header is used when firstPageHeader and evenPageHeader are not set. EvenPageHeader and OddPageHeader are not used at the same time (only OddPageHeader) unless useEvenAndOddHeaders was set to true in settings.xml.
+enum HeaderType {
+  evenPage,
+  oddPage,
+  firstPage,
+}
+
 enum HighlightColor {
   black,
   blue,
@@ -264,7 +278,7 @@ enum ParagraphBorderStyle {
   zigZagStitch,
 }
 
-enum ReferenceType { first, defaultType, even }
+// enum ReferenceType { first, defaultType, even }
 
 enum RestartLineNumber { continuous, newPage, newSection }
 
