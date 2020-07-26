@@ -252,42 +252,53 @@ class DocXBuilder {
 
   /// Should only be called once after all headers and footers are set to insert the references of headers and footers to a SectPr segment in the document.
   String _addHeadersAndFootersToSectPr(String sectPr) {
-    final List<Header> h = <Header>[
-      _firstPageHeader,
-      _oddPageHeader,
-      _evenPageHeader
-    ];
-    final List<Footer> f = <Footer>[
-      _firstPageFooter,
-      _oddPageFooter,
-      _evenPageFooter
-    ];
-    final StringBuffer hf = StringBuffer();
-    bool titlePageHasOwnHeaderFooter = false;
-    for (int i = 0; i < h.length; i++) {
-      if (h[i] != null) {
-        if (i == 0) {
-          titlePageHasOwnHeaderFooter = true;
+    if (_firstPageHeader != null ||
+        _firstPageFooter != null ||
+        _oddPageHeader != null ||
+        _oddPageFooter != null ||
+        _evenPageHeader != null ||
+        _evenPageFooter != null) {
+      final List<Header> h = <Header>[
+        _firstPageHeader,
+        _oddPageHeader,
+        _evenPageHeader
+      ];
+      final List<Footer> f = <Footer>[
+        _firstPageFooter,
+        _oddPageFooter,
+        _evenPageFooter
+      ];
+
+      bool titlePageHasOwnHeaderFooter = false;
+      final StringBuffer hf = StringBuffer();
+
+      for (int i = 0; i < h.length; i++) {
+        if (h[i] != null) {
+          if (i == 0) {
+            titlePageHasOwnHeaderFooter = true;
+          }
+          hf.write(
+              '<w:headerReference r:id="${h[i].rId}" w:type="${i == 0 ? "first" : i == 1 ? "default" : "even"}"/>');
         }
-        hf.write(
-            '<w:headerReference r:id="${h[i].rId}" w:type="${i == 0 ? "first" : i == 1 ? "default" : "even"}"/>');
       }
-    }
-    for (int i = 0; i < f.length; i++) {
-      if (f[i] != null) {
-        if (i == 0) {
-          titlePageHasOwnHeaderFooter = true;
+      for (int i = 0; i < f.length; i++) {
+        if (f[i] != null) {
+          if (i == 0) {
+            titlePageHasOwnHeaderFooter = true;
+          }
+          hf.write(
+              '<w:footerReference r:id="${f[i].rId}" w:type="${i == 0 ? "first" : i == 1 ? "default" : "even"}"/>');
         }
-        hf.write(
-            '<w:footerReference r:id="${f[i].rId}" w:type="${i == 0 ? "first" : i == 1 ? "default" : "even"}"/>');
       }
+      if (titlePageHasOwnHeaderFooter) {
+        hf.write('<w:titlePg/>');
+      }
+      final String r =
+          sectPr.replaceFirst('<w:sectPr>', '<w:sectPr>${hf.toString()}');
+      return '<w:p><w:pPr>$r</w:pPr></w:p>';
+    } else {
+      return '';
     }
-    if (titlePageHasOwnHeaderFooter) {
-      hf.write('<w:titlePg/>');
-    }
-    return hf.isNotEmpty
-        ? sectPr.replaceFirst('<w:sectPr>', '<w:sectPr>${hf.toString()}')
-        : sectPr;
   }
 
   /// Obtain the XML string of the page style.
