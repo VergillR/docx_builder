@@ -296,9 +296,7 @@ class DocXBuilder {
       if (titlePageHasOwnHeaderFooter) {
         hf.write('<w:titlePg/>');
       }
-      final String r =
-          sectPr.replaceFirst('<w:sectPr>', '<w:sectPr>${hf.toString()}');
-      return '<w:p><w:pPr>$r</w:pPr></w:p>';
+      return sectPr.replaceFirst('<w:sectPr>', '<w:sectPr>${hf.toString()}');
     } else {
       return '';
     }
