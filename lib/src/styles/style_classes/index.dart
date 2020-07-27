@@ -1,3 +1,4 @@
+export './complex_field.dart';
 export './docxpagestyle.dart';
 export './docxtextstyle.dart';
 export './footer.dart';

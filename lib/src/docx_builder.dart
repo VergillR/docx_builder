@@ -509,30 +509,56 @@ class DocXBuilder {
   /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the text by setting [addTab] to true.
   ///
   /// If [hyperlinkTo] is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
-  void addText(String text,
-      {LineBreak lineOrPageBreak, bool addTab = false, String hyperlinkTo}) {
-    final String tab =
-        globalDocxTextStyle.tabs != null && addTab ? '<w:r><w:tab/></w:r>' : '';
-    final String lineBreak =
-        lineOrPageBreak != null ? _getLineOrPageBreak(lineOrPageBreak) : '';
-
-    String closeHyperlink = '';
-    String openHyperlink = '';
-    if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
-      _packager.addHyperlink(hyperlinkTo);
-      closeHyperlink = '</w:hyperlink>';
-      openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
-    }
-
+  void addText(
+    String text, {
+    LineBreak lineOrPageBreak,
+    bool addTab = false,
+    String hyperlinkTo,
+    ComplexField complexField,
+  }) {
     if (!_bufferClosed) {
-      _docxstring.writeAll(<String>[
-        '<w:p>${_getParagraphStyleAsString()}',
-        tab,
-        openHyperlink,
-        '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
-      ]);
+      final String tab = globalDocxTextStyle.tabs != null && addTab
+          ? '<w:r><w:tab/></w:r>'
+          : '';
+      final String lineBreak =
+          lineOrPageBreak != null ? _getLineOrPageBreak(lineOrPageBreak) : '';
+
+      if (complexField == null ||
+          complexField.instructions == null ||
+          complexField.includeSeparate == null) {
+        String closeHyperlink = '';
+        String openHyperlink = '';
+        if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
+          _packager.addHyperlink(hyperlinkTo);
+          closeHyperlink = '</w:hyperlink>';
+          openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+        }
+
+        _docxstring.writeAll(<String>[
+          '<w:p>${_getParagraphStyleAsString()}',
+          tab,
+          openHyperlink,
+          '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
+        ]);
+      } else {
+        _docxstring.writeAll(<String>[
+          '<w:p>${_getParagraphStyleAsString()}',
+          tab,
+          '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${complexField.instructions}</w:instrText></w:r><w:r>${complexField.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>$lineBreak</w:p>'
+        ]);
+      }
+
       _addToCharCounters(text);
       _parCount++;
+
+      // else {
+      //   _docxstring.writeAll(<String>[
+      //     '<w:p>${_getParagraphStyleAsString()}',
+      //     '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${complexField.instructions}</w:instrText></w:r><w:r>${complexField.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>'
+      //   ]);
+      //   _addToCharCounters(text);
+      //   _parCount++;
+      // }
     }
   }
 
@@ -559,6 +585,7 @@ class DocXBuilder {
     LineBreak lineOrPageBreak,
     bool addBreakAfterEveryItem = false,
     bool addTab = false,
+    List<ComplexField> complexFields,
   }) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
       _docxstring.write('<w:p><w:pPr>');
@@ -578,28 +605,45 @@ class DocXBuilder {
         _docxstring.write('<w:r><w:tab/></w:r>');
       }
 
+      final List<ComplexField> cf =
+          complexFields != null && complexFields.length == text.length
+              ? complexFields
+              : List<ComplexField>.generate(text.length, (index) => null);
+
       for (int i = 0; i < text.length; i++) {
         final String t = text[i] ?? '';
-        String closeHyperlink = '';
-        String openHyperlink = '';
-        if (textStyles[i] != null &&
-            textStyles[i].hyperlinkTo != null &&
-            textStyles[i].hyperlinkTo.isNotEmpty) {
-          _packager.addHyperlink(textStyles[i].hyperlinkTo);
-          closeHyperlink = '</w:hyperlink>';
-          openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+        final ComplexField f = cf[i];
+        if (f == null || f.instructions == null || f.includeSeparate == null) {
+          String closeHyperlink = '';
+          String openHyperlink = '';
+          if (textStyles[i] != null &&
+              textStyles[i].hyperlinkTo != null &&
+              textStyles[i].hyperlinkTo.isNotEmpty) {
+            _packager.addHyperlink(textStyles[i].hyperlinkTo);
+            closeHyperlink = '</w:hyperlink>';
+            openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+          }
+          _docxstring.writeAll(<String>[
+            openHyperlink,
+            '<w:r>',
+            _getTextStyleAsString(
+                styleAsHyperlink: textStyles[i] != null &&
+                    textStyles[i].hyperlinkTo != null &&
+                    textStyles[i].hyperlinkTo.isNotEmpty,
+                style: textStyles[i],
+                doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+            '<w:t xml:space="preserve">$t</w:t></w:r>$multiBreak$closeHyperlink',
+          ]);
+        } else {
+          _docxstring.writeAll(<String>[
+            '<w:r>',
+            _getTextStyleAsString(
+                style: textStyles[i],
+                doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+            '<w:t xml:space="preserve">$t</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${f.instructions}</w:instrText></w:r><w:r>${f.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>$multiBreak',
+          ]);
         }
-        _docxstring.writeAll(<String>[
-          openHyperlink,
-          '<w:r>',
-          _getTextStyleAsString(
-              styleAsHyperlink: textStyles[i] != null &&
-                  textStyles[i].hyperlinkTo != null &&
-                  textStyles[i].hyperlinkTo.isNotEmpty,
-              style: textStyles[i],
-              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-          '<w:t xml:space="preserve">$t</w:t></w:r>$multiBreak$closeHyperlink',
-        ]);
+
         _addToCharCounters(t);
       }
 
