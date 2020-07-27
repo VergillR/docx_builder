@@ -26,6 +26,8 @@ class Packager {
   final Set<String> _contentDefaultRefs = <String>{};
   final Set<String> _contentOverrideRefs = <String>{};
 
+  bool _addEvenAndOddHeadersInSettings = false;
+
   Packager(this.cacheDirectory) {
     _dirPathToDocProps =
         '${cacheDirectory.path}/$cacheDocXBuilder/$src/docProps';
@@ -51,7 +53,10 @@ class Packager {
       final String type = isHeader ? 'header' : 'footer';
       final String fileName = '$type$counter.xml';
       final String fullPathFile = '$_dirPathToWord/$fileName';
-
+      if (counter == 3) {
+        // even page header/footer was created, so it needs to be declared in Settings.xml
+        _addEvenAndOddHeadersInSettings = true;
+      }
       final String totalContent = isHeader
           ? '$headerXml$contents</w:hdr>'
           : '$footerXml$contents</w:ftr>';
@@ -129,8 +134,8 @@ class Packager {
       File('$_dirPathToWord/document.xml').writeAsStringSync(documentXml);
       File('$_dirPathToWord/fontTable.xml')
           .writeAsStringSync(FontTable().getFontTableXml());
-      File('$_dirPathToWord/settings.xml')
-          .writeAsStringSync(SettingsXml().getSettingsXml());
+      File('$_dirPathToWord/settings.xml').writeAsStringSync(SettingsXml()
+          .getSettingsXml(useEvenHeaders: _addEvenAndOddHeadersInSettings));
       File('$_dirPathToWord/styles.xml')
           .writeAsStringSync(WordStylesXml().getWordStylesXml());
 
@@ -153,6 +158,7 @@ class Packager {
     _references.clear();
     _contentDefaultRefs.clear();
     _contentOverrideRefs.clear();
+    _addEvenAndOddHeadersInSettings = false;
     if (Directory('${cacheDirectory.path}/$cacheDocXBuilder').existsSync()) {
       Directory('${cacheDirectory.path}/$cacheDocXBuilder')
           .deleteSync(recursive: true);
