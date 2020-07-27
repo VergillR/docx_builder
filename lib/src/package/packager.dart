@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:docx_builder/src/utils/constants/constants.dart';
+import 'package:docx_builder/src/utils/constants/mimetypes.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:docx_builder/src/package/package_builders/index.dart';
 
@@ -21,6 +22,9 @@ class Packager {
   int get rIdCount => _rIdCount;
 
   final Map<String, String> _references = <String, String>{};
+
+  final Set<String> _contentDefaultRefs = <String>{};
+  final Set<String> _contentOverrideRefs = <String>{};
 
   Packager(this.cacheDirectory) {
     _dirPathToDocProps =
@@ -52,6 +56,8 @@ class Packager {
           ? '$headerXml$contents</w:hdr>'
           : '$footerXml$contents</w:ftr>';
       File(fullPathFile).writeAsStringSync(totalContent);
+      _contentOverrideRefs.add(
+          '<Override PartName="/word/$fileName" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.$type+xml"/>');
       _references['rId${_rIdCount++}'] =
           'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/$type" Target="$fileName"';
       return true;
@@ -68,6 +74,10 @@ class Packager {
       final String fileName = 'image$_rIdCount.$suffix';
       final String fullPathFile = '$_dirPathToWordMedia/$fileName';
       file.copySync(fullPathFile);
+      if (mimeTypes[suffix] != null) {
+        _contentDefaultRefs.add(
+            '<Default Extension="$suffix" ContentType="${mimeTypes[suffix]}"/>');
+      }
       _references['rId${_rIdCount++}'] =
           'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/$fileName"';
       return true;
@@ -98,7 +108,8 @@ class Packager {
           Directory('${cacheDirectory.path}/$cacheDocXBuilder/$src');
 
       File('${cacheDirectory.path}/$cacheDocXBuilder/$src/[Content_Types].xml')
-          .writeAsStringSync(ContentTypes().getContentsTypesXml());
+          .writeAsStringSync(ContentTypes()
+              .getContentsTypesXml(_contentDefaultRefs, _contentOverrideRefs));
       File('$_dirPathToDocProps/app.xml').writeAsStringSync(AppXml(
         chars: chars,
         charsWithSpaces: charsWithSpaces,
@@ -140,6 +151,8 @@ class Packager {
   void destroyCache() {
     _rIdCount = startIdCount;
     _references.clear();
+    _contentDefaultRefs.clear();
+    _contentOverrideRefs.clear();
     if (Directory('${cacheDirectory.path}/$cacheDocXBuilder').existsSync()) {
       Directory('${cacheDirectory.path}/$cacheDocXBuilder')
           .deleteSync(recursive: true);

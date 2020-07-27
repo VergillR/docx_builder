@@ -127,12 +127,12 @@ class SectPr {
     }
 
     final String start =
-        pageNumberingStart == null ? '' : 'w:fmt="$pageNumberingStart"';
+        pageNumberingStart == null ? '' : 'w:fmt="$pageNumberingStart" ';
     final String format = pageNumberingFormat == null
         ? ''
         : 'w:fmt="${getValueFromEnum(pageNumberingFormat)}"';
     if (start.isNotEmpty || format.isNotEmpty) {
-      s.write('<w:pgNumType $start $format />');
+      s.write('<w:pgNumType $start$format/>');
     }
 
     if (lineNumbering != null) {
