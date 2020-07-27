@@ -163,11 +163,11 @@ class DocXBuilder {
 
   /// Attaches all given headers and footers to the document by marking them to be included in the next SectionProperties.
   /// Only when attached, are headers and footers actually visible in the document.
-  /// Preferably, call this function at the start of the document and immediately after all required headers and footers have been set.
+  /// Preferably, call this function directly after all necessary headers and footers have been set.
   ///
   /// Normally, this function should only be called once.
   ///
-  /// Calling it multiple times with different headers/footers is possible but should be considered experimental.
+  /// Calling it multiple times with different sets of headers/footers is possible but is considered to be experimental.
   void attachHeadersAndFooters() {
     if (!_insertHeadersAndFootersInThisSection) {
       _insertHeadersAndFootersInThisSection = true;
