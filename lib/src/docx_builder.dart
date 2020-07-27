@@ -122,41 +122,39 @@ class DocXBuilder {
   /// The [type] determines where the header will appear: for odd pages (also called default header), first page (also called title page header) or even pages. When a header is set, it cannot be changed or removed afterwards as additional files and references are immediately written to the cache directory upon creation.
   ///
   /// Headers are not visible until they have been attached to the document by calling appendHeadersAndFooters.
+  ///
+  /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
   void setHeader(
       HeaderType headerType, List<String> text, List<DocxTextStyle> textStyles,
-      {bool doNotUseGlobalTextStyle = false}) {
-    // changing a header is not allowed
-    if (_bufferClosed ||
-        (headerType == HeaderType.evenPage && _evenPageHeader != null) ||
-        (headerType == HeaderType.oddPage && _oddPageHeader != null) ||
-        (headerType == HeaderType.firstPage && _firstPageHeader != null)) {
-      return;
+      {bool doNotUseGlobalTextStyle = true}) {
+    if (!_bufferClosed) {
+      final List<DocxTextStyle> styles = text.length == textStyles.length
+          ? textStyles
+          : List<DocxTextStyle>.generate(text.length, (index) => null);
+      _initHeaderOrFooter(
+          headerType: headerType,
+          text: text,
+          textStyles: styles,
+          doNotUseGlobalTextStyle: doNotUseGlobalTextStyle);
     }
-    _initHeaderOrFooter(
-        headerType: headerType,
-        text: text,
-        textStyles: textStyles,
-        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle);
   }
 
   /// The [type] determines where the footer will appear: for odd pages (also called default footer), first page (also called title page footer) or even pages. When a footer is set, it cannot be changed or removed afterwards as additional files and references are immediately written to the cache directory upon creation.
   ///
   /// Footers are not visible until they have been attached to the document by calling appendHeadersAndFooters.
+  ///
+  /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
   void setFooter(
       FooterType footerType, List<String> text, List<DocxTextStyle> textStyles,
-      {bool doNotUseGlobalTextStyle = false}) {
-    // changing a footer is not allowed
-    // if (_bufferClosed ||
-    //     (footerType == FooterType.evenPage && _evenPageFooter != null) ||
-    //     (footerType == FooterType.oddPage && _oddPageFooter != null) ||
-    //     (footerType == FooterType.firstPage && _firstPageFooter != null)) {
-    //   return;
-    // }
+      {bool doNotUseGlobalTextStyle = true}) {
     if (!_bufferClosed) {
+      final List<DocxTextStyle> styles = text.length == textStyles.length
+          ? textStyles
+          : List<DocxTextStyle>.generate(text.length, (index) => null);
       _initHeaderOrFooter(
           footerType: footerType,
           text: text,
-          textStyles: textStyles,
+          textStyles: styles,
           doNotUseGlobalTextStyle: doNotUseGlobalTextStyle);
     }
   }
@@ -370,7 +368,7 @@ class DocXBuilder {
   }
 
   // ignore: use_setters_to_change_properties
-  /// Sets the global style for text. Except for HighlightColor, colors are always 'RRGGBB' format.
+  /// Sets the global style for text. Except for HighlightColor, colors are in 'RRGGBB' format.
   /// The global text style can be overridden by addMixedText with its own styling rules.
   /// The hyperlinkTo property of the global text style is not used by addText or addMixedText.
   void setGlobalDocxTextStyle(DocxTextStyle textStyle) =>
@@ -542,7 +540,7 @@ class DocXBuilder {
   /// Unless [doNotUseTextGlobalStyle] is set to true, global text styling will be used for any values not provided (i.e. null values) by custom styling rules.
   /// Given lists should have equal lengths. Page style is optional and is used for custom section styling. If [doNotUsePageGlobalStyle] is set to false, global page styling will be used for any values not provided (i.e. null values) by the custom page styling.
   /// Note that the last paragraph of the document should NOT have any custom section styling!
-  /// Except for HighlightColor, colors are always 'RRGGBB' format.
+  /// Except for HighlightColor, colors are in 'RRGGBB' format.
   ///
   /// Lists can hold null values. For text: null implies no text; for textStyles: null implies use of globalDocxTextStyle.
   ///
