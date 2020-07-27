@@ -39,8 +39,6 @@ class DocxPageStyle {
   });
 
   DocxPageStyle getDefaultPageStyle() => DocxPageStyle(
-        pageNumberingFormat: PageNumberingFormat.decimal,
-        pageOrientation: PageOrientation.portrait,
         pageSzHeight: 16839,
         pageSzWidth: 11907,
       );
