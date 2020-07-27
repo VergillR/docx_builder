@@ -126,7 +126,7 @@ class DocXBuilder {
   /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
   void setHeader(
       HeaderType headerType, List<String> text, List<DocxTextStyle> textStyles,
-      {bool doNotUseGlobalTextStyle = true}) {
+      {bool doNotUseGlobalTextStyle = true, List<ComplexField> complexFields}) {
     if (!_bufferClosed) {
       final List<DocxTextStyle> styles = text.length == textStyles.length
           ? textStyles
@@ -146,7 +146,7 @@ class DocXBuilder {
   /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
   void setFooter(
       FooterType footerType, List<String> text, List<DocxTextStyle> textStyles,
-      {bool doNotUseGlobalTextStyle = true}) {
+      {bool doNotUseGlobalTextStyle = true, List<ComplexField> complexFields}) {
     if (!_bufferClosed) {
       final List<DocxTextStyle> styles = text.length == textStyles.length
           ? textStyles
@@ -177,6 +177,7 @@ class DocXBuilder {
       FooterType footerType,
       List<String> text,
       List<DocxTextStyle> textStyles,
+      List<ComplexField> complexFields,
       bool doNotUseGlobalTextStyle = false}) {
     final bool isHeader = headerType != null;
 
@@ -186,28 +187,44 @@ class DocXBuilder {
       b.write(_getParagraphStyleAsString(doNotUseGlobalStyle: true)
           .replaceFirst('<w:pPr>', ''));
 
+      final List<ComplexField> cf =
+          complexFields != null && complexFields.length == text.length
+              ? complexFields
+              : List<ComplexField>.generate(text.length, (index) => null);
+
       for (int i = 0; i < text.length; i++) {
         final String t = text[i] ?? '';
-        String closeHyperlink = '';
-        String openHyperlink = '';
-        if (textStyles[i] != null &&
-            textStyles[i].hyperlinkTo != null &&
-            textStyles[i].hyperlinkTo.isNotEmpty) {
-          _packager.addHyperlink(textStyles[i].hyperlinkTo);
-          closeHyperlink = '</w:hyperlink>';
-          openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+        final ComplexField f = cf[i];
+        if (f == null || f.instructions == null || f.includeSeparate == null) {
+          String closeHyperlink = '';
+          String openHyperlink = '';
+          if (textStyles[i] != null &&
+              textStyles[i].hyperlinkTo != null &&
+              textStyles[i].hyperlinkTo.isNotEmpty) {
+            _packager.addHyperlink(textStyles[i].hyperlinkTo);
+            closeHyperlink = '</w:hyperlink>';
+            openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+          }
+          b.writeAll(<String>[
+            openHyperlink,
+            '<w:r>',
+            _getTextStyleAsString(
+                styleAsHyperlink: textStyles[i] != null &&
+                    textStyles[i].hyperlinkTo != null &&
+                    textStyles[i].hyperlinkTo.isNotEmpty,
+                style: textStyles[i],
+                doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+            '<w:t xml:space="preserve">$t</w:t></w:r>$closeHyperlink',
+          ]);
+        } else {
+          b.writeAll(<String>[
+            '<w:r>',
+            _getTextStyleAsString(
+                style: textStyles[i],
+                doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+            '<w:t xml:space="preserve">$t</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${f.instructions}</w:instrText></w:r><w:r>${f.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>',
+          ]);
         }
-        b.writeAll(<String>[
-          openHyperlink,
-          '<w:r>',
-          _getTextStyleAsString(
-              styleAsHyperlink: textStyles[i] != null &&
-                  textStyles[i].hyperlinkTo != null &&
-                  textStyles[i].hyperlinkTo.isNotEmpty,
-              style: textStyles[i],
-              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-          '<w:t xml:space="preserve">$t</w:t></w:r>$closeHyperlink',
-        ]);
         _addToCharCounters(t);
       }
 
@@ -640,7 +657,7 @@ class DocXBuilder {
             _getTextStyleAsString(
                 style: textStyles[i],
                 doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-            '<w:t xml:space="preserve">$t</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${f.instructions}</w:instrText></w:r><w:r>${f.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>$multiBreak',
+            '<w:t xml:space="preserve">$t</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${f.instructions}</w:instrText></w:r><w:r>${f.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>$multiBreak',
           ]);
         }
 
