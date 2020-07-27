@@ -132,10 +132,12 @@ class DocXBuilder {
           ? textStyles
           : List<DocxTextStyle>.generate(text.length, (index) => null);
       _initHeaderOrFooter(
-          headerType: headerType,
-          text: text,
-          textStyles: styles,
-          doNotUseGlobalTextStyle: doNotUseGlobalTextStyle);
+        headerType: headerType,
+        text: text,
+        textStyles: styles,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        complexFields: complexFields,
+      );
     }
   }
 
@@ -152,10 +154,12 @@ class DocXBuilder {
           ? textStyles
           : List<DocxTextStyle>.generate(text.length, (index) => null);
       _initHeaderOrFooter(
-          footerType: footerType,
-          text: text,
-          textStyles: styles,
-          doNotUseGlobalTextStyle: doNotUseGlobalTextStyle);
+        footerType: footerType,
+        text: text,
+        textStyles: styles,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        complexFields: complexFields,
+      );
     }
   }
 
