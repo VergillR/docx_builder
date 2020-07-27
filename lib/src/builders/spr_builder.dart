@@ -127,7 +127,7 @@ class SectPr {
     }
 
     final String start =
-        pageNumberingStart == null ? '' : 'w:fmt="$pageNumberingStart" ';
+        pageNumberingStart == null ? '' : 'w:start="$pageNumberingStart" ';
     final String format = pageNumberingFormat == null
         ? ''
         : 'w:fmt="${getValueFromEnum(pageNumberingFormat)}"';
