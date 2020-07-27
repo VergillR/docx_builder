@@ -48,12 +48,17 @@ class Packager {
     Directory(_dirPathToWordRels).createSync(recursive: true);
   }
 
-  bool addHeaderOrFooter(int counter, String contents, {bool isHeader = true}) {
+  bool addHeaderOrFooter(int counter, String contents,
+      {bool isHeader = true, bool evenPage = false}) {
     try {
       final String type = isHeader ? 'header' : 'footer';
       final String fileName = '$type$counter.xml';
       final String fullPathFile = '$_dirPathToWord/$fileName';
-      if (counter == 3) {
+      // if (counter == 3) {
+      //   // even page header/footer was created, so it needs to be declared in Settings.xml
+      //   _addEvenAndOddHeadersInSettings = true;
+      // }
+      if (evenPage) {
         // even page header/footer was created, so it needs to be declared in Settings.xml
         _addEvenAndOddHeadersInSettings = true;
       }
