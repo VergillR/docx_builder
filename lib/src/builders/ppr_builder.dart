@@ -158,7 +158,7 @@ class Ppr {
       p.write(sectPrString);
     }
 
-    p.writeln('</w:pPr>');
+    p.write('</w:pPr>');
     return p.toString();
   }
 }

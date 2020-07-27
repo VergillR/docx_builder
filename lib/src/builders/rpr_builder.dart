@@ -118,7 +118,7 @@ class Rpr {
           '<w:vertAlign w:val="${vertAlign == VerticalAlignStyle.baseline ? 'baseline' : vertAlign == VerticalAlignStyle.subscript ? 'subscript' : 'superscript'}" />');
     }
 
-    r.writeln('</w:rPr>');
+    r.write('</w:rPr>');
     return r.toString();
   }
 }

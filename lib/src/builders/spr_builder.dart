@@ -140,7 +140,7 @@ class SectPr {
           '<w:lnNumType w:countBy="${lineNumbering.countBy}" w:start="${lineNumbering.start}" w:restart="${getValueFromEnum(lineNumbering.restartLineNumber)}" w:distance="${lineNumbering.distance}" />');
     }
 
-    s.writeln('</w:sectPr>');
+    s.write('</w:sectPr>');
     return s.toString();
   }
 }
