@@ -14,3 +14,4 @@ export './sect_column.dart';
 export './shading.dart';
 export './tab.dart';
 export './table.dart';
+export './textframe.dart';

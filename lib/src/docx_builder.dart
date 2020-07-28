@@ -409,16 +409,18 @@ class DocXBuilder {
   // ignore: use_setters_to_change_properties
   /// Sets the global style for text. Except for HighlightColor, colors are in 'RRGGBB' format.
   /// The global text style can be overridden by addMixedText with its own styling rules.
-  /// The hyperlinkTo property of the global text style is not used by addText or addMixedText.
+  /// The hyperlinkTo and textFrame properties of the global text style are never used as this makes no sense. Hyperlinks and textframes can be added manually with addText or addMixedText.
   void setGlobalDocxTextStyle(DocxTextStyle textStyle) =>
       _globalDocxTextStyle = textStyle;
 
   /// Obtain the XML string of the paragraph style, such as text alignment.
   /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
+  /// Textframes cannot be set global.
   String _getParagraphStyleAsString(
       {DocxTextStyle textStyle, bool doNotUseGlobalStyle = false}) {
     final DocxTextStyle style = textStyle ?? DocxTextStyle();
     return _b.Ppr.getPpr(
+      textFrame: textStyle?.textFrame != null ? textStyle.textFrame : null,
       keepLines: doNotUseGlobalStyle
           ? style.keepLines
           : style.keepLines ?? _globalDocxTextStyle.keepLines,
@@ -555,6 +557,7 @@ class DocXBuilder {
     bool addTab = false,
     String hyperlinkTo,
     ComplexField complexField,
+    TextFrame textFrame,
   }) {
     if (!_bufferClosed) {
       final String tab = globalDocxTextStyle.tabs != null && addTab
@@ -562,6 +565,11 @@ class DocXBuilder {
           : '';
       final String lineBreak =
           lineOrPageBreak != null ? _getLineOrPageBreak(lineOrPageBreak) : '';
+
+      final String ppr = textFrame == null
+          ? _getParagraphStyleAsString()
+          : _getParagraphStyleAsString()
+              .replaceFirst('</w:pPr>', '${textFrame.getFramePr()}</w:pPr>');
 
       if (complexField == null ||
           complexField.instructions == null ||
@@ -575,14 +583,14 @@ class DocXBuilder {
         }
 
         _docxstring.writeAll(<String>[
-          '<w:p>${_getParagraphStyleAsString()}',
+          '<w:p>$ppr',
           tab,
           openHyperlink,
           '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
         ]);
       } else {
         _docxstring.writeAll(<String>[
-          '<w:p>${_getParagraphStyleAsString()}',
+          '<w:p>$ppr',
           tab,
           '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${complexField.instructions}</w:instrText></w:r><w:r>${complexField.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>$lineBreak</w:p>'
         ]);

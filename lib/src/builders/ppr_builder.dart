@@ -24,8 +24,12 @@ class Ppr {
     VerticalTextAlignment verticalTextAlignment,
     bool keepLines,
     bool keepNext,
+    TextFrame textFrame,
   }) {
     final StringBuffer p = StringBuffer()..write('<w:pPr>');
+    if (textFrame != null) {
+      p.write(textFrame.getFramePr());
+    }
     if (keepLines != null) {
       p.write('<w:keepLines val="$keepLines" />');
     }

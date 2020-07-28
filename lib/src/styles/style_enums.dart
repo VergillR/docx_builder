@@ -1,3 +1,5 @@
+enum Anchor { margin, page, text }
+
 enum AnchorImageAreaWrap {
   wrapNone,
   wrapSquare,
@@ -9,6 +11,8 @@ enum AnchorImageAreaWrap {
 enum AnchorImageHorizontalAlignment { left, right, center, inside, outside }
 
 enum AnchorImageTextWrap { bothSides, left, right, largest }
+
+enum DropCap { margin, drop, none }
 
 /// Default footer is used when firstPageFooter and evenPageFooter are not used. EvenPageFooter and OddPageFooter are not used at the same time (only OddPageFooter) unless useEvenAndOddHeaders (despite its name, it also applies to footers) is set to true.
 enum FooterType {
@@ -54,6 +58,8 @@ enum HorizontalPositionRelativeBase {
   insideMargin,
   outsideMargin,
 }
+
+enum HRule { auto, atLeast, exact }
 
 enum LineBreakClearLocation { all, left, none, right }
 
@@ -278,8 +284,6 @@ enum ParagraphBorderStyle {
   zigZagStitch,
 }
 
-// enum ReferenceType { first, defaultType, even }
-
 enum RestartLineNumber { continuous, newPage, newSection }
 
 enum SectType {
@@ -368,6 +372,15 @@ enum TextEffect {
   none,
 }
 
+enum TextFrameWrapping {
+  around,
+  auto,
+  none,
+  notBeside,
+  through,
+  tight,
+}
+
 enum UnderlineStyle {
   dash,
   dashDotDotHeavy,
@@ -409,3 +422,7 @@ enum VerticalTextAlignment {
   center,
   top,
 }
+
+enum XPosAlign { center, inside, left, outside, right }
+
+enum YPosAlign { bottom, center, inline, inside, outside, top }

@@ -38,6 +38,7 @@ class DocxTextStyle {
   final VerticalTextAlignment verticalTextAlignment;
   final bool keepLines;
   final bool keepNext;
+  final TextFrame textFrame;
 
   DocxTextStyle({
     // rpr (Run properties: text styling)
@@ -76,5 +77,6 @@ class DocxTextStyle {
     this.verticalTextAlignment,
     this.keepLines,
     this.keepNext,
+    this.textFrame,
   });
 }
