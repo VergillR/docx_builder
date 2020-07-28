@@ -48,7 +48,7 @@ class TextFrame {
     final String hA =
         hAnchor != null ? 'w:hAnchor="${getValueFromEnum(hAnchor)}" ' : '';
     final String hS = hSpace != null ? 'w:hSpace="$hSpace" ' : '';
-    final String lines = 'w:lines="$linesHeightDropCap"';
+    final String lines = 'w:lines="$linesHeightDropCap" ';
     final String vA =
         vAnchor != null ? 'w:vAnchor="${getValueFromEnum(vAnchor)}" ' : '';
     final String vS = vSpace != null ? 'w:vSpace="$vSpace" ' : '';
