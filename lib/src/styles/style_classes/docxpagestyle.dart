@@ -4,7 +4,7 @@ import 'index.dart';
 /// PageStyle is the set of Sections Properties of the document that change the page's appearance.
 /// Most (if not all) can be omitted, allowing the word processor to use its default styling and rules.
 ///
-/// [pageNumberingFormat] should only be set once; [pageNumberingStart] should usually be omitted, but if it is set, it indicates at which number the page counter resets whenever a new section is encountered.
+/// [pageNumberingFormat] should only be set once in a section; [pageNumberingStart] can usually be omitted, but if it is set, it indicates at which number the page counter resets whenever a new section is encountered.
 class DocxPageStyle {
   final List<SectColumn> cols;
   final bool colsHaveSeparator;

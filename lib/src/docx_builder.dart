@@ -75,6 +75,12 @@ class DocXBuilder {
   final int emuHeightA4Pct90 = 9622800;
   final int emuHeightA4Pct100 = 10692000;
 
+  final String bullet = '•';
+  final String arrowBullet = '‣';
+  final String hyphenBullet = '⁃';
+  final String inverseBullet = '◘';
+  final String openBullet = '◦';
+
   /// Assign a [cacheDirectory] that DocXBuilder can use to store temporary files.
   DocXBuilder(Directory cacheDirectory) {
     _packager = _p.Packager(cacheDirectory);
@@ -121,12 +127,18 @@ class DocXBuilder {
 
   /// The [type] determines where the header will appear: for odd pages (also called default header), first page (also called title page header) or even pages. When a header is set, it cannot be changed or removed afterwards as additional files and references are immediately written to the cache directory upon creation.
   ///
-  /// Headers are not visible until they have been attached to the document by calling appendHeadersAndFooters.
+  /// Headers are not visible until they have been attached to the document by calling attachHeadersAndFooters.
   ///
   /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
+  ///
+  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
   void setHeader(
-      HeaderType headerType, List<String> text, List<DocxTextStyle> textStyles,
-      {bool doNotUseGlobalTextStyle = true, List<ComplexField> complexFields}) {
+    HeaderType headerType,
+    List<String> text,
+    List<DocxTextStyle> textStyles, {
+    bool doNotUseGlobalTextStyle = true,
+    List<ComplexField> complexFields,
+  }) {
     if (!_bufferClosed) {
       final List<DocxTextStyle> styles = text.length == textStyles.length
           ? textStyles
@@ -143,12 +155,18 @@ class DocXBuilder {
 
   /// The [type] determines where the footer will appear: for odd pages (also called default footer), first page (also called title page footer) or even pages. When a footer is set, it cannot be changed or removed afterwards as additional files and references are immediately written to the cache directory upon creation.
   ///
-  /// Footers are not visible until they have been attached to the document by calling appendHeadersAndFooters.
+  /// Footers are not visible until they have been attached to the document by calling attachHeadersAndFooters.
   ///
   /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
+  ///
+  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
   void setFooter(
-      FooterType footerType, List<String> text, List<DocxTextStyle> textStyles,
-      {bool doNotUseGlobalTextStyle = true, List<ComplexField> complexFields}) {
+    FooterType footerType,
+    List<String> text,
+    List<DocxTextStyle> textStyles, {
+    bool doNotUseGlobalTextStyle = true,
+    List<ComplexField> complexFields,
+  }) {
     if (!_bufferClosed) {
       final List<DocxTextStyle> styles = text.length == textStyles.length
           ? textStyles
@@ -530,6 +548,7 @@ class DocXBuilder {
   /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the text by setting [addTab] to true.
   ///
   /// If [hyperlinkTo] is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
+  /// If given, [complexField] adds a complex field, such as page and date, e.g. ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
   void addText(
     String text, {
     LineBreak lineOrPageBreak,
@@ -571,15 +590,6 @@ class DocXBuilder {
 
       _addToCharCounters(text);
       _parCount++;
-
-      // else {
-      //   _docxstring.writeAll(<String>[
-      //     '<w:p>${_getParagraphStyleAsString()}',
-      //     '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${complexField.instructions}</w:instrText></w:r><w:r>${complexField.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>'
-      //   ]);
-      //   _addToCharCounters(text);
-      //   _parCount++;
-      // }
     }
   }
 
@@ -597,6 +607,8 @@ class DocXBuilder {
   /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the first text item by setting [addTab] to true.
   ///
   /// If the custom textstyles contain a hyperlinkTo value that is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
+  ///
+  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
   void addMixedText(
     List<String> text,
     List<DocxTextStyle> textStyles, {
