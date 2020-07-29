@@ -19,19 +19,25 @@ class Table {
     List<TableRow> tableRows,
   }) {
     if (gridColumnWidths == null ||
+        gridColumnWidths.isEmpty ||
         gridColumnWidths.length != cols ||
         tableRows == null ||
         tableRows.length != rows) {
       return '';
     }
-    final StringBuffer t = StringBuffer()..write('<w:tbl>');
-    t.write('<w:tblGrid>');
+    final StringBuffer t = StringBuffer()..write('<w:tbl><w:tblGrid>');
     for (int i = 0; i < gridColumnWidths.length; i++) {
       t.write('<w:gridCol w:w="${gridColumnWidths[i]}"/>');
     }
     t.write('</w:tblGrid>');
 
     t.write(tableProperties.getXml());
+
+    if (tableRows != null) {
+      for (int i = 0; i < tableRows.length; i++) {
+        t.write(tableRows[i].getXml());
+      }
+    }
 
     t.write('</w:tbl>');
     return t.toString();

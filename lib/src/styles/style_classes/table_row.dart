@@ -1,12 +1,30 @@
-import '../style_enums.dart';
-import 'index.dart';
+import '../style.dart';
 
-class TableRow {
+import './index.dart';
+
+class TableRow extends Style {
   final TableRowProperties tableRowProperties;
-  final TableCell tableCell;
+  final List<TableCell> tableCells;
 
   TableRow({
     this.tableRowProperties,
-    this.tableCell,
+    this.tableCells,
   });
+
+  @override
+  String getXml() {
+    final StringBuffer s = StringBuffer()..write('<w:tr>');
+
+    if (tableRowProperties != null) {
+      s.write(tableRowProperties.getXml());
+    }
+    if (tableCells != null && tableCells.isNotEmpty) {
+      for (int i = 0; i < tableCells.length; i++) {
+        s.write(tableCells[i].getXml());
+      }
+    }
+
+    s.write('</w:tr>');
+    return s.toString();
+  }
 }

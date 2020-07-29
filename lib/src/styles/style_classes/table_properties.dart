@@ -10,15 +10,15 @@ class TableProperties extends Style {
   final List<TableBorder> tableBorders;
   final String tableCaption;
   final List<TableCellMargin> tableCellMargins;
-  final int tableCellSpacing;
+  final String tableCellSpacing;
   final PreferredWidthType tableCellSpacingType;
-  final int tableIndentation;
+  final String tableIndentation;
   final PreferredWidthType tableIndentationType;
   final bool tableLayoutUsesFixedWidth;
   final List<TableConditionalFormatting> tableLook;
   final bool allowFloatingTableOverlapping;
   final FloatingTable floatingTable;
-  final int preferredTableWidth;
+  final String preferredTableWidth;
   final PreferredWidthType preferredTableWidthType;
 
   TableProperties({
@@ -31,7 +31,7 @@ class TableProperties extends Style {
     this.tableCellSpacingType = PreferredWidthType.dxa,
     this.tableIndentation,
     this.tableIndentationType = PreferredWidthType.dxa,
-    this.tableLayoutUsesFixedWidth = false,
+    this.tableLayoutUsesFixedWidth,
     this.tableLook,
     this.allowFloatingTableOverlapping,
     this.floatingTable,
@@ -86,7 +86,7 @@ class TableProperties extends Style {
           '<w:tblInd w:w="$tableIndentation" w:type="${getValueFromEnum(tableIndentationType)}"/>');
     }
 
-    if (tableLayoutUsesFixedWidth) {
+    if (tableLayoutUsesFixedWidth ?? false) {
       tp.write('<w:tblLayout w:type="fixed"/>');
     }
 

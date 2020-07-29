@@ -1,6 +1,8 @@
-import 'package:docx_builder/src/styles/style_enums.dart';
+import '../../utils/utils.dart';
+import '../style.dart';
+import '../style_enums.dart';
 
-class TableCellBorder {
+class TableCellBorder extends Style {
   final TableCellBorderSide borderSide;
   final int width;
   final int space;
@@ -8,7 +10,7 @@ class TableCellBorder {
   final ParagraphBorderStyle pbrStyle;
   final bool shadow;
 
-  const TableCellBorder({
+  TableCellBorder({
     this.borderSide = TableCellBorderSide.bottom,
     this.width = 24,
     this.space = 1,
@@ -16,4 +18,10 @@ class TableCellBorder {
     this.pbrStyle = ParagraphBorderStyle.single,
     this.shadow = false,
   });
+
+  @override
+  String getXml() {
+    final String borderColor = isValidColor(color) ? color : '000000';
+    return '<w:${getValueFromEnum(borderSide)} w:val="${getValueFromEnum(pbrStyle)}" w:color="$borderColor" w:sz="$width" w:space="$space" w:shadow="$shadow" />';
+  }
 }
