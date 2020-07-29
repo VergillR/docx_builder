@@ -2,23 +2,6 @@ import 'package:docx_builder/src/styles/style_enums.dart';
 import 'package:docx_builder/src/styles/style_classes/index.dart';
 import 'package:docx_builder/src/utils/utils.dart';
 
-// abstract class Reference {
-//   final String id;
-//   final ReferenceType referenceType;
-
-//   Reference({this.id, this.referenceType});
-// }
-
-// class HeaderReference extends Reference {
-//   HeaderReference({String id, ReferenceType referenceType})
-//       : super(id: id, referenceType: referenceType);
-// }
-
-// class FooterReference extends Reference {
-//   FooterReference({String id, ReferenceType referenceType})
-//       : super(id: id, referenceType: referenceType);
-// }
-
 class SectPr {
   SectPr();
 
@@ -55,17 +38,6 @@ class SectPr {
       s.write('<w:pgSz $szh $szw $o />');
     }
 
-    // final String o = pageOrientation == null
-    //     ? ''
-    //     : pageOrientation == PageOrientation.portrait
-    //         ? 'w:orient="portrait"'
-    //         : 'w:orient="landscape"';
-    // s.write('<w:pgSz w:h="$pageSzHeight w:w="$pageSzWidth $o />');
-
-    // final PageMargin pg = pageMargin ?? PageMargin();
-    // s.write(
-    //     'w:pgMar w:header="${pg.header}" w:footer="${pg.footer}" w:gutter="${pg.gutter}" w:left="${pg.left}" w:right="${pg.right}" w:top="${pg.top}" w:bottom="${pg.bottom}" />');
-
     if (pageMargin != null) {
       s.write(
           'w:pgMar w:header="${pageMargin.header}" w:footer="${pageMargin.footer}" w:gutter="${pageMargin.gutter}" w:left="${pageMargin.left}" w:right="${pageMargin.right}" w:top="${pageMargin.top}" w:bottom="${pageMargin.bottom}" />');
@@ -96,12 +68,6 @@ class SectPr {
     }
 
     if (pageBorders != null && pageBorders.isNotEmpty) {
-      const List<String> sides = <String>[
-        'top',
-        'bottom',
-        'left',
-        'right',
-      ];
       final String pageBorderOffset =
           pageBorderOffsetBasedOnText ? "text" : "page";
       final String pageBorderZOrder =
@@ -121,7 +87,7 @@ class SectPr {
         final String borderColor =
             isValidColor(border.color) ? border.color : '000000';
         s.write(
-            '<w:${sides[border.pageBorderSide.index]} w:val="${getValueFromEnum(border.pbrStyle)}" w:color="$borderColor" w:sz="${border.size}" w:space="${border.space}" w:shadow="${border.shadow}" />');
+            '<w:${getValueFromEnum(border.pageBorderSide)} w:val="${getValueFromEnum(border.pbrStyle)}" w:color="$borderColor" w:sz="${border.size}" w:space="${border.space}" w:shadow="${border.shadow}" />');
       }
       s.write('</w:pgBorders>');
     }

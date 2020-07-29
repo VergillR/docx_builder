@@ -77,21 +77,13 @@ class Ppr {
     } else if (paragraphBorders != null &&
         paragraphBorders.isNotEmpty &&
         paragraphBorders.length < 7) {
-      const List<String> sides = <String>[
-        'top',
-        'bottom',
-        'left',
-        'right',
-        'between',
-        'bar',
-      ];
       p.write('<w:pBdr>');
       for (int i = 0; i < paragraphBorders.length; i++) {
         final ParagraphBorder border = paragraphBorders[i];
         final String borderColor =
             isValidColor(border.color) ? border.color : '000000';
         p.write(
-            '<w:${sides[border.borderSide.index]} w:val="${getValueFromEnum(paragraphBorderOnAllSides.pbrStyle)}" w:sz="${border.width}" w:space="${border.space}" w:color="$borderColor" w:shadow="${border.shadow}" />');
+            '<w:${getValueFromEnum(border.borderSide)} w:val="${getValueFromEnum(paragraphBorderOnAllSides.pbrStyle)}" w:sz="${border.width}" w:space="${border.space}" w:color="$borderColor" w:shadow="${border.shadow}" />');
       }
       p.write('</w:pBdr>');
     }
@@ -103,10 +95,8 @@ class Ppr {
           isValidColor(paragraphShading.shadingPatternColor)
               ? paragraphShading.shadingPatternColor
               : 'FFFFFF';
-      final String sp = paragraphShading.shadingPattern.toString();
-      final String sh = sp.substring(sp.lastIndexOf('.') + 1);
       p.write(
-          '<w:shd w:val="$sh" w:fill="$shadingPatternColor" w:color="$shadingColor" />');
+          '<w:shd w:val="${getValueFromEnum(paragraphShading.shadingPattern ?? ShadingPatternStyle.nil)}" w:fill="$shadingPatternColor" w:color="$shadingColor" />');
     }
     if (spacing != null) {
       const List<String> sides = <String>[
@@ -128,28 +118,11 @@ class Ppr {
           '<w:spacing ${spbuffer.toString()} w:beforeAutospacing="${spacing.beforeAutospacing}" w:afterAutospacing="${spacing.afterAutospacing}" w:lineRule="${spacing.lineRule == LineRule.auto ? "auto" : spacing.lineRule == LineRule.atLeast ? "atLeast" : "exactly"}" />');
     }
     if (tabs != null && tabs.isNotEmpty) {
-      const List<String> tLeader = [
-        'dot',
-        'heavy',
-        'hyphen',
-        'middleDot',
-        'none',
-        'underscore'
-      ];
-      const List<String> tStyle = [
-        'bar',
-        'center',
-        'clear',
-        'decimal',
-        'end',
-        'num',
-        'start'
-      ];
       final StringBuffer tab = StringBuffer();
       for (int i = 0; i < tabs.length; i++) {
         final DocxTab target = tabs[i];
         tab.write(
-            '<w:tab w:val="${tStyle[target.style.index]}" w:leader="${tLeader[target.leader.index]}" pos="${target.position}" />');
+            '<w:tab w:val="${getValueFromEnum(target.style)}" w:leader="${getValueFromEnum(target.leader)}" pos="${target.position}" />');
       }
       p.write('<w:tabs>${tab.toString()}</w:tabs>');
     }

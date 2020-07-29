@@ -73,7 +73,7 @@ class Rpr {
               ? shading.shadingPatternColor
               : 'FFFFFF';
       r.write(
-          '<w:shd w:val="${getValueFromEnum(shading.shadingPattern)}" w:fill="$shadingPatternColor" w:color="$shadingColor" />');
+          '<w:shd w:val="${getValueFromEnum(shading.shadingPattern ?? ShadingPatternStyle.nil)}" w:fill="$shadingPatternColor" w:color="$shadingColor" />');
     }
     if (highlightColor != null) {
       r.write('<w:highlight w:val="${getValueFromEnum(highlightColor)}" />');

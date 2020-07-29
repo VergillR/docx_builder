@@ -131,7 +131,7 @@ class DocXBuilder {
   ///
   /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
   ///
-  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
+  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
   void setHeader(
     HeaderType headerType,
     List<String> text,
@@ -159,7 +159,7 @@ class DocXBuilder {
   ///
   /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
   ///
-  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
+  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
   void setFooter(
     FooterType footerType,
     List<String> text,
@@ -550,7 +550,7 @@ class DocXBuilder {
   /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the text by setting [addTab] to true.
   ///
   /// If [hyperlinkTo] is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
-  /// If given, [complexField] adds a complex field, such as page and date, e.g. ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
+  /// If given, [complexField] adds a complex field, such as page and date, e.g. ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
   void addText(
     String text, {
     LineBreak lineOrPageBreak,
@@ -616,7 +616,7 @@ class DocXBuilder {
   ///
   /// If the custom textstyles contain a hyperlinkTo value that is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
   ///
-  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
+  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
   void addMixedText(
     List<String> text,
     List<DocxTextStyle> textStyles, {
@@ -1045,17 +1045,6 @@ class DocXBuilder {
         }
       }
     }
-  }
-
-  /// Defines a table that can be inserted later.
-  Table defineTable() {
-    if (!_bufferClosed) {}
-    return Table();
-  }
-
-  // InsertTable inserts a table that was defined earlier with defineTable.
-  void insertTable(Table table) {
-    if (!_bufferClosed) {}
   }
 
   /// Create the .docx file with the content stored in the buffer of DocXBuilder. This also closes the buffer.

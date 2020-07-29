@@ -284,6 +284,8 @@ enum ParagraphBorderStyle {
   zigZagStitch,
 }
 
+enum PreferredWidthType { auto, dxa, nil, pct }
+
 enum RestartLineNumber { continuous, newPage, newSection }
 
 enum SectType {
@@ -352,6 +354,36 @@ enum TabLeader {
 }
 
 enum TabStyle { bar, center, clear, decimal, end, num, start, left, right }
+
+enum TableBorderSide { top, bottom, left, right, start, end, insideH, insideV }
+
+enum TableCellBorderSide {
+  top,
+  bottom,
+  left,
+  right,
+  start,
+  end,
+  insideH,
+  insideV,
+  tl2br,
+  tr2bl
+}
+
+enum TableCellSide { top, bottom, left, right, start, end }
+
+enum TableCellVerticalAlignment { bottom, center, top }
+
+enum TableConditionalFormatting {
+  firstColumn,
+  firstRow,
+  lastColumn,
+  lastRow,
+  noHBand,
+  noVBand,
+}
+
+enum TableTextAlignment { left, right, center, start, end }
 
 enum TextAlignment { left, right, center, distribute, justify, start, end }
 
