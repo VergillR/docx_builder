@@ -4,6 +4,7 @@ import 'package:docx_builder/docx_builder.dart';
 import 'package:docx_builder/src/utils/constants/mimetypes.dart';
 import 'package:docx_builder/src/utils/utils.dart';
 import 'package:docx_builder/src/styles/style_classes/index.dart';
+import 'package:docx_builder/src/styles/style_containers/index.dart';
 
 import 'builders/index.dart' as _b;
 import 'package/packager.dart' as _p;
@@ -244,7 +245,7 @@ class DocXBuilder {
             _getTextStyleAsString(
                 style: textStyles[i],
                 doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-            '<w:t xml:space="preserve">$t</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${f.instructions}</w:instrText></w:r><w:r>${f.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>',
+            '<w:t xml:space="preserve">$t</w:t></w:r>${f.getXml()}',
           ]);
         }
         _addToCharCounters(t);
@@ -539,9 +540,6 @@ class DocXBuilder {
     );
   }
 
-  String _getLineOrPageBreak(LineBreak b) =>
-      '<w:r><w:br w:type="${b.lineBreakType != null ? getValueFromEnum(b.lineBreakType) : "textWrapping"}" w:clear="${b.lineBreakClearLocation != null ? getValueFromEnum(b.lineBreakClearLocation) : "none"}" /></w:r>';
-
   /// AddText adds lines of text to the document.
   /// It uses the global text styling defined by setGlobalDocxTextStyle.
   /// This function always adds a new paragraph to the document.
@@ -564,12 +562,12 @@ class DocXBuilder {
           ? '<w:r><w:tab/></w:r>'
           : '';
       final String lineBreak =
-          lineOrPageBreak != null ? _getLineOrPageBreak(lineOrPageBreak) : '';
+          lineOrPageBreak != null ? lineOrPageBreak.getXml() : '';
 
       final String ppr = textFrame == null
           ? _getParagraphStyleAsString()
           : _getParagraphStyleAsString()
-              .replaceFirst('</w:pPr>', '${textFrame.getFramePr()}</w:pPr>');
+              .replaceFirst('</w:pPr>', '${textFrame.getXml()}</w:pPr>');
 
       if (complexField == null ||
           complexField.instructions == null ||
@@ -592,7 +590,7 @@ class DocXBuilder {
         _docxstring.writeAll(<String>[
           '<w:p>$ppr',
           tab,
-          '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${complexField.instructions}</w:instrText></w:r><w:r>${complexField.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>$lineBreak</w:p>'
+          '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r>${complexField.getXml()}$lineBreak</w:p>'
         ]);
       }
 
@@ -639,7 +637,7 @@ class DocXBuilder {
 
       final String multiBreak =
           lineOrPageBreak != null && addBreakAfterEveryItem
-              ? _getLineOrPageBreak(lineOrPageBreak)
+              ? lineOrPageBreak.getXml()
               : '';
 
       if (globalDocxTextStyle.tabs != null && addTab) {
@@ -681,7 +679,7 @@ class DocXBuilder {
             _getTextStyleAsString(
                 style: textStyles[i],
                 doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-            '<w:t xml:space="preserve">$t</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">${f.instructions}</w:instrText></w:r><w:r>${f.includeSeparate ? "<w:fldChar w:fldCharType='separate'/>" : ""}</w:r><w:r><w:t></w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>$multiBreak',
+            '<w:t xml:space="preserve">$t</w:t></w:r>${f.getXml()}$multiBreak',
           ]);
         }
 
@@ -690,7 +688,7 @@ class DocXBuilder {
 
       final String singleBreak =
           lineOrPageBreak != null && !addBreakAfterEveryItem
-              ? _getLineOrPageBreak(lineOrPageBreak)
+              ? lineOrPageBreak.getXml()
               : '';
 
       _docxstring.write('$singleBreak</w:p>');

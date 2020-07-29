@@ -1,6 +1,7 @@
-import 'package:docx_builder/src/styles/style_enums.dart';
+import '../style.dart';
+import '../style_enums.dart';
 
-class PSpacing {
+class PSpacing extends Style {
   final List<int> spaces;
   final LineRule lineRule;
   final bool beforeAutospacing;
@@ -16,4 +17,25 @@ class PSpacing {
     this.beforeAutospacing = false,
     this.afterAutospacing = false,
   }) : spaces = <int>[after, afterLines, before, beforeLines, line];
+
+  @override
+  String getXml() {
+    const List<String> sides = <String>[
+      'after',
+      'afterLines',
+      'before',
+      'beforeLines',
+      'line',
+    ];
+
+    final StringBuffer spbuffer = StringBuffer();
+    for (int i = 0; i < spaces.length; i++) {
+      final int val = spaces[i];
+      if (val > 0) {
+        spbuffer.write('w:${sides[i]}="$val" ');
+      }
+    }
+
+    return '<w:spacing ${spbuffer.toString()} w:beforeAutospacing="$beforeAutospacing" w:afterAutospacing="$afterAutospacing" w:lineRule="${lineRule == LineRule.auto ? "auto" : lineRule == LineRule.atLeast ? "atLeast" : "exactly"}" />';
+  }
 }

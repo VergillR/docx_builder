@@ -1,4 +1,6 @@
-class PIndent {
+import '../style.dart';
+
+class PIndent extends Style {
   List<int> indents;
 
   PIndent({
@@ -16,4 +18,26 @@ class PIndent {
           indentHanging,
           indentFirstLine
         ];
+
+  @override
+  String getXml() {
+    const List<String> inds = [
+      'left',
+      'start',
+      'right',
+      'end',
+      'hanging',
+      'firstLine'
+    ];
+    final StringBuffer s = StringBuffer();
+    s.write('<w:ind ');
+    for (int i = 0; i < indents.length; i++) {
+      final int val = indents[i];
+      if (val > 0) {
+        s.write('w:${inds[i]}="$val" ');
+      }
+    }
+    s.write('/>');
+    return s.toString();
+  }
 }

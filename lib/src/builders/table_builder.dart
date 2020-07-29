@@ -31,6 +31,8 @@ class Table {
     }
     t.write('</w:tblGrid>');
 
+    t.write(tableProperties.getXml());
+
     t.write('</w:tbl>');
     return t.toString();
   }

@@ -1,22 +1,25 @@
 import '../../utils/utils.dart';
+import '../style.dart';
 import '../style_classes/index.dart';
 import '../style_enums.dart';
 import 'index.dart';
 
-class TableProperties {
+class TableProperties extends Style {
   final TableTextAlignment tableTextAlignment;
   final Shading shading;
   final List<TableBorder> tableBorders;
   final String tableCaption;
   final List<TableCellMargin> tableCellMargins;
   final int tableCellSpacing;
+  final PreferredWidthType tableCellSpacingType;
   final int tableIndentation;
+  final PreferredWidthType tableIndentationType;
   final bool tableLayoutUsesFixedWidth;
   final List<TableConditionalFormatting> tableLook;
   final bool allowFloatingTableOverlapping;
   final FloatingTable floatingTable;
-  final int preferredWidth;
-  final PreferredWidthType preferredWidthType;
+  final int preferredTableWidth;
+  final PreferredWidthType preferredTableWidthType;
 
   TableProperties({
     this.tableTextAlignment,
@@ -25,44 +28,90 @@ class TableProperties {
     this.tableCaption,
     this.tableCellMargins,
     this.tableCellSpacing,
+    this.tableCellSpacingType = PreferredWidthType.dxa,
     this.tableIndentation,
+    this.tableIndentationType = PreferredWidthType.dxa,
     this.tableLayoutUsesFixedWidth = false,
     this.tableLook,
     this.allowFloatingTableOverlapping,
     this.floatingTable,
-    this.preferredWidth,
-    this.preferredWidthType,
+    this.preferredTableWidth,
+    this.preferredTableWidthType = PreferredWidthType.dxa,
   });
 
-  String getTableProperties() {
+  @override
+  String getXml() {
     final StringBuffer tp = StringBuffer();
     tp.write('<w:tblPr>');
     if (tableTextAlignment != null) {
       tp.write('<w:jc w:val="${getValueFromEnum(tableTextAlignment)}"/>');
     }
+
     if (shading != null) {
-      final String shadingColor =
-          isValidColor(shading.shadingColor) ? shading.shadingColor : 'FFFFFF';
-      final String shadingPatternColor =
-          isValidColor(shading.shadingPatternColor)
-              ? shading.shadingPatternColor
-              : 'FFFFFF';
-      tp.write(
-          '<w:shd w:val="${getValueFromEnum(shading.shadingPattern ?? ShadingPatternStyle.nil)}" w:fill="$shadingPatternColor" w:color="$shadingColor" />');
+      tp.write(shading.getXml());
     }
 
     if (tableBorders != null &&
         tableBorders.isNotEmpty &&
-        tableBorders.length < 7) {
+        tableBorders.length <= TableBorderSide.values.length) {
       tp.write('<w:tblBorders>');
       for (int i = 0; i < tableBorders.length; i++) {
         final TableBorder border = tableBorders[i];
-        final String borderColor =
-            isValidColor(border.color) ? border.color : '000000';
-        tp.write(
-            '<w:${getValueFromEnum(border.borderSide)} w:val="${getValueFromEnum(border.pbrStyle)}" w:sz="${border.width}" w:space="${border.space}" w:color="$borderColor" w:shadow="${border.shadow}" />');
+        tp.write(border.getXml());
       }
       tp.write('</w:tblBorders>');
+    }
+
+    if (tableCaption != null) {
+      tp.write('<w:tblCaption w:val="$tableCaption"/>');
+    }
+
+    if (tableCellMargins != null &&
+        tableCellMargins.length <= TableCellSide.values.length) {
+      tp.write('<w:tblCellMar>');
+      for (int i = 0; i < tableCellMargins.length; i++) {
+        final TableCellMargin target = tableCellMargins[i];
+        tp.write(target.getXml());
+      }
+      tp.write('</w:tblCellMar>');
+    }
+
+    if (tableCellSpacing != null) {
+      tp.write(
+          '<w:tblCellSpacing w:w="$tableCellSpacing" w:type="${getValueFromEnum(tableCellSpacingType)}"/>');
+    }
+
+    if (tableIndentation != null) {
+      tp.write(
+          '<w:tblInd w:w="$tableIndentation" w:type="${getValueFromEnum(tableIndentationType)}"/>');
+    }
+
+    if (tableLayoutUsesFixedWidth) {
+      tp.write('<w:tblLayout w:type="fixed"/>');
+    }
+
+    if (tableLook != null &&
+        tableLook.isNotEmpty &&
+        tableLook.length <= TableConditionalFormatting.values.length) {
+      final StringBuffer conditions = StringBuffer();
+      for (int i = 0; i < tableLook.length; i++) {
+        conditions.write('w:${getValueFromEnum(tableLook[i])}="true" ');
+      }
+      tp.write('<w:tblLook ${conditions.toString()}/>');
+    }
+
+    if (allowFloatingTableOverlapping != null) {
+      tp.write(
+          '<w:tblOverlap val="${allowFloatingTableOverlapping ? "overlap" : "never"}"/>');
+    }
+
+    if (floatingTable != null) {
+      tp.write(floatingTable.getXml());
+    }
+
+    if (preferredTableWidth != null) {
+      tp.write(
+          '<w:tblW w:w="$preferredTableWidth" w:type="${getValueFromEnum(preferredTableWidthType)}"/>');
     }
 
     tp.write('</w:tblPr>');

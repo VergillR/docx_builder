@@ -1,9 +1,5 @@
 export './complex_field.dart';
-export './docxpagestyle.dart';
-export './docxtextstyle.dart';
 export './floating_table.dart';
-export './footer.dart';
-export './header.dart';
 export './linebreak.dart';
 export './linenumbering.dart';
 export './p_border.dart';

@@ -1,8 +1,9 @@
 import '../../utils/utils.dart';
+import '../style.dart';
 import '../style_enums.dart';
 
 /// Width and height are in twips (twentiehs of a point). TextFrame is a paragraph property.
-class TextFrame {
+class TextFrame extends Style {
   final bool anchorLock;
   final DropCap dropCap;
   final HRule hRule;
@@ -37,7 +38,8 @@ class TextFrame {
     this.yPosAlign,
   });
 
-  String getFramePr() {
+  @override
+  String getXml() {
     final String aLock =
         anchorLock != null ? 'w:anchorLock="$anchorLock" ' : '';
     final String dCap =

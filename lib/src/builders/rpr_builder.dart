@@ -66,14 +66,7 @@ class Rpr {
       r.write('<w:fitText w:val="$fitText" />');
     }
     if (shading != null) {
-      final String shadingColor =
-          isValidColor(shading.shadingColor) ? shading.shadingColor : 'FFFFFF';
-      final String shadingPatternColor =
-          isValidColor(shading.shadingPatternColor)
-              ? shading.shadingPatternColor
-              : 'FFFFFF';
-      r.write(
-          '<w:shd w:val="${getValueFromEnum(shading.shadingPattern ?? ShadingPatternStyle.nil)}" w:fill="$shadingPatternColor" w:color="$shadingColor" />');
+      r.write(shading.getXml());
     }
     if (highlightColor != null) {
       r.write('<w:highlight w:val="${getValueFromEnum(highlightColor)}" />');

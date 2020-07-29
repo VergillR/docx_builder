@@ -28,7 +28,7 @@ class Ppr {
   }) {
     final StringBuffer p = StringBuffer()..write('<w:pPr>');
     if (textFrame != null) {
-      p.write(textFrame.getFramePr());
+      p.write(textFrame.getXml());
     }
     if (keepLines != null) {
       p.write('<w:keepLines val="$keepLines" />');
@@ -40,24 +40,8 @@ class Ppr {
       p.write('<w:jc w:val="${getValueFromEnum(textAlignment)}" />');
     }
     if (paragraphIndent != null && paragraphIndent.indents.isNotEmpty) {
-      const List<String> indents = [
-        'left',
-        'start',
-        'right',
-        'end',
-        'hanging',
-        'firstLine'
-      ];
-      final StringBuffer ind = StringBuffer();
-      for (int i = 0; i < paragraphIndent.indents.length; i++) {
-        final int val = paragraphIndent.indents[i];
-        if (val > 0) {
-          ind.write('w:${indents[i]}="$val" ');
-        }
-      }
-      p.write('<w:ind ${ind.toString()}/>');
+      p.write(paragraphIndent.getXml());
     }
-
     if (verticalTextAlignment != null) {
       p.write(
           '<w:textAlignment w:val="${getValueFromEnum(verticalTextAlignment)}" />');
@@ -76,53 +60,25 @@ class Ppr {
       p.write('</w:pBdr>');
     } else if (paragraphBorders != null &&
         paragraphBorders.isNotEmpty &&
-        paragraphBorders.length < 7) {
+        paragraphBorders.length <= ParagraphBorderSide.values.length) {
       p.write('<w:pBdr>');
       for (int i = 0; i < paragraphBorders.length; i++) {
         final ParagraphBorder border = paragraphBorders[i];
-        final String borderColor =
-            isValidColor(border.color) ? border.color : '000000';
-        p.write(
-            '<w:${getValueFromEnum(border.borderSide)} w:val="${getValueFromEnum(paragraphBorderOnAllSides.pbrStyle)}" w:sz="${border.width}" w:space="${border.space}" w:color="$borderColor" w:shadow="${border.shadow}" />');
+        p.write(border.getXml());
       }
       p.write('</w:pBdr>');
     }
     if (paragraphShading != null) {
-      final String shadingColor = isValidColor(paragraphShading.shadingColor)
-          ? paragraphShading.shadingColor
-          : 'FFFFFF';
-      final String shadingPatternColor =
-          isValidColor(paragraphShading.shadingPatternColor)
-              ? paragraphShading.shadingPatternColor
-              : 'FFFFFF';
-      p.write(
-          '<w:shd w:val="${getValueFromEnum(paragraphShading.shadingPattern ?? ShadingPatternStyle.nil)}" w:fill="$shadingPatternColor" w:color="$shadingColor" />');
+      p.write(paragraphShading.getXml());
     }
     if (spacing != null) {
-      const List<String> sides = <String>[
-        'after',
-        'afterLines',
-        'before',
-        'beforeLines',
-        'line',
-      ];
-
-      final StringBuffer spbuffer = StringBuffer();
-      for (int i = 0; i < spacing.spaces.length; i++) {
-        final int val = spacing.spaces[i];
-        if (val > 0) {
-          spbuffer.write('w:${sides[i]}="$val" ');
-        }
-      }
-      p.write(
-          '<w:spacing ${spbuffer.toString()} w:beforeAutospacing="${spacing.beforeAutospacing}" w:afterAutospacing="${spacing.afterAutospacing}" w:lineRule="${spacing.lineRule == LineRule.auto ? "auto" : spacing.lineRule == LineRule.atLeast ? "atLeast" : "exactly"}" />');
+      p.write(spacing.getXml());
     }
     if (tabs != null && tabs.isNotEmpty) {
       final StringBuffer tab = StringBuffer();
       for (int i = 0; i < tabs.length; i++) {
         final DocxTab target = tabs[i];
-        tab.write(
-            '<w:tab w:val="${getValueFromEnum(target.style)}" w:leader="${getValueFromEnum(target.leader)}" pos="${target.position}" />');
+        tab.write(target.getXml());
       }
       p.write('<w:tabs>${tab.toString()}</w:tabs>');
     }

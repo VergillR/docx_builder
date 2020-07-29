@@ -1,5 +1,5 @@
+import '../style_classes/index.dart';
 import '../style_enums.dart';
-import 'index.dart';
 
 class DocxTextStyle {
   // rpr (Run properties: text styling)

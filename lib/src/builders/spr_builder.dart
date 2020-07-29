@@ -39,8 +39,7 @@ class SectPr {
     }
 
     if (pageMargin != null) {
-      s.write(
-          'w:pgMar w:header="${pageMargin.header}" w:footer="${pageMargin.footer}" w:gutter="${pageMargin.gutter}" w:left="${pageMargin.left}" w:right="${pageMargin.right}" w:top="${pageMargin.top}" w:bottom="${pageMargin.bottom}" />');
+      s.write(pageMargin.getXml());
     }
 
     if (cols != null && cols.isNotEmpty) {
@@ -53,8 +52,7 @@ class SectPr {
         s.write(
             '<w:cols w:num="$numCols" w:sep="$colsHaveSeparator" w:space="720" w:equalWidth="false">');
         for (int i = 0; i < numCols; i++) {
-          s.write(
-              'w:col w:w="${cols[i].w}" w:space="${cols[i].spaceAfterColumn}" />');
+          s.write(cols[i].getXml());
         }
         s.write('</w:cols>');
       }
@@ -67,7 +65,9 @@ class SectPr {
       s.write('<w:vAlign w:val="${getValueFromEnum(sectVerticalAlign)}"/>');
     }
 
-    if (pageBorders != null && pageBorders.isNotEmpty) {
+    if (pageBorders != null &&
+        pageBorders.isNotEmpty &&
+        pageBorders.length <= PageBorderSide.values.length) {
       final String pageBorderOffset =
           pageBorderOffsetBasedOnText ? "text" : "page";
       final String pageBorderZOrder =
@@ -84,10 +84,7 @@ class SectPr {
           '<w:pgBorders w:offsetFrom="$pageBorderOffset" zOrder="$pageBorderZOrder" $display>');
       for (int j = 0; j < pageBorders.length; j++) {
         final PageBorder border = pageBorders[j];
-        final String borderColor =
-            isValidColor(border.color) ? border.color : '000000';
-        s.write(
-            '<w:${getValueFromEnum(border.pageBorderSide)} w:val="${getValueFromEnum(border.pbrStyle)}" w:color="$borderColor" w:sz="${border.size}" w:space="${border.space}" w:shadow="${border.shadow}" />');
+        s.write(border.getXml());
       }
       s.write('</w:pgBorders>');
     }
@@ -102,8 +99,7 @@ class SectPr {
     }
 
     if (lineNumbering != null) {
-      s.write(
-          '<w:lnNumType w:countBy="${lineNumbering.countBy}" w:start="${lineNumbering.start}" w:restart="${getValueFromEnum(lineNumbering.restartLineNumber)}" w:distance="${lineNumbering.distance}" />');
+      s.write(lineNumbering.getXml());
     }
 
     s.write('</w:sectPr>');

@@ -1,6 +1,8 @@
-import 'package:docx_builder/src/styles/style_enums.dart';
+import '../../utils/utils.dart';
+import '../style.dart';
+import '../style_enums.dart';
 
-class ParagraphBorder {
+class ParagraphBorder extends Style {
   final ParagraphBorderSide borderSide;
   final int width;
   final int space;
@@ -8,7 +10,7 @@ class ParagraphBorder {
   final ParagraphBorderStyle pbrStyle;
   final bool shadow;
 
-  const ParagraphBorder({
+  ParagraphBorder({
     this.borderSide = ParagraphBorderSide.bottom,
     this.width = 24,
     this.space = 1,
@@ -16,4 +18,10 @@ class ParagraphBorder {
     this.pbrStyle = ParagraphBorderStyle.single,
     this.shadow = false,
   });
+
+  @override
+  String getXml() {
+    final String borderColor = isValidColor(color) ? color : '000000';
+    return '<w:${getValueFromEnum(borderSide)} w:val="${getValueFromEnum(pbrStyle)}" w:sz="$width" w:space="$space" w:color="$borderColor" w:shadow="$shadow" />';
+  }
 }

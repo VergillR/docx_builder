@@ -1,4 +1,6 @@
-class PageMargin {
+import '../style.dart';
+
+class PageMargin extends Style {
   final int bottom;
   final int footer;
   final int gutter;
@@ -16,4 +18,8 @@ class PageMargin {
     this.right = 1417,
     this.top = 1417,
   });
+
+  @override
+  String getXml() =>
+      'w:pgMar w:header="$header" w:footer="$footer" w:gutter="$gutter" w:left="$left" w:right="$right" w:top="$top" w:bottom="$bottom" />';
 }

@@ -1,7 +1,9 @@
-import 'package:docx_builder/src/styles/style_enums.dart';
+import '../../utils/utils.dart';
+import '../style.dart';
+import '../style_enums.dart';
 
 /// LineBreakClearLocation only has meaning if LineBreakType is set to 'textWrapping'
-class LineBreak {
+class LineBreak extends Style {
   final LineBreakType lineBreakType;
   final LineBreakClearLocation lineBreakClearLocation;
 
@@ -9,4 +11,8 @@ class LineBreak {
     this.lineBreakType,
     this.lineBreakClearLocation,
   });
+
+  @override
+  String getXml() =>
+      '<w:r><w:br w:type="${lineBreakType != null ? getValueFromEnum(lineBreakType) : "textWrapping"}" w:clear="${lineBreakClearLocation != null ? getValueFromEnum(lineBreakClearLocation) : "none"}" /></w:r>';
 }

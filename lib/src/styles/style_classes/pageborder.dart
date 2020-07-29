@@ -1,6 +1,8 @@
+import '../../utils/utils.dart';
+import '../style.dart';
 import '../style_enums.dart';
 
-class PageBorder {
+class PageBorder extends Style {
   final PageBorderSide pageBorderSide;
   final int size;
   final int space;
@@ -16,4 +18,10 @@ class PageBorder {
     this.pbrStyle = ParagraphBorderStyle.single,
     this.shadow = false,
   });
+
+  @override
+  String getXml() {
+    final String borderColor = isValidColor(color) ? color : '000000';
+    return '<w:${getValueFromEnum(pageBorderSide)} w:val="${getValueFromEnum(pbrStyle)}" w:color="$borderColor" w:sz="$size" w:space="$space" w:shadow="$shadow" />';
+  }
 }

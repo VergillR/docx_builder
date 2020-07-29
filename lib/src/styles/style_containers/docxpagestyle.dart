@@ -1,5 +1,5 @@
+import '../style_classes/index.dart';
 import '../style_enums.dart';
-import 'index.dart';
 
 /// PageStyle is the set of Sections Properties of the document that change the page's appearance.
 /// Most (if not all) can be omitted, allowing the word processor to use its default styling and rules.
