@@ -27,9 +27,9 @@ class DocXBuilder {
   _p.Packager _packager;
   final StringBuffer _docxstring = StringBuffer();
   bool _bufferClosed = false;
-  int _charCount = 0;
-  int _charCountWithSpaces = 0;
-  int _parCount = 0;
+  // int _charCount = 0;
+  // int _charCountWithSpaces = 0;
+  // int _parCount = 0;
   int _headerCounter = 1;
   int _footerCounter = 1;
 
@@ -94,10 +94,10 @@ class DocXBuilder {
   }
 
   /// Add a counter for characters; These values are written to the app.xml file.
-  void _addToCharCounters(String text) {
-    _charCountWithSpaces += text.length;
-    _charCount += text.replaceAll(' ', '').length;
-  }
+  // void _addToCharCounters(String text) {
+  //   _charCountWithSpaces += text.length;
+  //   _charCount += text.replaceAll(' ', '').length;
+  // }
 
   /// This attribute should be set before adding anything to the document or else it will be ignored.
   /// The given [color] should be in "RRGGBB" format.
@@ -248,11 +248,11 @@ class DocXBuilder {
             '<w:t xml:space="preserve">$t</w:t></w:r>${f.getXml()}',
           ]);
         }
-        _addToCharCounters(t);
+        // _addToCharCounters(t);
       }
 
       b.write('</w:p>');
-      _parCount++;
+      // _parCount++;
     }
 
     final int counter = isHeader ? _headerCounter++ : _footerCounter++;
@@ -558,45 +558,64 @@ class DocXBuilder {
     TextFrame textFrame,
   }) {
     if (!_bufferClosed) {
-      final String tab = globalDocxTextStyle.tabs != null && addTab
-          ? '<w:r><w:tab/></w:r>'
-          : '';
-      final String lineBreak =
-          lineOrPageBreak != null ? lineOrPageBreak.getXml() : '';
+      _docxstring.write(_getCachedAddText(
+        text,
+        lineOrPageBreak: lineOrPageBreak,
+        addTab: addTab,
+        hyperlinkTo: hyperlinkTo,
+        complexField: complexField,
+        textFrame: textFrame,
+      ));
+      // _addToCharCounters(text);
+      // _parCount++;
+    }
+  }
 
-      final String ppr = textFrame == null
-          ? _getParagraphStyleAsString()
-          : _getParagraphStyleAsString()
-              .replaceFirst('</w:pPr>', '${textFrame.getXml()}</w:pPr>');
+  /// Writes XML text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
+  String _getCachedAddText(
+    String text, {
+    LineBreak lineOrPageBreak,
+    bool addTab = false,
+    String hyperlinkTo,
+    ComplexField complexField,
+    TextFrame textFrame,
+  }) {
+    final StringBuffer cached = StringBuffer();
+    final String tab =
+        globalDocxTextStyle.tabs != null && addTab ? '<w:r><w:tab/></w:r>' : '';
+    final String lineBreak =
+        lineOrPageBreak != null ? lineOrPageBreak.getXml() : '';
 
-      if (complexField == null ||
-          complexField.instructions == null ||
-          complexField.includeSeparate == null) {
-        String closeHyperlink = '';
-        String openHyperlink = '';
-        if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
-          _packager.addHyperlink(hyperlinkTo);
-          closeHyperlink = '</w:hyperlink>';
-          openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
-        }
+    final String ppr = textFrame == null
+        ? _getParagraphStyleAsString()
+        : _getParagraphStyleAsString()
+            .replaceFirst('</w:pPr>', '${textFrame.getXml()}</w:pPr>');
 
-        _docxstring.writeAll(<String>[
-          '<w:p>$ppr',
-          tab,
-          openHyperlink,
-          '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
-        ]);
-      } else {
-        _docxstring.writeAll(<String>[
-          '<w:p>$ppr',
-          tab,
-          '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r>${complexField.getXml()}$lineBreak</w:p>'
-        ]);
+    if (complexField == null ||
+        complexField.instructions == null ||
+        complexField.includeSeparate == null) {
+      String closeHyperlink = '';
+      String openHyperlink = '';
+      if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
+        _packager.addHyperlink(hyperlinkTo);
+        closeHyperlink = '</w:hyperlink>';
+        openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
       }
 
-      _addToCharCounters(text);
-      _parCount++;
+      cached.writeAll(<String>[
+        '<w:p>$ppr',
+        tab,
+        openHyperlink,
+        '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
+      ]);
+    } else {
+      cached.writeAll(<String>[
+        '<w:p>$ppr',
+        tab,
+        '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r>${complexField.getXml()}$lineBreak</w:p>'
+      ]);
     }
+    return cached.toString();
   }
 
   /// AddMixedText adds lines of text that do NOT have the same styling as each other or with the global text style.
@@ -627,73 +646,100 @@ class DocXBuilder {
     List<ComplexField> complexFields,
   }) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
-      _docxstring.write('<w:p><w:pPr>');
-      if (pageStyle != null) {
-        _docxstring.write(_getDocxPageStyleAsString(
-            style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
-      }
-      _docxstring
-          .write(_getParagraphStyleAsString().replaceFirst('<w:pPr>', ''));
-
-      final String multiBreak =
-          lineOrPageBreak != null && addBreakAfterEveryItem
-              ? lineOrPageBreak.getXml()
-              : '';
-
-      if (globalDocxTextStyle.tabs != null && addTab) {
-        _docxstring.write('<w:r><w:tab/></w:r>');
-      }
-
-      final List<ComplexField> cf =
-          complexFields != null && complexFields.length == text.length
-              ? complexFields
-              : List<ComplexField>.generate(text.length, (index) => null);
-
-      for (int i = 0; i < text.length; i++) {
-        final String t = text[i] ?? '';
-        final ComplexField f = cf[i];
-        if (f == null || f.instructions == null || f.includeSeparate == null) {
-          String closeHyperlink = '';
-          String openHyperlink = '';
-          if (textStyles[i] != null &&
-              textStyles[i].hyperlinkTo != null &&
-              textStyles[i].hyperlinkTo.isNotEmpty) {
-            _packager.addHyperlink(textStyles[i].hyperlinkTo);
-            closeHyperlink = '</w:hyperlink>';
-            openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
-          }
-          _docxstring.writeAll(<String>[
-            openHyperlink,
-            '<w:r>',
-            _getTextStyleAsString(
-                styleAsHyperlink: textStyles[i] != null &&
-                    textStyles[i].hyperlinkTo != null &&
-                    textStyles[i].hyperlinkTo.isNotEmpty,
-                style: textStyles[i],
-                doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-            '<w:t xml:space="preserve">$t</w:t></w:r>$multiBreak$closeHyperlink',
-          ]);
-        } else {
-          _docxstring.writeAll(<String>[
-            '<w:r>',
-            _getTextStyleAsString(
-                style: textStyles[i],
-                doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-            '<w:t xml:space="preserve">$t</w:t></w:r>${f.getXml()}$multiBreak',
-          ]);
-        }
-
-        _addToCharCounters(t);
-      }
-
-      final String singleBreak =
-          lineOrPageBreak != null && !addBreakAfterEveryItem
-              ? lineOrPageBreak.getXml()
-              : '';
-
-      _docxstring.write('$singleBreak</w:p>');
-      _parCount++;
+      _docxstring.write(_getCachedAddMixedText(
+        text,
+        textStyles,
+        pageStyle: pageStyle,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+        lineOrPageBreak: lineOrPageBreak,
+        addBreakAfterEveryItem: addBreakAfterEveryItem,
+        addTab: addTab,
+        complexFields: complexFields,
+      ));
+      // _addToCharCounters(t);
+      // _parCount++;
     }
+  }
+
+  /// Writes XML mixed text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
+  String _getCachedAddMixedText(
+    List<String> text,
+    List<DocxTextStyle> textStyles, {
+    DocxPageStyle pageStyle,
+    bool doNotUseGlobalTextStyle = false,
+    bool doNotUseGlobalPageStyle = true,
+    LineBreak lineOrPageBreak,
+    bool addBreakAfterEveryItem = false,
+    bool addTab = false,
+    List<ComplexField> complexFields,
+  }) {
+    final StringBuffer d = StringBuffer();
+    d.write('<w:p><w:pPr>');
+    if (pageStyle != null) {
+      d.write(_getDocxPageStyleAsString(
+          style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
+    }
+    d.write(_getParagraphStyleAsString().replaceFirst('<w:pPr>', ''));
+
+    final String multiBreak = lineOrPageBreak != null && addBreakAfterEveryItem
+        ? lineOrPageBreak.getXml()
+        : '';
+
+    if (globalDocxTextStyle.tabs != null && addTab) {
+      d.write('<w:r><w:tab/></w:r>');
+    }
+
+    final List<ComplexField> cf =
+        complexFields != null && complexFields.length == text.length
+            ? complexFields
+            : List<ComplexField>.generate(text.length, (index) => null);
+
+    for (int i = 0; i < text.length; i++) {
+      final String t = text[i] ?? '';
+      final ComplexField f = cf[i];
+      if (f == null || f.instructions == null || f.includeSeparate == null) {
+        String closeHyperlink = '';
+        String openHyperlink = '';
+        if (textStyles[i] != null &&
+            textStyles[i].hyperlinkTo != null &&
+            textStyles[i].hyperlinkTo.isNotEmpty) {
+          _packager.addHyperlink(textStyles[i].hyperlinkTo);
+          closeHyperlink = '</w:hyperlink>';
+          openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+        }
+        d.writeAll(<String>[
+          openHyperlink,
+          '<w:r>',
+          _getTextStyleAsString(
+              styleAsHyperlink: textStyles[i] != null &&
+                  textStyles[i].hyperlinkTo != null &&
+                  textStyles[i].hyperlinkTo.isNotEmpty,
+              style: textStyles[i],
+              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+          '<w:t xml:space="preserve">$t</w:t></w:r>$multiBreak$closeHyperlink',
+        ]);
+      } else {
+        d.writeAll(<String>[
+          '<w:r>',
+          _getTextStyleAsString(
+              style: textStyles[i],
+              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+          '<w:t xml:space="preserve">$t</w:t></w:r>${f.getXml()}$multiBreak',
+        ]);
+      }
+
+      // _addToCharCounters(t);
+    }
+
+    final String singleBreak =
+        lineOrPageBreak != null && !addBreakAfterEveryItem
+            ? lineOrPageBreak.getXml()
+            : '';
+
+    d.write('$singleBreak</w:p>');
+
+    return d.toString();
   }
 
   /// Convert inches to EMU; A4 format is 8.3 x 11.7 inches.
@@ -998,17 +1044,60 @@ class DocXBuilder {
     int rotateInEMU = 0,
   }) {
     const int max = 27273042316900;
-    final style =
-        textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
     if (widthEMU < 1 || widthEMU > max || heightEMU < 1 || heightEMU > max) {
       return;
     }
 
     if (!_bufferClosed) {
-      final String path = imageFile.path;
-      final String suffix = path.substring(path.lastIndexOf('.') + 1);
-      if (mimeTypes.containsKey(suffix)) {
-        final bool saved = _packager.addImageFile(imageFile, suffix);
+      _docxstring.write(_getCachedInlineImage(
+        imageFile,
+        widthEMU,
+        heightEMU,
+        alternativeTextForImage: alternativeTextForImage,
+        noChangeAspect: noChangeAspect,
+        noMove: noMove,
+        noResize: noResize,
+        noSelect: noSelect,
+        textStyle: textStyle,
+        doNotUseGlobalStyle: doNotUseGlobalStyle,
+        encloseInParagraph: encloseInParagraph,
+        hyperlinkTo: hyperlinkTo,
+        effectExtentL: effectExtentL,
+        effectExtentT: effectExtentT,
+        effectExtentR: effectExtentR,
+        effectExtentB: effectExtentB,
+        flipImageHorizontal: flipImageHorizontal,
+        flipImageVertical: flipImageVertical,
+        rotateInEMU: rotateInEMU,
+      ));
+    }
+  }
+
+  String _getCachedInlineImage(File imageFile, int widthEMU, int heightEMU,
+      {String alternativeTextForImage = '',
+      bool noChangeAspect = true,
+      bool noMove = true,
+      bool noResize = true,
+      bool noSelect = false,
+      DocxTextStyle textStyle,
+      bool doNotUseGlobalStyle = true,
+      bool encloseInParagraph = true,
+      String hyperlinkTo,
+      int effectExtentL = 0,
+      int effectExtentT = 0,
+      int effectExtentR = 0,
+      int effectExtentB = 0,
+      bool flipImageHorizontal = false,
+      bool flipImageVertical = false,
+      int rotateInEMU = 0}) {
+    final style =
+        textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
+    final StringBuffer d = StringBuffer();
+    final String path = imageFile.path;
+    final String suffix = path.substring(path.lastIndexOf('.') + 1);
+    if (mimeTypes.containsKey(suffix)) {
+      final bool saved = _packager.addImageFile(imageFile, suffix);
+      if (saved) {
         final String _noChangeAspect = noChangeAspect ? '1' : '0';
         final String _noMove = noMove ? '1' : '0';
         final String _noResize = noResize ? '1' : '0';
@@ -1037,12 +1126,11 @@ class DocXBuilder {
         final String openR = encloseInParagraph ? '<w:r>' : '';
         final String closeR = encloseInParagraph ? '</w:r>' : '';
 
-        if (saved) {
-          _docxstring.write(
-              '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto">$xfrm</pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
-        }
+        d.write(
+            '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto">$xfrm</pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
       }
     }
+    return d.toString();
   }
 
   /// Create the .docx file with the content stored in the buffer of DocXBuilder. This also closes the buffer.
@@ -1066,9 +1154,9 @@ class DocXBuilder {
 
       final File f = await _packager.bundle(
         _docxstring.toString(),
-        chars: _charCount,
-        charsWithSpaces: _charCountWithSpaces,
-        paragraphs: _parCount,
+        // chars: _charCount,
+        // charsWithSpaces: _charCountWithSpaces,
+        // paragraphs: _parCount,
         documentTitle: documentTitle ?? '',
         documentSubject: documentSubject ?? '',
         documentDescription: documentDescription ?? '',
@@ -1094,9 +1182,9 @@ class DocXBuilder {
     _oddPageFooter = null;
     _evenPageFooter = null;
     _insertHeadersAndFootersInThisSection = false;
-    _charCount = 0;
-    _charCountWithSpaces = 0;
-    _parCount = 0;
+    // _charCount = 0;
+    // _charCountWithSpaces = 0;
+    // _parCount = 0;
     _headerCounter = 1;
     _footerCounter = 1;
     _packager.destroyCache();

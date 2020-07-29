@@ -54,10 +54,6 @@ class Packager {
       final String type = isHeader ? 'header' : 'footer';
       final String fileName = '$type$counter.xml';
       final String fullPathFile = '$_dirPathToWord/$fileName';
-      // if (counter == 3) {
-      //   // even page header/footer was created, so it needs to be declared in Settings.xml
-      //   _addEvenAndOddHeadersInSettings = true;
-      // }
       if (evenPage) {
         // even page header/footer was created, so it needs to be declared in Settings.xml
         _addEvenAndOddHeadersInSettings = true;
@@ -100,9 +96,9 @@ class Packager {
   /// The file is in the cache, so user has to store or send it right away before the cache is cleared.
   Future<File> bundle(
     String documentXml, {
-    int chars,
-    int charsWithSpaces,
-    int paragraphs,
+    // int chars,
+    // int charsWithSpaces,
+    // int paragraphs,
     String documentTitle,
     String documentSubject,
     String documentDescription,
@@ -121,10 +117,11 @@ class Packager {
           .writeAsStringSync(ContentTypes()
               .getContentsTypesXml(_contentDefaultRefs, _contentOverrideRefs));
       File('$_dirPathToDocProps/app.xml').writeAsStringSync(AppXml(
-        chars: chars,
-        charsWithSpaces: charsWithSpaces,
-        paragraphs: paragraphs,
-      ).getAppXml());
+              // chars: chars,
+              // charsWithSpaces: charsWithSpaces,
+              // paragraphs: paragraphs,
+              )
+          .getAppXml());
       File('$_dirPathToRels/.rels').writeAsStringSync(DotRels().getDotRels());
       File('$_dirPathToDocProps/core.xml').writeAsStringSync(
         CoreXml().getCoreXml(

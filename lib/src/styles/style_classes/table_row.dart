@@ -1,5 +1,4 @@
 import '../style.dart';
-
 import './index.dart';
 
 class TableRow extends Style {

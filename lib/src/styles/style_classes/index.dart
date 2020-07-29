@@ -10,6 +10,7 @@ export './pagemargin.dart';
 export './sect_column.dart';
 export './shading.dart';
 export './tab.dart';
+export './table.dart';
 export './table_border.dart';
 export './table_cell.dart';
 export './table_cell_border.dart';
