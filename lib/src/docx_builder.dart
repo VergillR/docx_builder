@@ -704,7 +704,7 @@ class DocXBuilder {
     }
   }
 
-  void addMixedTextInTableCell({
+  void insertMixedTextInTableCell({
     @required TableCell tableCell,
     @required List<String> text,
     List<TextStyle> textStyles,
