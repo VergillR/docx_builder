@@ -1185,7 +1185,7 @@ class DocXBuilder {
         ? '<w:t xml:space="preserve">${List<String>.generate(spaces, (index) => ' ').join()}</w:t>'
         : '';
     for (int i = 0; i < imageFiles.length; i++) {
-      _insertInlineImage(
+      s.write(_getCachedInlineImage(
         imageFiles[i],
         widthEMU,
         heightEMU,
@@ -1205,7 +1205,7 @@ class DocXBuilder {
         flipImageHorizontal: flipImageHorizontal,
         flipImageVertical: flipImageVertical,
         rotateInEMU: rotateInEMU,
-      );
+      ));
       if (addSpaces.isNotEmpty) {
         s.write(addSpaces);
       }
