@@ -822,10 +822,10 @@ class DocXBuilder {
   /// Convert millimeters to EMU; A4 format is 210x297mm.
   int convertMillimetersToEMU(int mm) => mm * 36000;
 
-  /// AddImageWithText inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU), indicated by [horizontalOffsetEMU] and [verticalOffsetEMU]. If both offsets are 0, the anchor image will be placed at the start (left side of the line) of the cursor's current position in the document. Positive offsets push the image to the right and bottom. Negative offsets push the image to the left and top.
-  /// Text is inserted with the function addMixedText, so [text] is a list of text and is styled with [textStyles].
+  /// AddAnchorImage inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU), indicated by [horizontalOffsetEMU] and [verticalOffsetEMU]. If both offsets are 0, the anchor image will be placed at the start (left side of the line) of the cursor's current position in the document. Positive offsets push the image to the right and bottom. Negative offsets push the image to the left and top.
+  /// Text (if not null) is inserted with the function addMixedText, so [text] is a list of text and is styled with [textStyles].
   /// Given text will behave and wrap as determined by [anchorImageAreaWrap] and [anchorImageTextWrap].
-  /// For example, an anchor image can look like a background image by setting [behindDocument] to true and anchorImageAreaWrap to AnchorImageAreaWrap.wrapNone.
+  /// For example, an anchor image can serve as a background image by setting [behindDocument] to true and anchorImageAreaWrap to AnchorImageAreaWrap.wrapNone.
   ///
   /// Width and height are measured in EMU (English Metric Unit) and should be between 1 and 27273042316900.
   /// The width and height should respect the aspect ratio (width / height) of your image to prevent distortion.
@@ -841,7 +841,7 @@ class DocXBuilder {
   ///
   /// height: 297mm/29.7cm/11.7 inches
   ///
-  void addImageWithText(
+  void addAnchorImage(
     File imageFile,
     int widthEMU,
     int heightEMU,
@@ -943,20 +943,13 @@ class DocXBuilder {
             addBreakAfterEveryItem: addBreakAfterEveryItem,
             addTab: addTab,
           );
-          addText(
-            '',
-            lineOrPageBreak: LineBreak(
-              lineBreakType: LineBreakType.textWrapping,
-              lineBreakClearLocation: LineBreakClearLocation.all,
-            ),
-          );
         }
       }
     }
   }
 
   /// AddImage inserts an inline image from a file at the current position in the buffer. AddImage is useful for stand-alone images that do not have accompanying text.
-  /// If you want multiple images in the same paragraph, use AddImages. If you need text around the image, use addImageWithText. You can also use tables to create a grid of images and/or text.
+  /// If you want multiple images in the same paragraph, use AddImages. If you need an anchor image or an image surrounded with text, use addAnchorImage. You can also use tables to create a grid of images and text as an alternative for anchor images.
   ///
   /// Ensure that the image is compressed to minimize the size of the docx file.
   ///
