@@ -1114,7 +1114,8 @@ class DocXBuilder {
     bool flipImageHorizontal = false,
     bool flipImageVertical = false,
     int rotateInEMU = 0,
-    List<TableBorder> tableBorders,
+    // List<TableBorder> tableBorders,
+    TableProperties tableProperties,
     TextAlignment textAlignment = TextAlignment.center,
     TableCellVerticalAlignment tableCellVerticalAlignment,
     bool doNotUseGlobalTextStyle = false,
@@ -1186,11 +1187,36 @@ class DocXBuilder {
 
       final Table t = Table(
         gridColumnWidths: [tableWidthInTwips ?? 8000],
-        tableProperties: TableProperties(
-          tableBorders: tableBorders,
-          preferredTableWidthType: PreferredWidthType.auto,
-          tableTextAlignment: TableTextAlignment.center,
-        ),
+        tableProperties: tableProperties ??
+            TableProperties(
+              tableTextAlignment: TableTextAlignment.center,
+              tableCellSpacing: '0',
+              tableCellSpacingType: PreferredWidthType.nil,
+              tableCellMargins: [
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.right,
+                ),
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.left,
+                ),
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.top,
+                ),
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.bottom,
+                ),
+              ],
+            ),
+        // tableProperties: TableProperties(
+
+        //   tableBorders: tableBorders,
+        //   preferredTableWidthType: PreferredWidthType.auto,
+        //   tableTextAlignment: TableTextAlignment.center,
+        // ),
         tableRows: [topRow, bottomRow],
       );
 
