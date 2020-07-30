@@ -246,7 +246,7 @@ class DocXBuilder {
             _getTextStyleAsString(
                 style: textStyles[i],
                 doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-            '<w:t xml:space="preserve">$t</w:t></w:r>${f.getXml()}',
+            '<w:t xml:space="preserve">$t</w:t></w:r><w:r>${_getTextStyleAsString(style: textStyles[i], doNotUseGlobalStyle: doNotUseGlobalTextStyle)}${f.getXml()}</w:r>',
           ]);
         }
         // _addToCharCounters(t);
@@ -654,7 +654,7 @@ class DocXBuilder {
       cached.writeAll(<String>[
         '<w:p>$ppr',
         tab,
-        '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r>${complexField.getXml()}$lineBreak</w:p>'
+        '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r><w:r>${_getTextStyleAsString()}${complexField.getXml()}</w:r>$lineBreak</w:p>'
       ]);
     }
     return cached.toString();
@@ -796,7 +796,7 @@ class DocXBuilder {
           _getTextStyleAsString(
               style: textStyles[i],
               doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-          '<w:t xml:space="preserve">$t</w:t></w:r>${f.getXml()}$multiBreak',
+          '<w:t xml:space="preserve">$t</w:t></w:r><w:r>${_getTextStyleAsString(style: textStyles[i], doNotUseGlobalStyle: doNotUseGlobalTextStyle)}${f.getXml()}</w:r>$multiBreak',
         ]);
       }
 
