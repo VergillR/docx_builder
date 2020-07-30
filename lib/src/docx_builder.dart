@@ -1163,7 +1163,7 @@ class DocXBuilder {
               verticalAlignment: tableCellVerticalAlignment,
               shading: captionAppearsBelowImage ? shadingImage : shadingCaption,
             ),
-            xmlContent: !captionAppearsBelowImage
+            xmlContent: captionAppearsBelowImage
                 ? '$xmlImage $xmlCaption'
                 : '$xmlCaption $xmlImage',
           )
