@@ -35,7 +35,9 @@ class Table extends Style {
     }
     t.write('</w:tblGrid>');
 
-    t.write(tableProperties.getXml());
+    if (tableProperties != null) {
+      t.write(tableProperties.getXml());
+    }
 
     if (tableRows != null) {
       for (int i = 0; i < tableRows.length; i++) {
