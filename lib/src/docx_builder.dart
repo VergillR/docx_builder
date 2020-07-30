@@ -54,35 +54,34 @@ class DocXBuilder {
   final String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-  final int emuWidthA4Pct05 = 378000;
-  final int emuWidthA4Pct10 = 756000;
-  final int emuWidthA4Pct20 = 1512000;
-  final int emuWidthA4Pct30 = 2268000;
-  final int emuWidthA4Pct40 = 3024000;
-  final int emuWidthA4Pct50 = 3780000;
-  final int emuWidthA4Pct60 = 4536000;
-  final int emuWidthA4Pct70 = 5292000;
-  final int emuWidthA4Pct80 = 6048000;
-  final int emuWidthA4Pct90 = 6804000;
-  final int emuWidthA4Pct100 = 7560000;
-
-  final int emuHeightA4Pct05 = 534600;
-  final int emuHeightA4Pct10 = 1069200;
-  final int emuHeightA4Pct20 = 2138400;
-  final int emuHeightA4Pct30 = 3207600;
-  final int emuHeightA4Pct40 = 4276800;
-  final int emuHeightA4Pct50 = 5346000;
-  final int emuHeightA4Pct60 = 6415200;
-  final int emuHeightA4Pct70 = 7484400;
-  final int emuHeightA4Pct80 = 8553600;
-  final int emuHeightA4Pct90 = 9622800;
-  final int emuHeightA4Pct100 = 10692000;
+  final int emuWidthA4 = 7560000;
+  final int emuHeightA4 = 10692000;
+  final int twipsWidthA4 = 13011; // 11906;
+  final int twipsHeightA4 = 16838;
 
   final String bullet = '•';
   final String arrowBullet = '‣';
   final String hyphenBullet = '⁃';
   final String inverseBullet = '◘';
   final String openBullet = '◦';
+
+  /// Convert inches to Twips (twentieth of point).
+  int convertInchesToTwips(int inches) => inches * 1440;
+
+  /// Convert centimeters to Twips (twentieth of point).
+  int convertCmToTwips(int cm) => (cm * 566.92913386).round();
+
+  /// Convert millimeters to Twips (twentieth of point).
+  int convertMmToTwips(int mm) => (mm * 56.692913386).round();
+
+  /// Convert inches to EMU; A4 format is 8.3 x 11.7 inches.
+  int convertInchesToEMU(int inches) => inches * 914400;
+
+  /// Convert centimeters to EMU; A4 format is 21x29.7cm.
+  int convertCentimetersToEMU(int cm) => cm * 360000;
+
+  /// Convert millimeters to EMU; A4 format is 210x297mm.
+  int convertMillimetersToEMU(int mm) => mm * 36000;
 
   /// Assign a [cacheDirectory] that DocXBuilder can use to store temporary files.
   DocXBuilder(Directory cacheDirectory) {
@@ -813,15 +812,6 @@ class DocXBuilder {
     return d.toString();
   }
 
-  /// Convert inches to EMU; A4 format is 8.3 x 11.7 inches.
-  int convertInchesToEMU(int inches) => inches * 914400;
-
-  /// Convert centimeters to EMU; A4 format is 21x29.7cm.
-  int convertCentimetersToEMU(int cm) => cm * 360000;
-
-  /// Convert millimeters to EMU; A4 format is 210x297mm.
-  int convertMillimetersToEMU(int mm) => mm * 36000;
-
   /// AddAnchorImage inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU), indicated by [horizontalOffsetEMU] and [verticalOffsetEMU]. If both offsets are 0, the anchor image will be placed at the start (left side of the line) of the cursor's current position in the document. Positive offsets push the image to the right and bottom. Negative offsets push the image to the left and top.
   /// Text (if not null) is inserted with the function addMixedText, so [text] is a list of text and is styled with [textStyles].
   /// Given text will behave and wrap as determined by [anchorImageAreaWrap] and [anchorImageTextWrap].
@@ -1083,6 +1073,116 @@ class DocXBuilder {
       }
     }
     _docx.write('</w:r></w:p>');
+  }
+
+  /// Create an inline image with a caption. The function itself is just syntactic sugar for creating a table with 1 column and 2 rows followed by placing an inline image in one row and text in the other.
+  ///
+  /// [captionAppearsBelowImage] determines if the caption is displayed above (false) or below (true; default) the image.
+  /// [hyperlinkTo] applies to the image, not the caption. If the caption needs to be a hyperlink, you can use TextStyle.hyperlinkTo or add the complexField(instructions: 'HYPERLINK').
+  void addImageWithCaption(
+    File imageFile,
+    int widthEMU,
+    int heightEMU, {
+    bool captionAppearsBelowImage = true,
+    Shading shadingCaption,
+    Shading shadingImage,
+    List<String> text,
+    List<TextStyle> textStyles,
+    String alternativeTextForImage = '',
+    bool noChangeAspect = true,
+    bool noMove = true,
+    bool noResize = true,
+    bool noSelect = false,
+    TextStyle textStyle,
+    bool doNotUseGlobalStyle = true,
+    String hyperlinkTo,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotateInEMU = 0,
+    List<TableBorder> tableBorders,
+    TableTextAlignment tableTextAlignment,
+    TableCellVerticalAlignment tableCellVerticalAlignment,
+    bool doNotUseGlobalTextStyle = false,
+    bool doNotUseGlobalPageStyle = true,
+    bool addTab = false,
+    List<ComplexField> complexFields,
+  }) {
+    if (!_bufferClosed) {
+      final xmlImage = _getCachedInlineImage(
+        imageFile,
+        widthEMU,
+        heightEMU,
+        alternativeTextForImage: alternativeTextForImage,
+        noChangeAspect: noChangeAspect,
+        noMove: noMove,
+        noResize: noResize,
+        noSelect: noSelect,
+        effectExtentB: effectExtentB,
+        effectExtentL: effectExtentL,
+        effectExtentR: effectExtentR,
+        effectExtentT: effectExtentT,
+        encloseInParagraph: true,
+        flipImageHorizontal: flipImageHorizontal,
+        flipImageVertical: flipImageVertical,
+        rotateInEMU: rotateInEMU,
+        hyperlinkTo: hyperlinkTo,
+      );
+      final xmlCaption = _getCachedAddMixedText(
+        text,
+        textStyles,
+        complexFields: complexFields,
+        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        addTab: addTab,
+      );
+
+      final TableRow topRow = TableRow(
+        tableRowProperties: TableRowProperties(
+            tableCellSpacingWidthType: PreferredWidthType.auto),
+        tableCells: [
+          TableCell(
+            tableCellProperties: TableCellProperties(
+              preferredWidthType: PreferredWidthType.auto,
+              verticalAlignment: tableCellVerticalAlignment,
+              shading: captionAppearsBelowImage ? shadingImage : shadingCaption,
+            ),
+            xmlContent: captionAppearsBelowImage ? xmlImage : xmlCaption,
+          )
+        ],
+      );
+
+      final TableRow bottomRow = TableRow(
+        tableRowProperties: TableRowProperties(
+          tableCellSpacingWidthType: PreferredWidthType.auto,
+        ),
+        tableCells: [
+          TableCell(
+            tableCellProperties: TableCellProperties(
+              preferredWidthType: PreferredWidthType.auto,
+              verticalAlignment: tableCellVerticalAlignment,
+              shading:
+                  !captionAppearsBelowImage ? shadingImage : shadingCaption,
+            ),
+            xmlContent: !captionAppearsBelowImage ? xmlImage : xmlCaption,
+          )
+        ],
+      );
+
+      final Table t = Table(
+        gridColumnWidths: [twipsWidthA4],
+        tableProperties: TableProperties(
+          tableBorders: tableBorders,
+          tableTextAlignment: tableTextAlignment,
+        ),
+        tableRows: [topRow, bottomRow],
+      );
+
+      attachTable(t);
+    }
   }
 
   void insertImageInTableCell({
