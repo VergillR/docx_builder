@@ -1086,16 +1086,16 @@ class DocXBuilder {
     _docx.write('</w:r></w:p>');
   }
 
-  /// Create an inline image with a caption. The function itself is just syntactic sugar for creating a table with 1 column and 2 rows followed by placing an inline image in one row and text in the other.
+  /// Create an inline image with a caption. The function itself is just syntactic sugar for creating a table with 1 column and 1 row followed by placing an inline image and the text in the row.
   ///
   /// [tableWidthInTwips] determines the width of the table (measured in twips).
-  /// [captionAppearsBelowImage] determines if the caption is displayed above (false) or below (true; default) the image. If the image is too small, the text will appear on the left (above) or right (below) side of the image.
+  /// [captionAppearsBelowImage] determines if the caption is displayed above (false) or below (true; default) the image.
   /// [hyperlinkTo] applies to the image, not the caption. If the caption needs to be a hyperlink, you can use TextStyle.hyperlinkTo or add the complexField(instructions: 'HYPERLINK').
   void addImageWithCaption(
     File imageFile,
     int widthEMU,
     int heightEMU, {
-    int tableWidthInTwips = 8000,
+    int tableWidthInTwips,
     bool captionAppearsBelowImage = true,
     Shading shadingCaption,
     Shading shadingImage,
@@ -1114,7 +1114,6 @@ class DocXBuilder {
     bool flipImageHorizontal = false,
     bool flipImageVertical = false,
     int rotateInEMU = 0,
-    // List<TableBorder> tableBorders,
     TableProperties tableProperties,
     TextAlignment textAlignment = TextAlignment.center,
     TableCellVerticalAlignment tableCellVerticalAlignment,
@@ -1170,40 +1169,8 @@ class DocXBuilder {
         ],
       );
 
-      // final TableRow topRow = TableRow(
-      //   tableRowProperties: TableRowProperties(
-      //       tableCellSpacingWidthType: PreferredWidthType.auto),
-      //   tableCells: [
-      //     TableCell(
-      //       tableCellProperties: TableCellProperties(
-      //         preferredWidthType: PreferredWidthType.auto,
-      //         verticalAlignment: tableCellVerticalAlignment,
-      //         shading: captionAppearsBelowImage ? shadingImage : shadingCaption,
-      //       ),
-      //       xmlContent: captionAppearsBelowImage ? xmlImage : xmlCaption,
-      //     )
-      //   ],
-      // );
-
-      // final TableRow bottomRow = TableRow(
-      //   tableRowProperties: TableRowProperties(
-      //     tableCellSpacingWidthType: PreferredWidthType.auto,
-      //   ),
-      //   tableCells: [
-      //     TableCell(
-      //       tableCellProperties: TableCellProperties(
-      //         preferredWidthType: PreferredWidthType.auto,
-      //         verticalAlignment: tableCellVerticalAlignment,
-      //         shading:
-      //             !captionAppearsBelowImage ? shadingImage : shadingCaption,
-      //       ),
-      //       xmlContent: !captionAppearsBelowImage ? xmlImage : xmlCaption,
-      //     )
-      //   ],
-      // );
-
       final Table t = Table(
-        gridColumnWidths: [tableWidthInTwips ?? 8000],
+        gridColumnWidths: [tableWidthInTwips ?? convertEMUToTwips(widthEMU)],
         tableProperties: tableProperties ??
             TableProperties(
               tableTextAlignment: TableTextAlignment.center,
@@ -1228,13 +1195,6 @@ class DocXBuilder {
                 ),
               ],
             ),
-        // tableProperties: TableProperties(
-
-        //   tableBorders: tableBorders,
-        //   preferredTableWidthType: PreferredWidthType.auto,
-        //   tableTextAlignment: TableTextAlignment.center,
-        // ),
-        // tableRows: [topRow, bottomRow],
         tableRows: [row],
       );
 
