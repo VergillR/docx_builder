@@ -27,7 +27,7 @@ export 'styles/style_enums.dart';
 /// When done, clear() is used to destroy the cache.
 class DocXBuilder {
   _p.Packager _packager;
-  final StringBuffer _docxstring = StringBuffer();
+  final StringBuffer _docx = StringBuffer();
   bool _bufferClosed = false;
   // int _charCount = 0;
   // int _charCountWithSpaces = 0;
@@ -92,7 +92,7 @@ class DocXBuilder {
 
   void _initDocX() {
     _bufferClosed = false;
-    _docxstring.write(_c.startDoc);
+    _docx.write(_c.startDoc);
   }
 
   /// Add a counter for characters; These values are written to the app.xml file.
@@ -109,17 +109,17 @@ class DocXBuilder {
         _documentBackgroundColor == null &&
         isValidColor(color)) {
       _documentBackgroundColor = '<w:background w:color="$color" /><w:body>';
-      if (_docxstring.toString().endsWith('<w:body>')) {
-        _docxstring.clear();
+      if (_docx.toString().endsWith('<w:body>')) {
+        _docx.clear();
         final String docWithBgColor =
             _c.startDoc.replaceAll('<w:body>', _documentBackgroundColor);
-        _docxstring.write(docWithBgColor);
+        _docx.write(docWithBgColor);
       }
     }
   }
 
   // Blank page can also be achieved with sectPr, sectType.nextPage and then create a new section which prompts a new page
-  // void addBlankPageA4() => _docxstring.write(_c.blankPageA4);
+  // void addBlankPageA4() => _docx.write(_c.blankPageA4);
 
   // ignore: use_setters_to_change_properties
   /// Sets the global page style, such as orientation, size, and page borders.
@@ -553,7 +553,7 @@ class DocXBuilder {
     TextFrame textFrame,
   }) {
     if (!_bufferClosed) {
-      _docxstring.write(_getCachedAddText(
+      _docx.write(_getCachedAddText(
         text,
         lineOrPageBreak: lineOrPageBreak,
         addTab: addTab,
@@ -571,7 +571,7 @@ class DocXBuilder {
   /// Similar to headers and footers, tables will only become visible after being attached to the document.
   void attachTable(Table table) {
     if (!_bufferClosed) {
-      _docxstring.write(table.getXml());
+      _docx.write(table.getXml());
     }
   }
 
@@ -688,7 +688,7 @@ class DocXBuilder {
     List<ComplexField> complexFields,
   }) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
-      _docxstring.write(_getCachedAddMixedText(
+      _docx.write(_getCachedAddMixedText(
         text,
         textStyles,
         pageStyle: pageStyle,
@@ -931,7 +931,7 @@ class DocXBuilder {
         const String closeR = '</w:r>';
 
         if (saved) {
-          _docxstring.write(
+          _docx.write(
               '$openParagraph$openPpr$openR<w:drawing><wp:anchor behindDoc="$behindDocument" distT="$distT" distB="$distB" distL="$distL" distR="$distR" simplePos="$simplePos" locked="$locked" layoutInCell="$layoutInCell" allowOverlap="$allowOverlap" relativeHeight="$relativeHeight"><wp:simplePos x="$simplePosX" y="$simplePosY" /><wp:positionH relativeFrom="${getValueFromEnum(horizontalPositionRelativeBase)}"><wp:posOffset>$horizontalOffsetEMU</wp:posOffset></wp:positionH><wp:positionV relativeFrom="${getValueFromEnum(verticalPositionRelativeBase)}"><wp:posOffset>$verticalOffsetEMU</wp:posOffset></wp:positionV><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:${getValueFromEnum(anchorImageAreaWrap)} wrapText="${getValueFromEnum(anchorImageTextWrap)}"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$_noChangeAspect" noMove="$_noMove" noResize="$_noResize" noSelect="$_noSelect" noChangeArrowheads="$_noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto">$xfrm</pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>$closeR$closeParagraph');
           addMixedText(
             text,
@@ -1059,7 +1059,7 @@ class DocXBuilder {
 
     final String openParagraphWithPpr =
         '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:r>';
-    _docxstring.write(openParagraphWithPpr);
+    _docx.write(openParagraphWithPpr);
     final String addSpaces = spaces > 0
         ? '<w:t xml:space="preserve">${List<String>.generate(spaces, (index) => ' ').join()}</w:t>'
         : '';
@@ -1086,10 +1086,10 @@ class DocXBuilder {
         rotateInEMU: rotateInEMU,
       );
       if (addSpaces.isNotEmpty) {
-        _docxstring.write(addSpaces);
+        _docx.write(addSpaces);
       }
     }
-    _docxstring.write('</w:r></w:p>');
+    _docx.write('</w:r></w:p>');
   }
 
   void insertImageInTableCell({
@@ -1241,7 +1241,7 @@ class DocXBuilder {
     }
 
     if (!_bufferClosed) {
-      _docxstring.write(_getCachedInlineImage(
+      _docx.write(_getCachedInlineImage(
         imageFile,
         widthEMU,
         heightEMU,
@@ -1337,13 +1337,13 @@ class DocXBuilder {
   }) async {
     try {
       if (!_bufferClosed) {
-        _docxstring.write(_getPageStyleAsString(style: _globalPageStyle));
-        _docxstring.write('</w:body></w:document>');
+        _docx.write(_getPageStyleAsString(style: _globalPageStyle));
+        _docx.write('</w:body></w:document>');
         _bufferClosed = true;
       }
 
       final File f = await _packager.bundle(
-        _docxstring.toString(),
+        _docx.toString(),
         // chars: _charCount,
         // charsWithSpaces: _charCountWithSpaces,
         // paragraphs: _parCount,
@@ -1361,7 +1361,7 @@ class DocXBuilder {
   /// Deletes all data and cache, so a new document can be created (or when DocXBuilder is no longer needed).
   /// This function also destroys the source file produced by createDocxFile so be sure to save or process the source file before calling clear.
   void clear({bool resetDocX = true}) {
-    _docxstring.clear();
+    _docx.clear();
     _documentBackgroundColor = null;
     _globalPageStyle = null;
     _globalTextStyle = null;
