@@ -1096,7 +1096,6 @@ class DocXBuilder {
     bool noResize = true,
     bool noSelect = false,
     TextStyle textStyle,
-    bool doNotUseGlobalStyle = true,
     String hyperlinkTo,
     int effectExtentL = 0,
     int effectExtentT = 0,
