@@ -56,7 +56,7 @@ class DocXBuilder {
 
   final int emuWidthA4 = 7560000;
   final int emuHeightA4 = 10692000;
-  final int twipsWidthA4 = 13011; // 11906;
+  final int twipsWidthA4 = 11906;
   final int twipsHeightA4 = 16838;
 
   final String bullet = '•';
@@ -1077,12 +1077,14 @@ class DocXBuilder {
 
   /// Create an inline image with a caption. The function itself is just syntactic sugar for creating a table with 1 column and 2 rows followed by placing an inline image in one row and text in the other.
   ///
+  /// [tableWidthInTwips] determines the width of the table (measured in twips).
   /// [captionAppearsBelowImage] determines if the caption is displayed above (false) or below (true; default) the image.
   /// [hyperlinkTo] applies to the image, not the caption. If the caption needs to be a hyperlink, you can use TextStyle.hyperlinkTo or add the complexField(instructions: 'HYPERLINK').
   void addImageWithCaption(
     File imageFile,
     int widthEMU,
     int heightEMU, {
+    int tableWidthInTwips = 8000,
     bool captionAppearsBelowImage = true,
     Shading shadingCaption,
     Shading shadingImage,
@@ -1173,7 +1175,7 @@ class DocXBuilder {
       );
 
       final Table t = Table(
-        gridColumnWidths: [twipsWidthA4],
+        gridColumnWidths: [tableWidthInTwips ?? 8000],
         tableProperties: TableProperties(
           tableBorders: tableBorders,
           tableTextAlignment: tableTextAlignment,
