@@ -1163,8 +1163,8 @@ class DocXBuilder {
               shading: captionAppearsBelowImage ? shadingImage : shadingCaption,
             ),
             xmlContent: captionAppearsBelowImage
-                ? '$xmlImage $xmlCaption'
-                : '$xmlCaption $xmlImage',
+                ? '$xmlImage$xmlCaption'
+                : '$xmlCaption$xmlImage',
           )
         ],
       );

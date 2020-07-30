@@ -37,7 +37,7 @@ class TableRowProperties extends Style {
     }
     if (tableCellSpacing != null || tableCellSpacingWidthType != null) {
       trp.write(
-          '<w:tblCellSpacing w:w="${tableCellSpacing ?? 100}" w:type="${getValueFromEnum(tableCellSpacingWidthType ?? PreferredWidthType.dxa)}"/>');
+          '<w:tblCellSpacing w:w="${tableCellSpacing ?? 0}" w:type="${getValueFromEnum(tableCellSpacingWidthType ?? PreferredWidthType.nil)}"/>');
     }
     if (isTableHeader ?? false) {
       trp.write('<w:tblHeader/>');
