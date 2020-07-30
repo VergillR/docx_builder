@@ -572,8 +572,10 @@ class DocXBuilder {
     }
   }
 
-  /// When the table has been finalized, insert it into the document with this function. A table should contain a list of column widths and have at least 1 table row. Rows can contain zero or more table cells.
-  void insertAndWriteTableToDocument(Table table) {
+  /// When the table has been finalized, attach it to the document at the cursor's current position. A table should contain a list of column widths and have at least 1 table row. Rows can contain zero or more table cells.
+  ///
+  /// Similar to headers and footers, tables will only become visible after being attached to the document.
+  void attachTable(Table table) {
     if (!_bufferClosed) {
       _docxstring.write(table.getXml());
     }
