@@ -12,6 +12,7 @@ import 'package/packager.dart' as _p;
 import 'utils/constants/constants.dart' as _c;
 
 export './styles/style_classes/index.dart';
+export './styles/style_containers/index.dart';
 export 'styles/style_enums.dart';
 
 /// DocXBuilder is used to construct and create .docx files.
