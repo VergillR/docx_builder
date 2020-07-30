@@ -1,8 +1,15 @@
-import 'package:meta/meta.dart';
+// import 'package:meta/meta.dart';
 
 import 'package:docx_builder/src/styles/style_classes/index.dart';
 import 'package:docx_builder/src/styles/style.dart';
 
+/// A table uses a grid to display its content. A table contains one or more table rows, which contain zero or more table cells. The table cells hold the actual content (text, images or another table).
+///
+/// [tableRows] contains the rows which hold the table cells carrying the actual content of the table.
+///
+/// [gridColumnWidths] should hold widths for the maximum amount of columns, e.g. for 5 columns the list can contain the values 1600, 1000, 800, 800, 800. If the designed table has varying widths for its cells, the number of given widths should equal that of the highest number of cells possible in one row.
+///
+/// [tableProperties] determine the global properties of the table; some properties can be overridden by row or cell properties.
 class Table extends Style {
   List<int> gridColumnWidths;
   TableProperties tableProperties;
@@ -47,13 +54,13 @@ class Table extends Style {
   /// [gridColumnWidths] should hold widths for the maximum amount of columns, e.g. for 5 columns the list can contain the values 1600, 1000, 800, 800, 800. If the designed table has varying widths for its cells, the number of given widths should equal that of the highest number of cells possible in one row.
   ///
   /// [tableProperties] determine the global properties of the table; some properties can be overridden by row or cell properties.
-  void setTable({
-    @required List<int> gridColumnWidths,
-    @required List<TableRow> tableRows,
-    TableProperties tableProperties,
-  }) {
-    this.gridColumnWidths = gridColumnWidths;
-    this.tableRows = tableRows;
-    this.tableProperties = tableProperties;
-  }
+  // void setTable({
+  //   @required List<int> gridColumnWidths,
+  //   @required List<TableRow> tableRows,
+  //   TableProperties tableProperties,
+  // }) {
+  //   this.gridColumnWidths = gridColumnWidths;
+  //   this.tableRows = tableRows;
+  //   this.tableProperties = tableProperties;
+  // }
 }

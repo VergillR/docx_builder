@@ -1,10 +1,11 @@
 import 'dart:io';
 
-import 'package:docx_builder/docx_builder.dart';
+import 'package:meta/meta.dart';
 import 'package:docx_builder/src/utils/constants/mimetypes.dart';
 import 'package:docx_builder/src/utils/utils.dart';
 import 'package:docx_builder/src/styles/style_classes/index.dart';
 import 'package:docx_builder/src/styles/style_containers/index.dart';
+import 'package:docx_builder/src/styles/style_enums.dart';
 
 import 'builders/index.dart' as _b;
 import 'package/packager.dart' as _p;
@@ -571,6 +572,51 @@ class DocXBuilder {
     }
   }
 
+  /// When the table has been finalized, insert it into the document with this function. A table should contain a list of column widths and have at least 1 table row. Rows can contain zero or more table cells.
+  void insertAndWriteTableToDocument(Table table) {
+    if (!_bufferClosed) {
+      _docxstring.write(table.getXml());
+    }
+  }
+
+  /// Assigning cells to tableRow.tableCells directly is also possible.
+  void insertTableCellsInRow(
+          {@required List<TableCell> tableCells,
+          @required TableRow tableRow}) =>
+      tableRow.tableCells = tableCells;
+
+  /// Assigning rows to table.tableRows directly is also possible.
+  void insertRowsInTable(
+          {@required Table table, @required List<TableRow> tableRows}) =>
+      table.tableRows = tableRows;
+
+  void insertTableInTableCell(
+          {@required Table table, @required TableCell tableCell}) =>
+      tableCell.xmlContent = table.getXml();
+
+  void insertTextInTableCell({
+    @required TableCell tableCell,
+    @required String text,
+    LineBreak lineOrPageBreak,
+    bool addTab = false,
+    String hyperlinkTo,
+    ComplexField complexField,
+    TextFrame textFrame,
+  }) {
+    if (!_bufferClosed) {
+      tableCell.xmlContent = _getCachedAddText(
+        text,
+        lineOrPageBreak: lineOrPageBreak,
+        addTab: addTab,
+        hyperlinkTo: hyperlinkTo,
+        complexField: complexField,
+        textFrame: textFrame,
+      );
+      // _addToCharCounters(text);
+      // _parCount++;
+    }
+  }
+
   /// Writes XML text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
   String _getCachedAddText(
     String text, {
@@ -657,6 +703,35 @@ class DocXBuilder {
         addTab: addTab,
         complexFields: complexFields,
       ));
+      // _addToCharCounters(t);
+      // _parCount++;
+    }
+  }
+
+  void addMixedTextInTableCell({
+    @required TableCell tableCell,
+    @required List<String> text,
+    List<DocxTextStyle> textStyles,
+    DocxPageStyle pageStyle,
+    bool doNotUseGlobalTextStyle = false,
+    bool doNotUseGlobalPageStyle = true,
+    LineBreak lineOrPageBreak,
+    bool addBreakAfterEveryItem = false,
+    bool addTab = false,
+    List<ComplexField> complexFields,
+  }) {
+    if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
+      tableCell.xmlContent = _getCachedAddMixedText(
+        text,
+        textStyles,
+        pageStyle: pageStyle,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+        lineOrPageBreak: lineOrPageBreak,
+        addBreakAfterEveryItem: addBreakAfterEveryItem,
+        addTab: addTab,
+        complexFields: complexFields,
+      );
       // _addToCharCounters(t);
       // _parCount++;
     }
@@ -1020,6 +1095,129 @@ class DocXBuilder {
       }
     }
     _docxstring.write('</w:r></w:p>');
+  }
+
+  void insertImageInTableCell({
+    @required TableCell tableCell,
+    @required File imageFile,
+    @required int widthEMU,
+    @required int heightEMU,
+    String alternativeTextForImage = '',
+    bool noChangeAspect = true,
+    bool noMove = true,
+    bool noResize = true,
+    bool noSelect = false,
+    DocxTextStyle textStyle,
+    bool doNotUseGlobalStyle = true,
+    String hyperlinkTo,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotateInEMU = 0,
+  }) {
+    const int max = 27273042316900;
+    if (widthEMU < 1 || widthEMU > max || heightEMU < 1 || heightEMU > max) {
+      return;
+    }
+
+    if (!_bufferClosed) {
+      tableCell.xmlContent = _getCachedInlineImage(
+        imageFile,
+        widthEMU,
+        heightEMU,
+        alternativeTextForImage: alternativeTextForImage,
+        noChangeAspect: noChangeAspect,
+        noMove: noMove,
+        noResize: noResize,
+        noSelect: noSelect,
+        textStyle: textStyle,
+        doNotUseGlobalStyle: doNotUseGlobalStyle,
+        encloseInParagraph: true,
+        hyperlinkTo: hyperlinkTo,
+        effectExtentL: effectExtentL,
+        effectExtentT: effectExtentT,
+        effectExtentR: effectExtentR,
+        effectExtentB: effectExtentB,
+        flipImageHorizontal: flipImageHorizontal,
+        flipImageVertical: flipImageVertical,
+        rotateInEMU: rotateInEMU,
+      );
+    }
+  }
+
+  void insertImagesInTableCell({
+    @required TableCell tableCell,
+    @required List<File> imageFiles,
+    @required int widthEMU,
+    @required int heightEMU,
+    List<String> alternativeTextListForImage,
+    List<String> hyperlinksTo,
+    bool noChangeAspect = true,
+    bool noMove = true,
+    bool noResize = true,
+    bool noSelect = false,
+    DocxTextStyle textStyle,
+    bool doNotUseGlobalStyle = true,
+    int spaces = 0,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotateInEMU = 0,
+  }) {
+    final StringBuffer s = StringBuffer();
+    final style =
+        textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
+
+    final List<String> desc = alternativeTextListForImage != null &&
+            alternativeTextListForImage.length == imageFiles.length
+        ? alternativeTextListForImage
+        : List.generate(imageFiles.length, (index) => '');
+
+    final List<String> hyperlinks =
+        hyperlinksTo != null && hyperlinksTo.length == imageFiles.length
+            ? hyperlinksTo
+            : List.generate(imageFiles.length, (index) => '');
+
+    final String openParagraphWithPpr =
+        '<w:p>${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:r>';
+    s.write(openParagraphWithPpr);
+    final String addSpaces = spaces > 0
+        ? '<w:t xml:space="preserve">${List<String>.generate(spaces, (index) => ' ').join()}</w:t>'
+        : '';
+    for (int i = 0; i < imageFiles.length; i++) {
+      _insertInlineImage(
+        imageFiles[i],
+        widthEMU,
+        heightEMU,
+        alternativeTextForImage: desc[i] ?? '',
+        noChangeAspect: noChangeAspect,
+        noMove: noMove,
+        noResize: noResize,
+        noSelect: noSelect,
+        textStyle: textStyle,
+        doNotUseGlobalStyle: doNotUseGlobalStyle,
+        encloseInParagraph: false,
+        hyperlinkTo: hyperlinks[i] ?? '',
+        effectExtentL: effectExtentL,
+        effectExtentT: effectExtentT,
+        effectExtentR: effectExtentR,
+        effectExtentB: effectExtentB,
+        flipImageHorizontal: flipImageHorizontal,
+        flipImageVertical: flipImageVertical,
+        rotateInEMU: rotateInEMU,
+      );
+      if (addSpaces.isNotEmpty) {
+        s.write(addSpaces);
+      }
+    }
+    s.write('</w:r></w:p>');
+    tableCell.xmlContent = s.toString();
   }
 
   void _insertInlineImage(

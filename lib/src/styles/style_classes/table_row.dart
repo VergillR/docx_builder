@@ -3,7 +3,7 @@ import './index.dart';
 
 class TableRow extends Style {
   final TableRowProperties tableRowProperties;
-  final List<TableCell> tableCells;
+  List<TableCell> tableCells;
 
   TableRow({
     this.tableRowProperties,

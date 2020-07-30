@@ -3,15 +3,16 @@ import '../style.dart';
 import './index.dart';
 
 /// TableCell can contain content which holds an entire p (paragraph with runs and text) or tbl (table).
+/// Content must be in formatted correctly in OOXML.
 class TableCell extends Style {
   final String cellId;
   final TableCellProperties tableCellProperties;
-  final String content;
+  String xmlContent;
 
   TableCell({
     this.cellId,
     this.tableCellProperties,
-    this.content,
+    this.xmlContent,
   });
 
   @override
@@ -21,7 +22,7 @@ class TableCell extends Style {
     if (tableCellProperties != null) {
       tc.write(tableCellProperties.getXml());
     }
-    tc.write('${content ?? '<w:p><w:r></w:r></w:p>'}</w:tc>');
+    tc.write('${xmlContent ?? '<w:p><w:r></w:r></w:p>'}</w:tc>');
     return tc.toString();
   }
 }
