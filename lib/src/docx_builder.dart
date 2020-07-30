@@ -65,8 +65,11 @@ class DocXBuilder {
   final String inverseBullet = '◘';
   final String openBullet = '◦';
 
-  /// Convert inches to Twips (twentieth of point).
-  int convertInchesToTwips(int inches) => inches * 1440;
+  /// Convert EMUs to Twips (twentieth of point).
+  int convertEMUToTwips(int emu) => (emu / 635).round();
+
+  /// Convert Twips to EMUS.
+  int convertTwipsToEMU(int twips) => twips * 635;
 
   /// Convert centimeters to Twips (twentieth of point).
   int convertCmToTwips(int cm) => (cm * 566.92913386).round();
@@ -865,10 +868,10 @@ class DocXBuilder {
         VerticalPositionRelativeBase.paragraph,
     AnchorImageHorizontalAlignment anchorImageHorizontalAlignment,
     String alternativeTextForImage = '',
-    bool noChangeAspect = true,
-    bool noChangeArrowheads = true,
-    bool noMove = true,
-    bool noResize = true,
+    bool noChangeAspect = false,
+    bool noChangeArrowheads = false,
+    bool noMove = false,
+    bool noResize = false,
     bool noSelect = false,
     String hyperlinkTo,
     List<String> text,
@@ -971,9 +974,9 @@ class DocXBuilder {
     int widthEMU,
     int heightEMU, {
     String alternativeTextForImage = '',
-    bool noChangeAspect = true,
-    bool noMove = true,
-    bool noResize = true,
+    bool noChangeAspect = false,
+    bool noMove = false,
+    bool noResize = false,
     bool noSelect = false,
     TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
@@ -1021,9 +1024,9 @@ class DocXBuilder {
     int heightEMU, {
     List<String> alternativeTextListForImage,
     List<String> hyperlinksTo,
-    bool noChangeAspect = true,
-    bool noMove = true,
-    bool noResize = true,
+    bool noChangeAspect = false,
+    bool noMove = false,
+    bool noResize = false,
     bool noSelect = false,
     TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
@@ -1099,11 +1102,10 @@ class DocXBuilder {
     List<String> text,
     List<TextStyle> textStyles,
     String alternativeTextForImage = '',
-    bool noChangeAspect = true,
-    bool noMove = true,
-    bool noResize = true,
+    bool noChangeAspect = false,
+    bool noMove = false,
+    bool noResize = false,
     bool noSelect = false,
-    TextStyle textStyle,
     String hyperlinkTo,
     int effectExtentL = 0,
     int effectExtentT = 0,
@@ -1187,6 +1189,7 @@ class DocXBuilder {
         tableProperties: TableProperties(
           tableBorders: tableBorders,
           preferredTableWidthType: PreferredWidthType.auto,
+          tableTextAlignment: TableTextAlignment.center,
         ),
         tableRows: [topRow, bottomRow],
       );
@@ -1201,9 +1204,9 @@ class DocXBuilder {
     @required int widthEMU,
     @required int heightEMU,
     String alternativeTextForImage = '',
-    bool noChangeAspect = true,
-    bool noMove = true,
-    bool noResize = true,
+    bool noChangeAspect = false,
+    bool noMove = false,
+    bool noResize = false,
     bool noSelect = false,
     TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
@@ -1253,9 +1256,9 @@ class DocXBuilder {
     @required int heightEMU,
     List<String> alternativeTextListForImage,
     List<String> hyperlinksTo,
-    bool noChangeAspect = true,
-    bool noMove = true,
-    bool noResize = true,
+    bool noChangeAspect = false,
+    bool noMove = false,
+    bool noResize = false,
     bool noSelect = false,
     TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
@@ -1322,9 +1325,9 @@ class DocXBuilder {
     int widthEMU,
     int heightEMU, {
     String alternativeTextForImage = '',
-    bool noChangeAspect = true,
-    bool noMove = true,
-    bool noResize = true,
+    bool noChangeAspect = false,
+    bool noMove = false,
+    bool noResize = false,
     bool noSelect = false,
     TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
@@ -1370,9 +1373,9 @@ class DocXBuilder {
 
   String _getCachedInlineImage(File imageFile, int widthEMU, int heightEMU,
       {String alternativeTextForImage = '',
-      bool noChangeAspect = true,
-      bool noMove = true,
-      bool noResize = true,
+      bool noChangeAspect = false,
+      bool noMove = false,
+      bool noResize = false,
       bool noSelect = false,
       TextStyle textStyle,
       bool doNotUseGlobalStyle = true,
