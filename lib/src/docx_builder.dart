@@ -1186,7 +1186,8 @@ class DocXBuilder {
         gridColumnWidths: [tableWidthInTwips ?? 8000],
         tableProperties: TableProperties(
           tableBorders: tableBorders,
-          tableTextAlignment: tableTextAlignment,
+          preferredTableWidth: '100%',
+          preferredTableWidthType: PreferredWidthType.pct,
         ),
         tableRows: [topRow, bottomRow],
       );
