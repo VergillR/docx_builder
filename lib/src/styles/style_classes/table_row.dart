@@ -19,7 +19,11 @@ class TableRow extends Style {
     }
     if (tableCells != null && tableCells.isNotEmpty) {
       for (int i = 0; i < tableCells.length; i++) {
-        s.write(tableCells[i].getXml());
+        if (tableCells[i] != null) {
+          s.write(tableCells[i].getXml());
+        } else {
+          s.write('<w:tc></w:tc>');
+        }
       }
     }
 
