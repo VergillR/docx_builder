@@ -665,7 +665,7 @@ class DocXBuilder {
   /// Note that the last paragraph of the document should NOT have any custom section styling!
   /// Except for HighlightColor, colors are in 'RRGGBB' format.
   ///
-  /// Lists can hold null values. For text: null implies no text; for textStyles: null implies use of globalDocxTextStyle.
+  /// Lists can hold null values. For text: null implies no text; for textStyles: null implies use of globalDocxTextStyle. [textAlignment] for the entire text should be set as an argument in the function instead of in the individual textStyles.
   ///
   /// This function always adds a new paragraph to the document.
   ///
@@ -678,6 +678,7 @@ class DocXBuilder {
   void addMixedText(
     List<String> text,
     List<TextStyle> textStyles, {
+    TextAlignment textAlignment,
     PageStyle pageStyle,
     bool doNotUseGlobalTextStyle = false,
     bool doNotUseGlobalPageStyle = true,
@@ -690,6 +691,7 @@ class DocXBuilder {
       _docx.write(_getCachedAddMixedText(
         text,
         textStyles,
+        textAlignment: textAlignment,
         pageStyle: pageStyle,
         doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
         doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
@@ -706,6 +708,7 @@ class DocXBuilder {
   void insertMixedTextInTableCell({
     @required TableCell tableCell,
     @required List<String> text,
+    TextAlignment textAlignment,
     List<TextStyle> textStyles,
     PageStyle pageStyle,
     bool doNotUseGlobalTextStyle = false,
@@ -719,6 +722,7 @@ class DocXBuilder {
       tableCell.xmlContent = _getCachedAddMixedText(
         text,
         textStyles,
+        textAlignment: textAlignment,
         pageStyle: pageStyle,
         doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
         doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
@@ -743,6 +747,7 @@ class DocXBuilder {
     bool addBreakAfterEveryItem = false,
     bool addTab = false,
     List<ComplexField> complexFields,
+    TextAlignment textAlignment,
   }) {
     final StringBuffer d = StringBuffer();
     d.write('<w:p><w:pPr>');
@@ -750,7 +755,10 @@ class DocXBuilder {
       d.write(_getPageStyleAsString(
           style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
     }
-    d.write(_getParagraphStyleAsString().replaceFirst('<w:pPr>', ''));
+    d.write(_getParagraphStyleAsString(
+            textStyle: TextStyle(textAlignment: textAlignment),
+            doNotUseGlobalStyle: doNotUseGlobalTextStyle)
+        .replaceFirst('<w:pPr>', ''));
 
     final String multiBreak = lineOrPageBreak != null && addBreakAfterEveryItem
         ? lineOrPageBreak.getXml()
@@ -1105,7 +1113,7 @@ class DocXBuilder {
     bool flipImageVertical = false,
     int rotateInEMU = 0,
     List<TableBorder> tableBorders,
-    TableTextAlignment tableTextAlignment,
+    TextAlignment textAlignment = TextAlignment.center,
     TableCellVerticalAlignment tableCellVerticalAlignment,
     bool doNotUseGlobalTextStyle = false,
     bool doNotUseGlobalPageStyle = true,
@@ -1135,6 +1143,7 @@ class DocXBuilder {
       final xmlCaption = _getCachedAddMixedText(
         text,
         textStyles,
+        textAlignment: textAlignment,
         complexFields: complexFields,
         doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
         doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
