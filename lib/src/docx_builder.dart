@@ -1158,7 +1158,6 @@ class DocXBuilder {
         tableCells: [
           TableCell(
             tableCellProperties: TableCellProperties(
-              preferredWidthType: PreferredWidthType.auto,
               verticalAlignment: tableCellVerticalAlignment,
               shading: captionAppearsBelowImage ? shadingImage : shadingCaption,
             ),
