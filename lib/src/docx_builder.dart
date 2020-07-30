@@ -38,10 +38,10 @@ class DocXBuilder {
   String _documentBackgroundColor;
   String get documentBackgroundColor => _documentBackgroundColor;
 
-  DocxTextStyle _globalDocxTextStyle = DocxTextStyle();
-  DocxTextStyle get globalDocxTextStyle => _globalDocxTextStyle;
-  DocxPageStyle _globalDocxPageStyle = DocxPageStyle().getDefaultPageStyle();
-  DocxPageStyle get globalDocxPageStyle => _globalDocxPageStyle;
+  TextStyle _globalTextStyle = TextStyle();
+  TextStyle get globalTextStyle => _globalTextStyle;
+  PageStyle _globalPageStyle = PageStyle().getDefaultPageStyle();
+  PageStyle get globalPageStyle => _globalPageStyle;
 
   Header _firstPageHeader;
   Header _oddPageHeader;
@@ -125,8 +125,7 @@ class DocXBuilder {
   /// Sets the global page style, such as orientation, size, and page borders.
   /// This page style can only be set once as the final SectPr directly inside the body tag of the document.
   /// When adding custom section properties to a paragraph, make sure that paragraph is NOT the last paragraph of the document or else the document will be malformed.
-  void setGlobalDocxPageStyle(DocxPageStyle pageStyle) =>
-      _globalDocxPageStyle = pageStyle;
+  void setGlobalPageStyle(PageStyle pageStyle) => _globalPageStyle = pageStyle;
 
   /// The [type] determines where the header will appear: for odd pages (also called default header), first page (also called title page header) or even pages. When a header is set, it cannot be changed or removed afterwards as additional files and references are immediately written to the cache directory upon creation.
   ///
@@ -138,14 +137,14 @@ class DocXBuilder {
   void setHeader(
     HeaderType headerType,
     List<String> text,
-    List<DocxTextStyle> textStyles, {
+    List<TextStyle> textStyles, {
     bool doNotUseGlobalTextStyle = true,
     List<ComplexField> complexFields,
   }) {
     if (!_bufferClosed) {
-      final List<DocxTextStyle> styles = text.length == textStyles.length
+      final List<TextStyle> styles = text.length == textStyles.length
           ? textStyles
-          : List<DocxTextStyle>.generate(text.length, (index) => null);
+          : List<TextStyle>.generate(text.length, (index) => null);
       _initHeaderOrFooter(
         headerType: headerType,
         text: text,
@@ -166,14 +165,14 @@ class DocXBuilder {
   void setFooter(
     FooterType footerType,
     List<String> text,
-    List<DocxTextStyle> textStyles, {
+    List<TextStyle> textStyles, {
     bool doNotUseGlobalTextStyle = true,
     List<ComplexField> complexFields,
   }) {
     if (!_bufferClosed) {
-      final List<DocxTextStyle> styles = text.length == textStyles.length
+      final List<TextStyle> styles = text.length == textStyles.length
           ? textStyles
-          : List<DocxTextStyle>.generate(text.length, (index) => null);
+          : List<TextStyle>.generate(text.length, (index) => null);
       _initHeaderOrFooter(
         footerType: footerType,
         text: text,
@@ -201,7 +200,7 @@ class DocXBuilder {
       {HeaderType headerType,
       FooterType footerType,
       List<String> text,
-      List<DocxTextStyle> textStyles,
+      List<TextStyle> textStyles,
       List<ComplexField> complexFields,
       bool doNotUseGlobalTextStyle = false}) {
     final bool isHeader = headerType != null;
@@ -341,66 +340,61 @@ class DocXBuilder {
 
   /// Obtain the XML string of the page style.
   /// If no style is given, then the globalDocxPageStyle is used.
-  String _getDocxPageStyleAsString(
-      {DocxPageStyle style, bool doNotUseGlobalStyle = false}) {
-    final DocxPageStyle pageStyle = style ?? DocxPageStyle();
+  String _getPageStyleAsString(
+      {PageStyle style, bool doNotUseGlobalStyle = false}) {
+    final PageStyle pageStyle = style ?? PageStyle();
     String spr = _b.SectPr.getSpr(
       cols: doNotUseGlobalStyle
           ? pageStyle.cols
-          : pageStyle.cols ?? _globalDocxPageStyle.cols,
+          : pageStyle.cols ?? _globalPageStyle.cols,
       colsHaveSeparator: doNotUseGlobalStyle
           ? pageStyle.colsHaveSeparator
-          : pageStyle.colsHaveSeparator ??
-              _globalDocxPageStyle.colsHaveSeparator,
+          : pageStyle.colsHaveSeparator ?? _globalPageStyle.colsHaveSeparator,
       colsHaveEqualWidth: doNotUseGlobalStyle
           ? pageStyle.colsHaveEqualWidth
-          : pageStyle.colsHaveEqualWidth ??
-              _globalDocxPageStyle.colsHaveEqualWidth,
+          : pageStyle.colsHaveEqualWidth ?? _globalPageStyle.colsHaveEqualWidth,
       sectType: doNotUseGlobalStyle
           ? pageStyle.sectType
-          : pageStyle.sectType ?? _globalDocxPageStyle.sectType,
+          : pageStyle.sectType ?? _globalPageStyle.sectType,
       pageSzHeight: doNotUseGlobalStyle
           ? pageStyle.pageSzHeight
-          : pageStyle.pageSzHeight ?? _globalDocxPageStyle.pageSzHeight,
+          : pageStyle.pageSzHeight ?? _globalPageStyle.pageSzHeight,
       pageSzWidth: doNotUseGlobalStyle
           ? pageStyle.pageSzWidth
-          : pageStyle.pageSzWidth ?? _globalDocxPageStyle.pageSzWidth,
+          : pageStyle.pageSzWidth ?? _globalPageStyle.pageSzWidth,
       pageOrientation: doNotUseGlobalStyle
           ? pageStyle.pageOrientation
-          : pageStyle.pageOrientation ?? _globalDocxPageStyle.pageOrientation,
+          : pageStyle.pageOrientation ?? _globalPageStyle.pageOrientation,
       sectVerticalAlign: doNotUseGlobalStyle
           ? pageStyle.sectVerticalAlign
-          : pageStyle.sectVerticalAlign ??
-              _globalDocxPageStyle.sectVerticalAlign,
+          : pageStyle.sectVerticalAlign ?? _globalPageStyle.sectVerticalAlign,
       pageBorders: doNotUseGlobalStyle
           ? pageStyle.pageBorders
-          : pageStyle.pageBorders ?? _globalDocxPageStyle.pageBorders,
+          : pageStyle.pageBorders ?? _globalPageStyle.pageBorders,
       pageBorderDisplay: doNotUseGlobalStyle
           ? pageStyle.pageBorderDisplay
-          : pageStyle.pageBorderDisplay ??
-              _globalDocxPageStyle.pageBorderDisplay,
+          : pageStyle.pageBorderDisplay ?? _globalPageStyle.pageBorderDisplay,
       pageBorderOffsetBasedOnText: doNotUseGlobalStyle
           ? pageStyle.pageBorderOffsetBasedOnText
           : pageStyle.pageBorderOffsetBasedOnText ??
-              _globalDocxPageStyle.pageBorderOffsetBasedOnText,
+              _globalPageStyle.pageBorderOffsetBasedOnText,
       pageBorderIsRenderedAboveText: doNotUseGlobalStyle
           ? pageStyle.pageBorderIsRenderedAboveText
           : pageStyle.pageBorderIsRenderedAboveText ??
-              _globalDocxPageStyle.pageBorderIsRenderedAboveText,
+              _globalPageStyle.pageBorderIsRenderedAboveText,
       pageNumberingFormat: doNotUseGlobalStyle
           ? pageStyle.pageNumberingFormat
           : pageStyle.pageNumberingFormat ??
-              _globalDocxPageStyle.pageNumberingFormat,
+              _globalPageStyle.pageNumberingFormat,
       pageNumberingStart: doNotUseGlobalStyle
           ? pageStyle.pageNumberingStart
-          : pageStyle.pageNumberingStart ??
-              _globalDocxPageStyle.pageNumberingStart,
+          : pageStyle.pageNumberingStart ?? _globalPageStyle.pageNumberingStart,
       lineNumbering: doNotUseGlobalStyle
           ? pageStyle.lineNumbering
-          : pageStyle.lineNumbering ?? _globalDocxPageStyle.lineNumbering,
+          : pageStyle.lineNumbering ?? _globalPageStyle.lineNumbering,
       pageMargin: doNotUseGlobalStyle
           ? pageStyle.pageMargin
-          : pageStyle.pageMargin ?? _globalDocxPageStyle.pageMargin,
+          : pageStyle.pageMargin ?? _globalPageStyle.pageMargin,
     );
     if (_insertHeadersAndFootersInThisSection) {
       spr = _addHeadersAndFootersToSectPr(spr);
@@ -413,132 +407,131 @@ class DocXBuilder {
   /// Sets the global style for text. Except for HighlightColor, colors are in 'RRGGBB' format.
   /// The global text style can be overridden by addMixedText with its own styling rules.
   /// The hyperlinkTo and textFrame properties of the global text style are never used as this makes no sense. Hyperlinks and textframes can be added manually with addText or addMixedText.
-  void setGlobalDocxTextStyle(DocxTextStyle textStyle) =>
-      _globalDocxTextStyle = textStyle;
+  void setGlobalTextStyle(TextStyle textStyle) => _globalTextStyle = textStyle;
 
   /// Obtain the XML string of the paragraph style, such as text alignment.
   /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
   /// Textframes cannot be set global.
   String _getParagraphStyleAsString(
-      {DocxTextStyle textStyle, bool doNotUseGlobalStyle = false}) {
-    final DocxTextStyle style = textStyle ?? DocxTextStyle();
+      {TextStyle textStyle, bool doNotUseGlobalStyle = false}) {
+    final TextStyle style = textStyle ?? TextStyle();
     return _b.Ppr.getPpr(
       textFrame: textStyle?.textFrame != null ? textStyle.textFrame : null,
       keepLines: doNotUseGlobalStyle
           ? style.keepLines
-          : style.keepLines ?? _globalDocxTextStyle.keepLines,
+          : style.keepLines ?? _globalTextStyle.keepLines,
       keepNext: doNotUseGlobalStyle
           ? style.keepNext
-          : style.keepNext ?? _globalDocxTextStyle.keepNext,
+          : style.keepNext ?? _globalTextStyle.keepNext,
       paragraphBorderOnAllSides: doNotUseGlobalStyle
           ? style.paragraphBorderOnAllSides
           : style.paragraphBorderOnAllSides ??
-              _globalDocxTextStyle.paragraphBorderOnAllSides,
+              _globalTextStyle.paragraphBorderOnAllSides,
       paragraphBorders: doNotUseGlobalStyle
           ? style.paragraphBorders
-          : style.paragraphBorders ?? _globalDocxTextStyle.paragraphBorders,
+          : style.paragraphBorders ?? _globalTextStyle.paragraphBorders,
       paragraphIndent: doNotUseGlobalStyle
           ? style.paragraphIndent
-          : style.paragraphIndent ?? _globalDocxTextStyle.paragraphIndent,
+          : style.paragraphIndent ?? _globalTextStyle.paragraphIndent,
       paragraphShading: doNotUseGlobalStyle
           ? style.paragraphShading
-          : style.paragraphShading ?? _globalDocxTextStyle.paragraphShading,
+          : style.paragraphShading ?? _globalTextStyle.paragraphShading,
       spacing: doNotUseGlobalStyle
           ? style.paragraphSpacing
-          : style.paragraphSpacing ?? _globalDocxTextStyle.paragraphSpacing,
+          : style.paragraphSpacing ?? _globalTextStyle.paragraphSpacing,
       tabs: doNotUseGlobalStyle
           ? style.tabs
-          : style.tabs ?? _globalDocxTextStyle.tabs,
+          : style.tabs ?? _globalTextStyle.tabs,
       textAlignment: doNotUseGlobalStyle
           ? style.textAlignment
-          : style.textAlignment ?? _globalDocxTextStyle.textAlignment,
+          : style.textAlignment ?? _globalTextStyle.textAlignment,
       verticalTextAlignment: doNotUseGlobalStyle
           ? style.verticalTextAlignment
           : style.verticalTextAlignment ??
-              _globalDocxTextStyle.verticalTextAlignment,
+              _globalTextStyle.verticalTextAlignment,
     );
   }
 
   /// Obtain the XML string of the text style.
   /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
   String _getTextStyleAsString(
-      {DocxTextStyle style,
+      {TextStyle style,
       bool doNotUseGlobalStyle = false,
       bool styleAsHyperlink = false}) {
-    final DocxTextStyle textStyle = style ?? DocxTextStyle();
+    final TextStyle textStyle = style ?? TextStyle();
     return _b.Rpr.getRpr(
       styleAsHyperlink: styleAsHyperlink,
       bold: doNotUseGlobalStyle
           ? textStyle.bold
-          : textStyle.bold ?? _globalDocxTextStyle.bold,
+          : textStyle.bold ?? _globalTextStyle.bold,
       caps: doNotUseGlobalStyle
           ? textStyle.caps
-          : textStyle.caps ?? _globalDocxTextStyle.caps,
+          : textStyle.caps ?? _globalTextStyle.caps,
       doubleStrike: doNotUseGlobalStyle
           ? textStyle.doubleStrike
-          : textStyle.doubleStrike ?? _globalDocxTextStyle.doubleStrike,
+          : textStyle.doubleStrike ?? _globalTextStyle.doubleStrike,
       fontColor: doNotUseGlobalStyle
           ? textStyle.fontColor
-          : textStyle.fontColor ?? _globalDocxTextStyle.fontColor,
+          : textStyle.fontColor ?? _globalTextStyle.fontColor,
       fontName: doNotUseGlobalStyle
           ? textStyle.fontName
-          : textStyle.fontName ?? _globalDocxTextStyle.fontName,
+          : textStyle.fontName ?? _globalTextStyle.fontName,
       fontNameComplexScript: doNotUseGlobalStyle
           ? textStyle.fontNameComplexScript
           : textStyle.fontNameComplexScript ??
-              _globalDocxTextStyle.fontNameComplexScript,
+              _globalTextStyle.fontNameComplexScript,
       fontSize: doNotUseGlobalStyle
           ? textStyle.fontSize
-          : textStyle.fontSize ?? _globalDocxTextStyle.fontSize,
+          : textStyle.fontSize ?? _globalTextStyle.fontSize,
       highlightColor: doNotUseGlobalStyle
           ? textStyle.highlightColor
-          : textStyle.highlightColor ?? _globalDocxTextStyle.highlightColor,
+          : textStyle.highlightColor ?? _globalTextStyle.highlightColor,
       italic: doNotUseGlobalStyle
           ? textStyle.italic
-          : textStyle.italic ?? _globalDocxTextStyle.italic,
+          : textStyle.italic ?? _globalTextStyle.italic,
       rtlText: doNotUseGlobalStyle
           ? textStyle.rtlText
-          : textStyle.rtlText ?? _globalDocxTextStyle.rtlText,
+          : textStyle.rtlText ?? _globalTextStyle.rtlText,
       shading: doNotUseGlobalStyle
           ? textStyle.shading
-          : textStyle.shading ?? _globalDocxTextStyle.shading,
+          : textStyle.shading ?? _globalTextStyle.shading,
       smallCaps: doNotUseGlobalStyle
           ? textStyle.smallCaps
-          : textStyle.smallCaps ?? _globalDocxTextStyle.smallCaps,
+          : textStyle.smallCaps ?? _globalTextStyle.smallCaps,
       strike: doNotUseGlobalStyle
           ? textStyle.strike
-          : textStyle.strike ?? _globalDocxTextStyle.strike,
+          : textStyle.strike ?? _globalTextStyle.strike,
       textArt: doNotUseGlobalStyle
           ? textStyle.textArt
-          : textStyle.textArt ?? _globalDocxTextStyle.textArt,
+          : textStyle.textArt ?? _globalTextStyle.textArt,
       underline: doNotUseGlobalStyle
           ? textStyle.underline
-          : textStyle.underline ?? _globalDocxTextStyle.underline,
+          : textStyle.underline ?? _globalTextStyle.underline,
       underlineColor: doNotUseGlobalStyle
           ? textStyle.underlineColor
-          : textStyle.underlineColor ?? _globalDocxTextStyle.underlineColor,
+          : textStyle.underlineColor ?? _globalTextStyle.underlineColor,
       vanish: doNotUseGlobalStyle
           ? textStyle.vanish
-          : textStyle.vanish ?? _globalDocxTextStyle.vanish,
+          : textStyle.vanish ?? _globalTextStyle.vanish,
       vertAlign: doNotUseGlobalStyle
           ? textStyle.vertAlign
-          : textStyle.vertAlign ?? _globalDocxTextStyle.vertAlign,
+          : textStyle.vertAlign ?? _globalTextStyle.vertAlign,
       spacing: doNotUseGlobalStyle
           ? textStyle.textSpacing
-          : textStyle.textSpacing ?? _globalDocxTextStyle.textSpacing,
+          : textStyle.textSpacing ?? _globalTextStyle.textSpacing,
       stretchOrCompressInPercentage: doNotUseGlobalStyle
           ? textStyle.stretchOrCompressInPercentage
           : textStyle.stretchOrCompressInPercentage ??
-              _globalDocxTextStyle.stretchOrCompressInPercentage,
+              _globalTextStyle.stretchOrCompressInPercentage,
       kern: doNotUseGlobalStyle
           ? textStyle.kern
-          : textStyle.kern ?? _globalDocxTextStyle.kern,
+          : textStyle.kern ?? _globalTextStyle.kern,
       fitText: doNotUseGlobalStyle
           ? textStyle.fitText
-          : textStyle.fitText ?? _globalDocxTextStyle.fitText,
+          : textStyle.fitText ?? _globalTextStyle.fitText,
       effect: doNotUseGlobalStyle
           ? textStyle.textEffect
-          : textStyle.textEffect ?? _globalDocxTextStyle.textEffect,
+          : textStyle.textEffect ?? _globalTextStyle.textEffect,
     );
   }
 
@@ -631,7 +624,7 @@ class DocXBuilder {
   }) {
     final StringBuffer cached = StringBuffer();
     final String tab =
-        globalDocxTextStyle.tabs != null && addTab ? '<w:r><w:tab/></w:r>' : '';
+        globalTextStyle.tabs != null && addTab ? '<w:r><w:tab/></w:r>' : '';
     final String lineBreak =
         lineOrPageBreak != null ? lineOrPageBreak.getXml() : '';
 
@@ -685,8 +678,8 @@ class DocXBuilder {
   /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
   void addMixedText(
     List<String> text,
-    List<DocxTextStyle> textStyles, {
-    DocxPageStyle pageStyle,
+    List<TextStyle> textStyles, {
+    PageStyle pageStyle,
     bool doNotUseGlobalTextStyle = false,
     bool doNotUseGlobalPageStyle = true,
     LineBreak lineOrPageBreak,
@@ -714,8 +707,8 @@ class DocXBuilder {
   void addMixedTextInTableCell({
     @required TableCell tableCell,
     @required List<String> text,
-    List<DocxTextStyle> textStyles,
-    DocxPageStyle pageStyle,
+    List<TextStyle> textStyles,
+    PageStyle pageStyle,
     bool doNotUseGlobalTextStyle = false,
     bool doNotUseGlobalPageStyle = true,
     LineBreak lineOrPageBreak,
@@ -743,8 +736,8 @@ class DocXBuilder {
   /// Writes XML mixed text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
   String _getCachedAddMixedText(
     List<String> text,
-    List<DocxTextStyle> textStyles, {
-    DocxPageStyle pageStyle,
+    List<TextStyle> textStyles, {
+    PageStyle pageStyle,
     bool doNotUseGlobalTextStyle = false,
     bool doNotUseGlobalPageStyle = true,
     LineBreak lineOrPageBreak,
@@ -755,7 +748,7 @@ class DocXBuilder {
     final StringBuffer d = StringBuffer();
     d.write('<w:p><w:pPr>');
     if (pageStyle != null) {
-      d.write(_getDocxPageStyleAsString(
+      d.write(_getPageStyleAsString(
           style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
     }
     d.write(_getParagraphStyleAsString().replaceFirst('<w:pPr>', ''));
@@ -764,7 +757,7 @@ class DocXBuilder {
         ? lineOrPageBreak.getXml()
         : '';
 
-    if (globalDocxTextStyle.tabs != null && addTab) {
+    if (globalTextStyle.tabs != null && addTab) {
       d.write('<w:r><w:tab/></w:r>');
     }
 
@@ -881,9 +874,9 @@ class DocXBuilder {
     bool noSelect = false,
     String hyperlinkTo,
     List<String> text,
-    DocxTextStyle imageTextStyle,
-    List<DocxTextStyle> textStyles,
-    DocxPageStyle pageStyle,
+    TextStyle imageTextStyle,
+    List<TextStyle> textStyles,
+    PageStyle pageStyle,
     bool doNotUseGlobalTextStyle = false,
     bool doNotUseGlobalPageStyle = true,
     LineBreak lineOrPageBreak,
@@ -899,7 +892,7 @@ class DocXBuilder {
   }) {
     const int max = 27273042316900;
     final style =
-        imageTextStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
+        imageTextStyle ?? TextStyle(textAlignment: TextAlignment.center);
     if (widthEMU < 1 || widthEMU > max || heightEMU < 1 || heightEMU > max) {
       return;
     }
@@ -991,7 +984,7 @@ class DocXBuilder {
     bool noMove = true,
     bool noResize = true,
     bool noSelect = false,
-    DocxTextStyle textStyle,
+    TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
     String hyperlinkTo,
     int effectExtentL = 0,
@@ -1041,7 +1034,7 @@ class DocXBuilder {
     bool noMove = true,
     bool noResize = true,
     bool noSelect = false,
-    DocxTextStyle textStyle,
+    TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
     int spaces = 0,
     int effectExtentL = 0,
@@ -1052,8 +1045,7 @@ class DocXBuilder {
     bool flipImageVertical = false,
     int rotateInEMU = 0,
   }) {
-    final style =
-        textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
+    final style = textStyle ?? TextStyle(textAlignment: TextAlignment.center);
 
     final List<String> desc = alternativeTextListForImage != null &&
             alternativeTextListForImage.length == imageFiles.length
@@ -1110,7 +1102,7 @@ class DocXBuilder {
     bool noMove = true,
     bool noResize = true,
     bool noSelect = false,
-    DocxTextStyle textStyle,
+    TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
     String hyperlinkTo,
     int effectExtentL = 0,
@@ -1162,7 +1154,7 @@ class DocXBuilder {
     bool noMove = true,
     bool noResize = true,
     bool noSelect = false,
-    DocxTextStyle textStyle,
+    TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
     int spaces = 0,
     int effectExtentL = 0,
@@ -1174,8 +1166,7 @@ class DocXBuilder {
     int rotateInEMU = 0,
   }) {
     final StringBuffer s = StringBuffer();
-    final style =
-        textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
+    final style = textStyle ?? TextStyle(textAlignment: TextAlignment.center);
 
     final List<String> desc = alternativeTextListForImage != null &&
             alternativeTextListForImage.length == imageFiles.length
@@ -1232,7 +1223,7 @@ class DocXBuilder {
     bool noMove = true,
     bool noResize = true,
     bool noSelect = false,
-    DocxTextStyle textStyle,
+    TextStyle textStyle,
     bool doNotUseGlobalStyle = true,
     bool encloseInParagraph = true,
     String hyperlinkTo,
@@ -1280,7 +1271,7 @@ class DocXBuilder {
       bool noMove = true,
       bool noResize = true,
       bool noSelect = false,
-      DocxTextStyle textStyle,
+      TextStyle textStyle,
       bool doNotUseGlobalStyle = true,
       bool encloseInParagraph = true,
       String hyperlinkTo,
@@ -1291,8 +1282,7 @@ class DocXBuilder {
       bool flipImageHorizontal = false,
       bool flipImageVertical = false,
       int rotateInEMU = 0}) {
-    final style =
-        textStyle ?? DocxTextStyle(textAlignment: TextAlignment.center);
+    final style = textStyle ?? TextStyle(textAlignment: TextAlignment.center);
     final StringBuffer d = StringBuffer();
     final String path = imageFile.path;
     final String suffix = path.substring(path.lastIndexOf('.') + 1);
@@ -1347,8 +1337,7 @@ class DocXBuilder {
   }) async {
     try {
       if (!_bufferClosed) {
-        _docxstring
-            .write(_getDocxPageStyleAsString(style: _globalDocxPageStyle));
+        _docxstring.write(_getPageStyleAsString(style: _globalPageStyle));
         _docxstring.write('</w:body></w:document>');
         _bufferClosed = true;
       }
@@ -1374,8 +1363,8 @@ class DocXBuilder {
   void clear({bool resetDocX = true}) {
     _docxstring.clear();
     _documentBackgroundColor = null;
-    _globalDocxPageStyle = null;
-    _globalDocxTextStyle = null;
+    _globalPageStyle = null;
+    _globalTextStyle = null;
     _firstPageHeader = null;
     _oddPageHeader = null;
     _evenPageHeader = null;

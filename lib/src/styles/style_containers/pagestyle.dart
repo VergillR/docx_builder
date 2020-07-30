@@ -5,7 +5,7 @@ import '../style_enums.dart';
 /// Most (if not all) can be omitted, allowing the word processor to use its default styling and rules.
 ///
 /// [pageNumberingFormat] should only be set once in a section; [pageNumberingStart] can usually be omitted, but if it is set, it indicates at which number the page counter resets whenever a new section is encountered.
-class DocxPageStyle {
+class PageStyle {
   final List<SectColumn> cols;
   final bool colsHaveSeparator;
   final bool colsHaveEqualWidth;
@@ -23,7 +23,7 @@ class DocxPageStyle {
   final LineNumbering lineNumbering;
   final PageMargin pageMargin;
 
-  DocxPageStyle({
+  PageStyle({
     this.cols,
     this.colsHaveSeparator = false,
     this.colsHaveEqualWidth = false,
@@ -42,7 +42,7 @@ class DocxPageStyle {
     this.pageMargin,
   });
 
-  DocxPageStyle getDefaultPageStyle() => DocxPageStyle(
+  PageStyle getDefaultPageStyle() => PageStyle(
         pageSzHeight: 16839,
         pageSzWidth: 11907,
       );

@@ -1,7 +1,7 @@
 import '../style_classes/index.dart';
 import '../style_enums.dart';
 
-class DocxTextStyle {
+class TextStyle {
   // rpr (Run properties: text styling)
   final String hyperlinkTo;
   final bool bold;
@@ -40,7 +40,7 @@ class DocxTextStyle {
   final bool keepNext;
   final TextFrame textFrame;
 
-  DocxTextStyle({
+  TextStyle({
     // rpr (Run properties: text styling)
     this.hyperlinkTo,
     this.bold,
