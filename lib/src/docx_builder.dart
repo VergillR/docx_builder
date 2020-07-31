@@ -1014,30 +1014,30 @@ class DocXBuilder {
     final String suffix = path.substring(path.lastIndexOf('.') + 1);
     if (mimeTypes.containsKey(suffix)) {
       final bool saved = _packager.addImageFile(imageFile, suffix);
-      final String xfrm = rotateInEMU > 0 ||
-              flipImageHorizontal ||
-              flipImageVertical
-          ? '<a:xfrm rot="$rotateInEMU" flipH="$flipImageHorizontal" flipV="$flipImageVertical"><a:off x="0" y="0"/><a:ext cx="$widthEMU" cy="$heightEMU"/></a:xfrm>'
-          : '';
-
-      final int mediaIdCount = _packager.rIdCount - 1;
-
-      String hyperlink = '';
-      if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
-        hyperlink =
-            '<a:hlinkClick xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" r:id="rId${_packager.rIdCount}"/>';
-        _packager.addHyperlink(hyperlinkTo);
-      }
-
-      final String openParagraph = encloseInParagraph ? '<w:p>' : '';
-      final String closeParagraph = encloseInParagraph ? '</w:p>' : '';
-      final String openPpr = encloseInParagraph
-          ? '${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalTextStyle)}'
-          : '';
-      const String openR = '<w:r>';
-      const String closeR = '</w:r>';
-
       if (saved) {
+        final String xfrm = rotateInEMU > 0 ||
+                flipImageHorizontal ||
+                flipImageVertical
+            ? '<a:xfrm rot="$rotateInEMU" flipH="$flipImageHorizontal" flipV="$flipImageVertical"><a:off x="0" y="0"/><a:ext cx="$widthEMU" cy="$heightEMU"/></a:xfrm>'
+            : '';
+
+        final int mediaIdCount = _packager.rIdCount - 1;
+
+        String hyperlink = '';
+        if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
+          hyperlink =
+              '<a:hlinkClick xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" r:id="rId${_packager.rIdCount}"/>';
+          _packager.addHyperlink(hyperlinkTo);
+        }
+
+        final String openParagraph = encloseInParagraph ? '<w:p>' : '';
+        final String closeParagraph = encloseInParagraph ? '</w:p>' : '';
+        final String openPpr = encloseInParagraph
+            ? '${_getParagraphStyleAsString(textStyle: style, doNotUseGlobalStyle: doNotUseGlobalTextStyle)}'
+            : '';
+        const String openR = '<w:r>';
+        const String closeR = '</w:r>';
+
         return '$openParagraph$openPpr$openR<w:drawing><wp:anchor behindDoc="$behindDocument" distT="$distT" distB="$distB" distL="$distL" distR="$distR" simplePos="$simplePos" locked="$locked" layoutInCell="$layoutInCell" allowOverlap="$allowOverlap" relativeHeight="$relativeHeight"><wp:simplePos x="$simplePosX" y="$simplePosY" /><wp:positionH relativeFrom="${getValueFromEnum(horizontalPositionRelativeBase)}"><wp:posOffset>$horizontalOffsetEMU</wp:posOffset></wp:positionH><wp:positionV relativeFrom="${getValueFromEnum(verticalPositionRelativeBase)}"><wp:posOffset>$verticalOffsetEMU</wp:posOffset></wp:positionV><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:${getValueFromEnum(anchorImageAreaWrap)} wrapText="${getValueFromEnum(anchorImageTextWrap)}"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect" noChangeArrowheads="$noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto">$xfrm</pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>$closeR$closeParagraph';
       } else {
         return '';
