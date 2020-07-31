@@ -751,17 +751,20 @@ class DocXBuilder {
     bool addTab = false,
     List<ComplexField> complexFields,
     TextAlignment textAlignment,
+    bool encloseInParagraph = true,
   }) {
     final StringBuffer d = StringBuffer();
-    d.write('<w:p><w:pPr>');
-    if (pageStyle != null) {
-      d.write(_getPageStyleAsString(
-          style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
+    if (encloseInParagraph) {
+      d.write('<w:p><w:pPr>');
+      if (pageStyle != null) {
+        d.write(_getPageStyleAsString(
+            style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
+      }
+      d.write(_getParagraphStyleAsString(
+              textStyle: TextStyle(textAlignment: textAlignment),
+              doNotUseGlobalStyle: doNotUseGlobalTextStyle)
+          .replaceFirst('<w:pPr>', ''));
     }
-    d.write(_getParagraphStyleAsString(
-            textStyle: TextStyle(textAlignment: textAlignment),
-            doNotUseGlobalStyle: doNotUseGlobalTextStyle)
-        .replaceFirst('<w:pPr>', ''));
 
     final String multiBreak = lineOrPageBreak != null && addBreakAfterEveryItem
         ? lineOrPageBreak.getXml()
@@ -818,7 +821,7 @@ class DocXBuilder {
             ? lineOrPageBreak.getXml()
             : '';
 
-    d.write('$singleBreak</w:p>');
+    d.write('$singleBreak${encloseInParagraph ? "</w:p>" : ""}');
 
     return d.toString();
   }
@@ -1136,13 +1139,13 @@ class DocXBuilder {
         effectExtentL: effectExtentL,
         effectExtentR: effectExtentR,
         effectExtentT: effectExtentT,
-        encloseInParagraph: true,
+        encloseInParagraph: false,
         flipImageHorizontal: flipImageHorizontal,
         flipImageVertical: flipImageVertical,
         rotateInEMU: rotateInEMU,
         hyperlinkTo: hyperlinkTo,
       );
-      final xmlCaption = _getCachedAddMixedText(
+      final c = _getCachedAddMixedText(
         text,
         textStyles,
         textAlignment: textAlignment,
@@ -1150,7 +1153,11 @@ class DocXBuilder {
         doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
         doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
         addTab: addTab,
+        encloseInParagraph: false,
       );
+
+      final xmlCaption =
+          '${_getParagraphStyleAsString(textStyle: TextStyle(textAlignment: textAlignment), doNotUseGlobalStyle: doNotUseGlobalTextStyle)}$c';
 
       final TableRow row = TableRow(
         tableRowProperties: TableRowProperties(
@@ -1162,8 +1169,8 @@ class DocXBuilder {
               shading: captionAppearsBelowImage ? shadingImage : shadingCaption,
             ),
             xmlContent: captionAppearsBelowImage
-                ? '$xmlImage$xmlCaption'
-                : '$xmlCaption$xmlImage',
+                ? '<p>$xmlImage<br w:clear="all"/>$xmlCaption</p>'
+                : '<p>$xmlCaption<br w:clear="all"/>$xmlImage</p>',
           )
         ],
       );
