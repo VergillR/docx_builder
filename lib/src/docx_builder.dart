@@ -1158,6 +1158,7 @@ class DocXBuilder {
         tableCells: [
           TableCell(
             tableCellProperties: TableCellProperties(
+              restartVMerge: true,
               verticalAlignment: tableCellVerticalAlignment,
               shading: captionAppearsBelowImage ? shadingImage : shadingCaption,
             ),
