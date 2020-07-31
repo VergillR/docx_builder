@@ -866,7 +866,10 @@ class DocXBuilder {
         HorizontalPositionRelativeBase.column,
     VerticalPositionRelativeBase verticalPositionRelativeBase =
         VerticalPositionRelativeBase.paragraph,
-    AnchorImageHorizontalAlignment anchorImageHorizontalAlignment,
+    AnchorImageHorizontalAlignment anchorImageHorizontalAlignment =
+        AnchorImageHorizontalAlignment.center,
+    AnchorImageVerticalAlignment anchorImageVerticalAlignment =
+        AnchorImageVerticalAlignment.top,
     String alternativeTextForImage = '',
     bool noChangeAspect = false,
     bool noChangeArrowheads = false,
@@ -914,6 +917,7 @@ class DocXBuilder {
         alternativeTextForImage: alternativeTextForImage,
         anchorImageAreaWrap: anchorImageAreaWrap,
         anchorImageHorizontalAlignment: anchorImageHorizontalAlignment,
+        anchorImageVerticalAlignment: anchorImageVerticalAlignment,
         anchorImageTextWrap: anchorImageTextWrap,
         behindDocument: behindDocument,
         doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
@@ -961,51 +965,59 @@ class DocXBuilder {
     }
   }
 
-  String _getCachedAnchorImage(File imageFile, int widthEMU, int heightEMU,
-      int horizontalOffsetEMU, int verticalOffsetEMU,
-      {int distT = 0,
-      int distB = 0,
-      int distL = 0,
-      int distR = 0,
-      bool simplePos = false,
-      bool locked = false,
-      bool layoutInCell = true,
-      bool allowOverlap = true,
-      bool behindDocument = false,
-      int relativeHeight = 2,
-      int simplePosX = 0,
-      int simplePosY = 0,
-      AnchorImageAreaWrap anchorImageAreaWrap = AnchorImageAreaWrap.wrapSquare,
-      AnchorImageTextWrap anchorImageTextWrap = AnchorImageTextWrap.largest,
-      HorizontalPositionRelativeBase horizontalPositionRelativeBase =
-          HorizontalPositionRelativeBase.column,
-      VerticalPositionRelativeBase verticalPositionRelativeBase =
-          VerticalPositionRelativeBase.paragraph,
-      AnchorImageHorizontalAlignment anchorImageHorizontalAlignment,
-      String alternativeTextForImage = '',
-      bool noChangeAspect = false,
-      bool noChangeArrowheads = false,
-      bool noMove = false,
-      bool noResize = false,
-      bool noSelect = false,
-      String hyperlinkTo,
-      List<String> text,
-      TextStyle imageTextStyle,
-      List<TextStyle> textStyles,
-      PageStyle pageStyle,
-      bool doNotUseGlobalTextStyle = false,
-      bool doNotUseGlobalPageStyle = true,
-      LineBreak lineOrPageBreak,
-      bool addBreakAfterEveryItem = false,
-      bool addTab = false,
-      int effectExtentL = 0,
-      int effectExtentT = 0,
-      int effectExtentR = 0,
-      int effectExtentB = 0,
-      bool flipImageHorizontal = false,
-      bool flipImageVertical = false,
-      int rotateInEMU = 0,
-      bool encloseInParagraph = true}) {
+  String _getCachedAnchorImage(
+    File imageFile,
+    int widthEMU,
+    int heightEMU,
+    int horizontalOffsetEMU,
+    int verticalOffsetEMU, {
+    int distT = 0,
+    int distB = 0,
+    int distL = 0,
+    int distR = 0,
+    bool simplePos = false,
+    bool locked = false,
+    bool layoutInCell = true,
+    bool allowOverlap = true,
+    bool behindDocument = false,
+    int relativeHeight = 2,
+    int simplePosX = 0,
+    int simplePosY = 0,
+    AnchorImageAreaWrap anchorImageAreaWrap = AnchorImageAreaWrap.wrapSquare,
+    AnchorImageTextWrap anchorImageTextWrap = AnchorImageTextWrap.largest,
+    HorizontalPositionRelativeBase horizontalPositionRelativeBase =
+        HorizontalPositionRelativeBase.column,
+    VerticalPositionRelativeBase verticalPositionRelativeBase =
+        VerticalPositionRelativeBase.paragraph,
+    AnchorImageHorizontalAlignment anchorImageHorizontalAlignment =
+        AnchorImageHorizontalAlignment.center,
+    AnchorImageVerticalAlignment anchorImageVerticalAlignment =
+        AnchorImageVerticalAlignment.top,
+    String alternativeTextForImage = '',
+    bool noChangeAspect = false,
+    bool noChangeArrowheads = false,
+    bool noMove = false,
+    bool noResize = false,
+    bool noSelect = false,
+    String hyperlinkTo,
+    List<String> text,
+    TextStyle imageTextStyle,
+    List<TextStyle> textStyles,
+    PageStyle pageStyle,
+    bool doNotUseGlobalTextStyle = false,
+    bool doNotUseGlobalPageStyle = true,
+    LineBreak lineOrPageBreak,
+    bool addBreakAfterEveryItem = false,
+    bool addTab = false,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotateInEMU = 0,
+    bool encloseInParagraph = true,
+  }) {
     final style =
         imageTextStyle ?? TextStyle(textAlignment: TextAlignment.center);
 
@@ -1037,7 +1049,7 @@ class DocXBuilder {
         const String openR = '<w:r>';
         const String closeR = '</w:r>';
 
-        return '$openParagraph$openPpr$openR<w:drawing><wp:anchor behindDoc="$behindDocument" distT="$distT" distB="$distB" distL="$distL" distR="$distR" simplePos="$simplePos" locked="$locked" layoutInCell="$layoutInCell" allowOverlap="$allowOverlap" relativeHeight="$relativeHeight"><wp:simplePos x="$simplePosX" y="$simplePosY" /><wp:positionH relativeFrom="${getValueFromEnum(horizontalPositionRelativeBase)}"><wp:posOffset>$horizontalOffsetEMU</wp:posOffset></wp:positionH><wp:positionV relativeFrom="${getValueFromEnum(verticalPositionRelativeBase)}"><wp:posOffset>$verticalOffsetEMU</wp:posOffset></wp:positionV><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:${getValueFromEnum(anchorImageAreaWrap)} wrapText="${getValueFromEnum(anchorImageTextWrap)}"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect" noChangeArrowheads="$noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto">$xfrm</pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>$closeR$closeParagraph';
+        return '$openParagraph$openPpr$openR<w:drawing><wp:anchor behindDoc="$behindDocument" distT="$distT" distB="$distB" distL="$distL" distR="$distR" simplePos="$simplePos" locked="$locked" layoutInCell="$layoutInCell" allowOverlap="$allowOverlap" relativeHeight="$relativeHeight"><wp:simplePos x="$simplePosX" y="$simplePosY" /><wp:positionH relativeFrom="${getValueFromEnum(horizontalPositionRelativeBase)}"><wp:align>${getValueFromEnum(anchorImageHorizontalAlignment)}</wp:align><wp:posOffset>$horizontalOffsetEMU</wp:posOffset></wp:positionH><wp:positionV relativeFrom="${getValueFromEnum(verticalPositionRelativeBase)}"><wp:align>${getValueFromEnum(anchorImageVerticalAlignment)}</wp:align><wp:posOffset>$verticalOffsetEMU</wp:posOffset></wp:positionV><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:${getValueFromEnum(anchorImageAreaWrap)} wrapText="${getValueFromEnum(anchorImageTextWrap)}"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect" noChangeArrowheads="$noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto">$xfrm</pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>$closeR$closeParagraph';
       } else {
         return '';
       }
@@ -1187,19 +1199,21 @@ class DocXBuilder {
     _docx.write('</w:r></w:p>');
   }
 
-  /// Create an inline image with a caption. The function itself is just syntactic sugar for creating a table with 1 column and 1 row followed by placing an inline image and the text in the row.
+  /// Creates an inline image with a caption inside a 1x1 table. The [tableProperties] can be set to customize the appearance of the table, such as changing the border colors and widths.
   ///
-  /// [tableWidthInTwips] determines the width of the table (measured in twips).
+  /// Other ways to combine image with text: use addAnchorImage or use addImage followed or preceeded with addText/addMixedText.
+  ///
+  /// [tableWidthInTwips] determines the width of the table (measured in twips). If omitted, the width of the image will be used as table width.
   /// [captionAppearsBelowImage] determines if the caption is displayed above (false) or below (true; default) the image.
-  /// [hyperlinkTo] applies to the image, not the caption. If the caption needs to be a hyperlink, you can use TextStyle.hyperlinkTo or add the complexField(instructions: 'HYPERLINK').
+  /// [hyperlinkTo] applies to the image, not the caption. If the caption needs to be a hyperlink, you can use the textStyle.hyperlinkTo or add the complexField(instructions: 'HYPERLINK https://www.yyy.zzz/').
   void addImageWithCaption(
     File imageFile,
     int widthEMU,
     int heightEMU, {
     int tableWidthInTwips,
     bool captionAppearsBelowImage = true,
-    Shading shadingCaption,
-    Shading shadingImage,
+    // Shading shadingCaption,
+    // Shading shadingImage,
     List<String> text,
     List<TextStyle> textStyles,
     String alternativeTextForImage = '',
@@ -1263,7 +1277,6 @@ class DocXBuilder {
             tableCellProperties: TableCellProperties(
               restartVMerge: true,
               verticalAlignment: tableCellVerticalAlignment,
-              shading: captionAppearsBelowImage ? shadingImage : shadingCaption,
             ),
             xmlContent: captionAppearsBelowImage
                 ? '$xmlImage$xmlCaption'
@@ -1305,6 +1318,192 @@ class DocXBuilder {
     }
   }
 
+  /// Creates an anchor image with a caption inside a 1x1 table. The [tableProperties] can be set to customize the appearance of the table, such as changing the border colors and widths.
+  ///
+  /// Other ways to combine image with text: use addAnchorImage or use addImage followed or preceeded with addText/addMixedText.
+  ///
+  /// [tableWidthInTwips] determines the width of the table (measured in twips). If omitted, the width of the image will be used as table width.
+  /// [captionAppearsBelowImage] determines if the caption is displayed above (false) or below (true; default) the image.
+  /// [hyperlinkTo] applies to the image, not the caption. If the caption needs to be a hyperlink, you can use the textStyle.hyperlinkTo or add the complexField(instructions: 'HYPERLINK https://www.yyy.zzz/').
+  void addAnchorImageWithCaption(
+    File imageFile,
+    int widthEMU,
+    int heightEMU,
+    int horizontalOffsetEMU,
+    int verticalOffsetEMU, {
+    int tableWidthInTwips,
+    bool captionAppearsBelowImage = true,
+    int distT = 0,
+    int distB = 0,
+    int distL = 0,
+    int distR = 0,
+    bool simplePos = false,
+    bool locked = false,
+    bool layoutInCell = true,
+    bool allowOverlap = true,
+    bool behindDocument = false,
+    int relativeHeight = 2,
+    int simplePosX = 0,
+    int simplePosY = 0,
+    AnchorImageAreaWrap anchorImageAreaWrap = AnchorImageAreaWrap.wrapSquare,
+    AnchorImageTextWrap anchorImageTextWrap = AnchorImageTextWrap.largest,
+    HorizontalPositionRelativeBase horizontalPositionRelativeBase =
+        HorizontalPositionRelativeBase.column,
+    VerticalPositionRelativeBase verticalPositionRelativeBase =
+        VerticalPositionRelativeBase.paragraph,
+    AnchorImageHorizontalAlignment anchorImageHorizontalAlignment =
+        AnchorImageHorizontalAlignment.center,
+    AnchorImageVerticalAlignment anchorImageVerticalAlignment =
+        AnchorImageVerticalAlignment.top,
+    String alternativeTextForImage = '',
+    bool noChangeAspect = false,
+    bool noChangeArrowheads = false,
+    bool noMove = false,
+    bool noResize = false,
+    bool noSelect = false,
+    String hyperlinkTo,
+    List<String> text,
+    TextStyle imageTextStyle,
+    List<TextStyle> textStyles,
+    TableProperties tableProperties,
+    TextAlignment textAlignment = TextAlignment.center,
+    TableCellVerticalAlignment tableCellVerticalAlignment,
+    PageStyle pageStyle,
+    bool doNotUseGlobalTextStyle = false,
+    bool doNotUseGlobalPageStyle = true,
+    LineBreak lineOrPageBreak,
+    bool addBreakAfterEveryItem = false,
+    bool addTab = false,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotateInEMU = 0,
+    List<ComplexField> complexFields,
+  }) {
+    if (!_bufferClosed) {
+      final xmlImage = _getCachedAnchorImage(
+        imageFile,
+        widthEMU,
+        heightEMU,
+        horizontalOffsetEMU,
+        verticalOffsetEMU,
+        distB: distB,
+        distL: distL,
+        distR: distR,
+        distT: distT,
+        addBreakAfterEveryItem: addBreakAfterEveryItem,
+        addTab: addTab,
+        allowOverlap: allowOverlap,
+        alternativeTextForImage: alternativeTextForImage,
+        anchorImageAreaWrap: anchorImageAreaWrap,
+        anchorImageHorizontalAlignment: anchorImageHorizontalAlignment,
+        anchorImageVerticalAlignment: anchorImageVerticalAlignment,
+        anchorImageTextWrap: anchorImageTextWrap,
+        behindDocument: behindDocument,
+        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        effectExtentB: effectExtentB,
+        effectExtentL: effectExtentL,
+        effectExtentR: effectExtentR,
+        effectExtentT: effectExtentT,
+        encloseInParagraph: true,
+        flipImageHorizontal: flipImageHorizontal,
+        flipImageVertical: flipImageVertical,
+        horizontalPositionRelativeBase: horizontalPositionRelativeBase,
+        hyperlinkTo: hyperlinkTo,
+        imageTextStyle: imageTextStyle,
+        layoutInCell: layoutInCell,
+        lineOrPageBreak: lineOrPageBreak,
+        locked: locked,
+        noChangeArrowheads: noChangeArrowheads,
+        noChangeAspect: noChangeAspect,
+        noMove: noMove,
+        noResize: noResize,
+        noSelect: noSelect,
+        pageStyle: pageStyle,
+        relativeHeight: relativeHeight,
+        rotateInEMU: rotateInEMU,
+        simplePos: simplePos,
+        simplePosX: simplePosX,
+        simplePosY: simplePosY,
+        text: text,
+        textStyles: textStyles,
+        verticalPositionRelativeBase: verticalPositionRelativeBase,
+      );
+      final xmlCaption = _getCachedAddMixedText(
+        text,
+        textStyles,
+        textAlignment: textAlignment,
+        complexFields: complexFields,
+        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        addTab: addTab,
+      );
+
+      final TableRow topRow = TableRow(
+        tableRowProperties: TableRowProperties(
+            tableCellSpacingWidthType: PreferredWidthType.auto),
+        tableCells: [
+          TableCell(
+            tableCellProperties: TableCellProperties(
+              restartVMerge: true,
+              verticalAlignment: tableCellVerticalAlignment,
+            ),
+            xmlContent: captionAppearsBelowImage ? '$xmlImage' : '$xmlCaption',
+          )
+        ],
+      );
+      final TableRow bottomRow = TableRow(
+        tableRowProperties: TableRowProperties(
+            tableCellSpacingWidthType: PreferredWidthType.auto),
+        tableCells: [
+          TableCell(
+            tableCellProperties: TableCellProperties(
+              restartVMerge: true,
+              verticalAlignment: tableCellVerticalAlignment,
+            ),
+            xmlContent: !captionAppearsBelowImage ? '$xmlImage' : '$xmlCaption',
+          )
+        ],
+      );
+
+      final Table t = Table(
+        gridColumnWidths: [tableWidthInTwips ?? convertEMUToTwips(widthEMU)],
+        tableProperties: tableProperties ??
+            TableProperties(
+              tableTextAlignment: TableTextAlignment.center,
+              tableCellSpacing: '0',
+              tableCellSpacingType: PreferredWidthType.nil,
+              tableCellMargins: [
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.right,
+                ),
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.left,
+                ),
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.top,
+                ),
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.bottom,
+                ),
+              ],
+            ),
+        tableRows: [topRow, bottomRow],
+      );
+
+      attachTable(t);
+    }
+  }
+
+  /// Inserts inline image into the table cell.
   void insertImageInTableCell({
     @required TableCell tableCell,
     @required File imageFile,
@@ -1358,6 +1557,7 @@ class DocXBuilder {
     }
   }
 
+  /// Inserts multiple inline images into the table cell.
   void insertImagesInTableCell({
     @required TableCell tableCell,
     @required List<File> imageFiles,

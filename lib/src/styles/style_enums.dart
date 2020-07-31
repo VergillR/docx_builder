@@ -10,6 +10,8 @@ enum AnchorImageAreaWrap {
 
 enum AnchorImageHorizontalAlignment { left, right, center, inside, outside }
 
+enum AnchorImageVerticalAlignment { top, bottom, center, inside, outside }
+
 enum AnchorImageTextWrap { bothSides, left, right, largest }
 
 enum DropCap { margin, drop, none }
