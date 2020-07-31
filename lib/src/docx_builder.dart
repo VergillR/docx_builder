@@ -899,8 +899,54 @@ class DocXBuilder {
     }
 
     if (!_bufferClosed) {
-      _docx.write(_getCachedAnchorImage(imageFile, widthEMU, heightEMU,
-          horizontalOffsetEMU, verticalOffsetEMU));
+      _docx.write(_getCachedAnchorImage(
+        imageFile,
+        widthEMU,
+        heightEMU,
+        horizontalOffsetEMU,
+        verticalOffsetEMU,
+        distB: distB,
+        distL: distL,
+        distR: distR,
+        distT: distT,
+        addBreakAfterEveryItem: addBreakAfterEveryItem,
+        addTab: addTab,
+        allowOverlap: allowOverlap,
+        alternativeTextForImage: alternativeTextForImage,
+        anchorImageAreaWrap: anchorImageAreaWrap,
+        anchorImageHorizontalAlignment: anchorImageHorizontalAlignment,
+        anchorImageTextWrap: anchorImageTextWrap,
+        behindDocument: behindDocument,
+        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        effectExtentB: effectExtentB,
+        effectExtentL: effectExtentL,
+        effectExtentR: effectExtentR,
+        effectExtentT: effectExtentT,
+        encloseInParagraph: encloseInParagraph,
+        flipImageHorizontal: flipImageHorizontal,
+        flipImageVertical: flipImageVertical,
+        horizontalPositionRelativeBase: horizontalPositionRelativeBase,
+        hyperlinkTo: hyperlinkTo,
+        imageTextStyle: imageTextStyle,
+        layoutInCell: layoutInCell,
+        lineOrPageBreak: lineOrPageBreak,
+        locked: locked,
+        noChangeArrowheads: noChangeArrowheads,
+        noChangeAspect: noChangeAspect,
+        noMove: noMove,
+        noResize: noResize,
+        noSelect: noSelect,
+        pageStyle: pageStyle,
+        relativeHeight: relativeHeight,
+        rotateInEMU: rotateInEMU,
+        simplePos: simplePos,
+        simplePosX: simplePosX,
+        simplePosY: simplePosY,
+        text: text,
+        textStyles: textStyles,
+        verticalPositionRelativeBase: verticalPositionRelativeBase,
+      ));
       if (text != null) {
         addMixedText(
           text,
@@ -1199,6 +1245,178 @@ class DocXBuilder {
         flipImageVertical: flipImageVertical,
         rotateInEMU: rotateInEMU,
         hyperlinkTo: hyperlinkTo,
+      );
+      final xmlCaption = _getCachedAddMixedText(
+        text,
+        textStyles,
+        textAlignment: textAlignment,
+        complexFields: complexFields,
+        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        addTab: addTab,
+      );
+
+      final TableRow row = TableRow(
+        tableRowProperties: TableRowProperties(
+            tableCellSpacingWidthType: PreferredWidthType.auto),
+        tableCells: [
+          TableCell(
+            tableCellProperties: TableCellProperties(
+              restartVMerge: true,
+              verticalAlignment: tableCellVerticalAlignment,
+              shading: captionAppearsBelowImage ? shadingImage : shadingCaption,
+            ),
+            xmlContent: captionAppearsBelowImage
+                ? '$xmlImage$xmlCaption'
+                : '$xmlCaption$xmlImage',
+          )
+        ],
+      );
+
+      final Table t = Table(
+        gridColumnWidths: [tableWidthInTwips ?? convertEMUToTwips(widthEMU)],
+        tableProperties: tableProperties ??
+            TableProperties(
+              tableTextAlignment: TableTextAlignment.center,
+              tableCellSpacing: '0',
+              tableCellSpacingType: PreferredWidthType.nil,
+              tableCellMargins: [
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.right,
+                ),
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.left,
+                ),
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.top,
+                ),
+                TableCellMargin(
+                  isNil: true,
+                  tableCellSide: TableCellSide.bottom,
+                ),
+              ],
+            ),
+        tableRows: [row],
+      );
+
+      attachTable(t);
+    }
+  }
+
+  /// Create an anchor image with a caption. The function itself is just syntactic sugar for creating a table with 1 column and 1 row followed by placing an anchor image and the text in the row.
+  ///
+  /// [tableWidthInTwips] determines the width of the table (measured in twips).
+  /// [captionAppearsBelowImage] determines if the caption is displayed above (false) or below (true; default) the image.
+  /// [hyperlinkTo] applies to the image, not the caption. If the caption needs to be a hyperlink, you can use TextStyle.hyperlinkTo or add the complexField(instructions: 'HYPERLINK').
+  void addAnchorImageWithCaption(
+    File imageFile,
+    int widthEMU,
+    int heightEMU,
+    int horizontalOffsetEMU,
+    int verticalOffsetEMU, {
+    int tableWidthInTwips,
+    bool captionAppearsBelowImage = true,
+    Shading shadingCaption,
+    Shading shadingImage,
+    int distT = 0,
+    int distB = 0,
+    int distL = 0,
+    int distR = 0,
+    bool simplePos = false,
+    bool locked = false,
+    bool layoutInCell = true,
+    bool allowOverlap = true,
+    bool behindDocument = false,
+    int relativeHeight = 2,
+    int simplePosX = 0,
+    int simplePosY = 0,
+    AnchorImageAreaWrap anchorImageAreaWrap = AnchorImageAreaWrap.wrapSquare,
+    AnchorImageTextWrap anchorImageTextWrap = AnchorImageTextWrap.largest,
+    HorizontalPositionRelativeBase horizontalPositionRelativeBase =
+        HorizontalPositionRelativeBase.column,
+    VerticalPositionRelativeBase verticalPositionRelativeBase =
+        VerticalPositionRelativeBase.paragraph,
+    AnchorImageHorizontalAlignment anchorImageHorizontalAlignment,
+    String alternativeTextForImage = '',
+    bool noChangeAspect = false,
+    bool noChangeArrowheads = false,
+    bool noMove = false,
+    bool noResize = false,
+    bool noSelect = false,
+    String hyperlinkTo,
+    List<String> text,
+    TextStyle imageTextStyle,
+    List<TextStyle> textStyles,
+    PageStyle pageStyle,
+    bool doNotUseGlobalTextStyle = false,
+    bool doNotUseGlobalPageStyle = true,
+    LineBreak lineOrPageBreak,
+    bool addBreakAfterEveryItem = false,
+    bool addTab = false,
+    int effectExtentL = 0,
+    int effectExtentT = 0,
+    int effectExtentR = 0,
+    int effectExtentB = 0,
+    bool flipImageHorizontal = false,
+    bool flipImageVertical = false,
+    int rotateInEMU = 0,
+    bool encloseInParagraph = true,
+    TableProperties tableProperties,
+    TextAlignment textAlignment = TextAlignment.center,
+    TableCellVerticalAlignment tableCellVerticalAlignment,
+    List<ComplexField> complexFields,
+  }) {
+    if (!_bufferClosed) {
+      final xmlImage = _getCachedAnchorImage(
+        imageFile,
+        widthEMU,
+        heightEMU,
+        horizontalOffsetEMU,
+        verticalOffsetEMU,
+        distB: distB,
+        distL: distL,
+        distR: distR,
+        distT: distT,
+        addBreakAfterEveryItem: addBreakAfterEveryItem,
+        addTab: addTab,
+        allowOverlap: allowOverlap,
+        alternativeTextForImage: alternativeTextForImage,
+        anchorImageAreaWrap: anchorImageAreaWrap,
+        anchorImageHorizontalAlignment: anchorImageHorizontalAlignment,
+        anchorImageTextWrap: anchorImageTextWrap,
+        behindDocument: behindDocument,
+        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        effectExtentB: effectExtentB,
+        effectExtentL: effectExtentL,
+        effectExtentR: effectExtentR,
+        effectExtentT: effectExtentT,
+        encloseInParagraph: encloseInParagraph,
+        flipImageHorizontal: flipImageHorizontal,
+        flipImageVertical: flipImageVertical,
+        horizontalPositionRelativeBase: horizontalPositionRelativeBase,
+        hyperlinkTo: hyperlinkTo,
+        imageTextStyle: imageTextStyle,
+        layoutInCell: layoutInCell,
+        lineOrPageBreak: lineOrPageBreak,
+        locked: locked,
+        noChangeArrowheads: noChangeArrowheads,
+        noChangeAspect: noChangeAspect,
+        noMove: noMove,
+        noResize: noResize,
+        noSelect: noSelect,
+        pageStyle: pageStyle,
+        relativeHeight: relativeHeight,
+        rotateInEMU: rotateInEMU,
+        simplePos: simplePos,
+        simplePosX: simplePosX,
+        simplePosY: simplePosY,
+        text: text,
+        textStyles: textStyles,
+        verticalPositionRelativeBase: verticalPositionRelativeBase,
       );
       final xmlCaption = _getCachedAddMixedText(
         text,
