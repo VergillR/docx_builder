@@ -127,16 +127,16 @@ class Packager {
       final Directory sourceDirectory =
           Directory('${cacheDirectory.path}/$cacheDocXBuilder/$src');
 
-      File('${cacheDirectory.path}/$cacheDocXBuilder/$src/[Content_Types].xml')
-          .writeAsStringSync(ContentTypes()
-              .getContentsTypesXml(_contentDefaultRefs, _contentOverrideRefs));
-      File('$_dirPathToDocProps/app.xml').writeAsStringSync(AppXml(
-              // chars: chars,
-              // charsWithSpaces: charsWithSpaces,
-              // paragraphs: paragraphs,
-              )
-          .getAppXml());
-      File('$_dirPathToRels/.rels').writeAsStringSync(DotRels().getDotRels());
+      if (includeNumberingFileToPackage) {
+        final added = addNumberingList();
+        if (added) {
+          File('$_dirPathToWord/numbering.xml').writeAsStringSync(Numbering()
+              .getNumberingXml(customNumberingXml: customNumberingXml ?? ''));
+        }
+      }
+
+      File('$_dirPathToDocProps/app.xml')
+          .writeAsStringSync(AppXml().getAppXml());
       File('$_dirPathToDocProps/core.xml').writeAsStringSync(
         CoreXml().getCoreXml(
           documentTitle: documentTitle ?? '',
@@ -145,15 +145,16 @@ class Packager {
           documentCreator: documentCreator ?? '',
         ),
       );
+      File('$_dirPathToRels/.rels').writeAsStringSync(DotRels().getDotRels());
+      File('${cacheDirectory.path}/$cacheDocXBuilder/$src/[Content_Types].xml')
+          .writeAsStringSync(ContentTypes()
+              .getContentsTypesXml(_contentDefaultRefs, _contentOverrideRefs));
       File('$_dirPathToWordRels/document.xml.rels')
           .writeAsStringSync(DocumentXmlRels().getDocumentXmlRels(_references));
       File('$_dirPathToWord/document.xml').writeAsStringSync(documentXml);
       File('$_dirPathToWord/fontTable.xml')
           .writeAsStringSync(FontTable().getFontTableXml());
-      if (includeNumberingFileToPackage) {
-        File('$_dirPathToWord/numbering.xml').writeAsStringSync(Numbering()
-            .getNumberingXml(customNumberingXml: customNumberingXml ?? ''));
-      }
+
       File('$_dirPathToWord/settings.xml').writeAsStringSync(SettingsXml()
           .getSettingsXml(useEvenHeaders: _addEvenAndOddHeadersInSettings));
       File('$_dirPathToWord/styles.xml')
