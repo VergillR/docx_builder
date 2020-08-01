@@ -39,6 +39,8 @@ class TextStyle {
   final bool keepLines;
   final bool keepNext;
   final TextFrame textFrame;
+  final NumberingList numberList;
+  final int numberLevelInList;
 
   TextStyle({
     // rpr (Run properties: text styling)
@@ -78,5 +80,7 @@ class TextStyle {
     this.keepLines,
     this.keepNext,
     this.textFrame,
+    this.numberList,
+    this.numberLevelInList,
   });
 }

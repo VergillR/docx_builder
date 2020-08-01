@@ -69,6 +69,73 @@ enum LineBreakType { column, page, textWrapping }
 
 enum LineRule { auto, exact, atLeast }
 
+enum NumberingList { bullet, numbered, custom }
+
+enum NumberingSuffix { nothing, space, tab }
+
+enum NumberFormat {
+  decimal,
+  upperRoman,
+  lowerRoman,
+  upperLetter,
+  lowerLetter,
+  ordinal,
+  cardinalText,
+  ordinalText,
+  hex,
+  chicago,
+  ideographDigital,
+  japaneseCounting,
+  aiueo,
+  iroha,
+  decimalFullWidth,
+  decimalHalfWidth,
+  japaneseLegal,
+  japaneseDigitalTenThousand,
+  decimalEnclosedCircle,
+  decimalFullWidth2,
+  aiueoFullWidth,
+  irohaFullWidth,
+  decimalZero,
+  bullet,
+  ganada,
+  chosung,
+  decimalEnclosedFullstop,
+  decimalEnclosedParen,
+  decimalEnclosedCircleChinese,
+  ideographEnclosedCircle,
+  ideographTraditional,
+  ideographZodiac,
+  ideographZodiacTraditional,
+  taiwaneseCounting,
+  ideographLegalTraditional,
+  taiwaneseCountingThousand,
+  taiwaneseDigital,
+  chineseCounting,
+  chineseLegalSimplified,
+  chineseCountingThousand,
+  koreanDigital,
+  koreanCounting,
+  koreanLegal,
+  koreanDigital2,
+  vietnameseCounting,
+  russianLower,
+  russianUpper,
+  none,
+  numberInDash,
+  hebrew1,
+  hebrew2,
+  arabicAlpha,
+  arabicAbjad,
+  hindiVowels,
+  hindiConsonants,
+  hindiNumbers,
+  hindiCounting,
+  thaiLetters,
+  thaiNumbers,
+  thaiCounting
+}
+
 enum PageBorderDisplay { allPages, firstPage, notFirstPage }
 
 enum PageBorderSide { top, bottom, left, right }

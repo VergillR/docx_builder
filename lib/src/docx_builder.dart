@@ -50,6 +50,8 @@ class DocXBuilder {
   Footer _oddPageFooter;
   Footer _evenPageFooter;
   bool _insertHeadersAndFootersInThisSection = false;
+  bool _includeNumberingFileToPackage = false;
+  String _customNumberingXml;
 
   final String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -60,10 +62,78 @@ class DocXBuilder {
   final int twipsHeightA4 = 16838;
 
   final String bullet = '•';
-  final String arrowBullet = '‣';
-  final String hyphenBullet = '⁃';
-  final String inverseBullet = '◘';
-  final String openBullet = '◦';
+  final String bulletArrow = '‣';
+  final String bulletDiamond = '⬩';
+  final String bulletHyphen = '⁃';
+  final String bulletSquare = '▪';
+  final String bulletSquareWhite = '▫';
+  final String bulletWhite = '◦';
+
+  /// A custom numbering list can be set once for the entire document.
+  ///
+  /// Maximum level of depth is 8.
+  void setCustomNumberingList({
+    @required List<NumberFormat> numberFormatForEachLevel,
+    @required List<String> charactersForEachLevel,
+    List<TextStyle> characterTextStyles,
+    int tabSpace = 420,
+    bool justifyToLeft = true,
+    NumberingSuffix suffix,
+    bool isLgl = false,
+  }) {
+    if (_customNumberingXml == null &&
+        numberFormatForEachLevel != null &&
+        charactersForEachLevel != null) {
+      final List<NumberFormat> formats = <NumberFormat>[
+        ...numberFormatForEachLevel,
+        ...List<NumberFormat>.generate(8, (index) => null),
+      ].sublist(0, 8);
+
+      final List<String> chars = <String>[
+        ...charactersForEachLevel,
+        ...List<String>.generate(8, (index) => null),
+      ].sublist(0, 8);
+
+      final List<TextStyle> styles = <TextStyle>[
+        ...characterTextStyles,
+        ...List<TextStyle>.generate(8, (index) => null),
+      ].sublist(0, 8);
+
+      final String jc = justifyToLeft ? 'left' : 'right';
+
+      final String suff =
+          suffix != null ? '<w:suff w:val="${getValueFromEnum(suffix)}"/>' : '';
+
+      final String lgl = isLgl ?? false ? '<w:isLgl/>' : '';
+
+      final StringBuffer c = StringBuffer()
+        ..write(
+            '<w:abstractNum w:abstractNumId="2"><w:multiLevelType w:val="multilevel"/>');
+      for (int i = 0; i < formats.length; i++) {
+        String ppr = '<w:pPr></w:pPr>';
+        String rpr = '<w:rPr><w:rFonts w:hint="default"/></w:rPr>';
+        if (styles[i] != null) {
+          ppr = _getParagraphStyleAsString(
+                  textStyle: styles[i],
+                  doNotUseGlobalStyle: true,
+                  includeTabsAndIndent: false)
+              .replaceFirst('<w:pPr>',
+                  '<w:pPr><w:tabs><w:tab w:val="left" w:pos="${tabSpace * (i + 1)}"/></w:tabs><w:ind w:left="${tabSpace * (i + 1)}" w:leftChars="0" w:hanging="$tabSpace" w:firstLineChars="0"/>');
+          rpr = _getTextStyleAsString(
+            style: styles[i],
+            doNotUseGlobalStyle: true,
+            styleAsHyperlink: false,
+          );
+        }
+
+        if (formats[i] != null) {
+          c.write(
+              '<w:lvl w:ilvl="$i" w:tentative="0"><w:start w:val="1"/>$suff$lgl<w:numFt w:val="${formats[i]}"/><w:lvlText w:val="${chars[i] ?? "%${i + 1}"}"/><w:lvlJc w:val="$jc"/>$ppr$rpr</w:lvl>');
+        }
+      }
+      c.write('</w:abstractNum>');
+    }
+  }
 
   /// Convert EMUs to Twips (twentieth of point).
   int convertEMUToTwips(int emu) => (emu / 635).round();
@@ -415,8 +485,13 @@ class DocXBuilder {
   /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
   /// Textframes cannot be set global.
   String _getParagraphStyleAsString(
-      {TextStyle textStyle, bool doNotUseGlobalStyle = false}) {
+      {TextStyle textStyle,
+      bool doNotUseGlobalStyle = false,
+      bool includeTabsAndIndent = true}) {
     final TextStyle style = textStyle ?? TextStyle();
+    if (style.numberList != null) {
+      _includeNumberingFileToPackage = true;
+    }
     return _b.Ppr.getPpr(
       textFrame: textStyle?.textFrame != null ? textStyle.textFrame : null,
       keepLines: doNotUseGlobalStyle
@@ -432,18 +507,22 @@ class DocXBuilder {
       paragraphBorders: doNotUseGlobalStyle
           ? style.paragraphBorders
           : style.paragraphBorders ?? _globalTextStyle.paragraphBorders,
-      paragraphIndent: doNotUseGlobalStyle
-          ? style.paragraphIndent
-          : style.paragraphIndent ?? _globalTextStyle.paragraphIndent,
+      paragraphIndent: !includeTabsAndIndent
+          ? null
+          : doNotUseGlobalStyle
+              ? style.paragraphIndent
+              : style.paragraphIndent ?? _globalTextStyle.paragraphIndent,
       paragraphShading: doNotUseGlobalStyle
           ? style.paragraphShading
           : style.paragraphShading ?? _globalTextStyle.paragraphShading,
       spacing: doNotUseGlobalStyle
           ? style.paragraphSpacing
           : style.paragraphSpacing ?? _globalTextStyle.paragraphSpacing,
-      tabs: doNotUseGlobalStyle
-          ? style.tabs
-          : style.tabs ?? _globalTextStyle.tabs,
+      tabs: !includeTabsAndIndent
+          ? null
+          : doNotUseGlobalStyle
+              ? style.tabs
+              : style.tabs ?? _globalTextStyle.tabs,
       textAlignment: doNotUseGlobalStyle
           ? style.textAlignment
           : style.textAlignment ?? _globalTextStyle.textAlignment,
@@ -451,6 +530,12 @@ class DocXBuilder {
           ? style.verticalTextAlignment
           : style.verticalTextAlignment ??
               _globalTextStyle.verticalTextAlignment,
+      numberList: doNotUseGlobalStyle
+          ? style.numberList
+          : style.numberList ?? _globalTextStyle.numberList,
+      numberLevelInList: doNotUseGlobalStyle
+          ? style.numberLevelInList
+          : style.numberLevelInList ?? _globalTextStyle.numberLevelInList,
     );
   }
 
@@ -1199,7 +1284,7 @@ class DocXBuilder {
     _docx.write('</w:r></w:p>');
   }
 
-  /// Creates an inline image with a caption inside a 1x1 table. The [tableProperties] can be set to customize the appearance of the table, such as changing the border colors and widths.
+  /// Creates an inline image with a caption inside a 1x1 table. The [tableProperties] can be set to customize the appearance of the table, such as changing the border colors and widths. LibreOffice/OpenOffice converts an inline image (called "anchor as character") in a table to an anchor image (called "anchor to character/paragraph") for historic reasons, but this should have little effect on the end result.
   ///
   /// Other ways to combine image with text: use addAnchorImage or use addImage followed or preceeded with addText/addMixedText.
   ///
@@ -1581,6 +1666,8 @@ class DocXBuilder {
         documentSubject: documentSubject ?? '',
         documentDescription: documentDescription ?? '',
         documentCreator: documentCreator ?? '',
+        includeNumberingFileToPackage: _includeNumberingFileToPackage,
+        customNumberingXml: _customNumberingXml,
       );
       return f;
     } catch (e) {
@@ -1602,6 +1689,8 @@ class DocXBuilder {
     _oddPageFooter = null;
     _evenPageFooter = null;
     _insertHeadersAndFootersInThisSection = false;
+    _includeNumberingFileToPackage = false;
+    _customNumberingXml = null;
     // _charCount = 0;
     // _charCountWithSpaces = 0;
     // _parCount = 0;
