@@ -127,14 +127,6 @@ class Packager {
       final Directory sourceDirectory =
           Directory('${cacheDirectory.path}/$cacheDocXBuilder/$src');
 
-      if (includeNumberingFileToPackage) {
-        final added = addNumberingList();
-        if (added) {
-          File('$_dirPathToWord/numbering.xml').writeAsStringSync(Numbering()
-              .getNumberingXml(customNumberingXml: customNumberingXml ?? ''));
-        }
-      }
-
       File('$_dirPathToDocProps/app.xml')
           .writeAsStringSync(AppXml().getAppXml());
       File('$_dirPathToDocProps/core.xml').writeAsStringSync(
@@ -154,11 +146,14 @@ class Packager {
       File('$_dirPathToWord/document.xml').writeAsStringSync(documentXml);
       File('$_dirPathToWord/fontTable.xml')
           .writeAsStringSync(FontTable().getFontTableXml());
-
       File('$_dirPathToWord/settings.xml').writeAsStringSync(SettingsXml()
           .getSettingsXml(useEvenHeaders: _addEvenAndOddHeadersInSettings));
       File('$_dirPathToWord/styles.xml')
           .writeAsStringSync(WordStylesXml().getWordStylesXml());
+      if (includeNumberingFileToPackage) {
+        File('$_dirPathToWord/numbering.xml').writeAsStringSync(Numbering()
+            .getNumberingXml(customNumberingXml: customNumberingXml ?? ''));
+      }
 
       final File docxFile = File(destination);
       docxFile.createSync(recursive: false);
