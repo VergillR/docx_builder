@@ -50,7 +50,6 @@ class DocXBuilder {
   Footer _oddPageFooter;
   Footer _evenPageFooter;
   bool _insertHeadersAndFootersInThisSection = false;
-  bool _includeNumberingFileToPackage = false;
   String _customNumberingXml;
 
   final String mimetype =
@@ -489,9 +488,6 @@ class DocXBuilder {
       bool doNotUseGlobalStyle = false,
       bool includeTabsAndIndent = true}) {
     final TextStyle style = textStyle ?? TextStyle();
-    if (style.numberList != null) {
-      _includeNumberingFileToPackage = true;
-    }
     return _b.Ppr.getPpr(
       textFrame: textStyle?.textFrame != null ? textStyle.textFrame : null,
       keepLines: doNotUseGlobalStyle
@@ -1652,9 +1648,7 @@ class DocXBuilder {
   }) async {
     try {
       if (!_bufferClosed) {
-        if (_includeNumberingFileToPackage) {
-          _packager.addNumberingList();
-        }
+        _packager.addNumberingList();
         _docx.write(_getPageStyleAsString(style: _globalPageStyle));
         _docx.write('</w:body></w:document>');
         _bufferClosed = true;
@@ -1669,7 +1663,6 @@ class DocXBuilder {
         documentSubject: documentSubject ?? '',
         documentDescription: documentDescription ?? '',
         documentCreator: documentCreator ?? '',
-        includeNumberingFileToPackage: _includeNumberingFileToPackage,
         customNumberingXml: _customNumberingXml,
       );
       return f;
@@ -1692,7 +1685,6 @@ class DocXBuilder {
     _oddPageFooter = null;
     _evenPageFooter = null;
     _insertHeadersAndFootersInThisSection = false;
-    _includeNumberingFileToPackage = false;
     _customNumberingXml = null;
     // _charCount = 0;
     // _charCountWithSpaces = 0;

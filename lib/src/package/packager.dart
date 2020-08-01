@@ -48,16 +48,11 @@ class Packager {
     Directory(_dirPathToWordRels).createSync(recursive: true);
   }
 
-  bool addNumberingList() {
-    try {
-      _contentOverrideRefs.add(
-          '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>');
-      _references['rId${_rIdCount++}'] =
-          'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"';
-      return true;
-    } catch (e) {
-      return false;
-    }
+  void addNumberingList() {
+    _contentOverrideRefs.add(
+        '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>');
+    _references['rId${_rIdCount++}'] =
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"';
   }
 
   bool addHeaderOrFooter(int counter, String contents,
@@ -115,7 +110,6 @@ class Packager {
     String documentSubject,
     String documentDescription,
     String documentCreator,
-    bool includeNumberingFileToPackage = false,
     String customNumberingXml,
   }) async {
     try {
@@ -150,10 +144,8 @@ class Packager {
           .getSettingsXml(useEvenHeaders: _addEvenAndOddHeadersInSettings));
       File('$_dirPathToWord/styles.xml')
           .writeAsStringSync(WordStylesXml().getWordStylesXml());
-      if (includeNumberingFileToPackage) {
-        File('$_dirPathToWord/numbering.xml').writeAsStringSync(Numbering()
-            .getNumberingXml(customNumberingXml: customNumberingXml ?? ''));
-      }
+      File('$_dirPathToWord/numbering.xml').writeAsStringSync(Numbering()
+          .getNumberingXml(customNumberingXml: customNumberingXml ?? ''));
 
       final File docxFile = File(destination);
       docxFile.createSync(recursive: false);
