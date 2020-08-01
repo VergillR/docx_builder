@@ -1652,11 +1652,11 @@ class DocXBuilder {
   }) async {
     try {
       if (!_bufferClosed) {
-        _docx.write(_getPageStyleAsString(style: _globalPageStyle));
-        _docx.write('</w:body></w:document>');
         if (_includeNumberingFileToPackage) {
           _packager.addNumberingList();
         }
+        _docx.write(_getPageStyleAsString(style: _globalPageStyle));
+        _docx.write('</w:body></w:document>');
         _bufferClosed = true;
       }
 
