@@ -25,10 +25,19 @@ class Ppr {
     bool keepLines,
     bool keepNext,
     TextFrame textFrame,
+    NumberingList numberingList,
+    int numberLevelInList,
   }) {
     final StringBuffer p = StringBuffer()..write('<w:pPr>');
     if (textFrame != null) {
       p.write(textFrame.getXml());
+    }
+    if (numberingList != null) {
+      final int numId = numberingList == NumberingList.bullet
+          ? 1
+          : numberingList == NumberingList.numbered ? 2 : 3;
+      p.write(
+          '<w:numPr><w:ilvl w:val="${numberLevelInList ?? 0}"/><w:numId w:val="$numId"/></w:numPr>');
     }
     if (keepLines != null) {
       p.write('<w:keepLines val="$keepLines" />');

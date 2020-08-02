@@ -28,6 +28,13 @@ export 'styles/style_enums.dart';
 class DocXBuilder {
   _p.Packager _packager;
   final StringBuffer _docx = StringBuffer();
+
+  /// OOXML does not allow the last paragraph in the document to have its own section properties; instead, they should be placed directly in the body of the document.
+  /// To prevent problems with this rule, docxBuilder adds an empty paragraph (i.e. a last paragraph without section properties) at the end of the document.
+  ///
+  /// If you know the last paragraph does not have its own section rules and you do not want an empty line at the end of the document, you can set this value to false.
+  bool addEmptyParagraphAtEndOfDocument = true;
+
   bool _bufferClosed = false;
   // int _charCount = 0;
   // int _charCountWithSpaces = 0;
@@ -466,11 +473,14 @@ class DocXBuilder {
   /// Obtain the XML string of the paragraph style, such as text alignment.
   /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
   /// Textframes cannot be set global.
-  String _getParagraphStyleAsString(
-      {TextStyle textStyle,
-      bool doNotUseGlobalStyle = false,
-      bool includeTabsAndIndent = true}) {
+  String _getParagraphStyleAsString({
+    TextStyle textStyle,
+    bool doNotUseGlobalStyle = false,
+  }) {
     final TextStyle style = textStyle ?? TextStyle();
+    if (style?.numberingList != null ?? false) {
+      _includeNumberingXml = true;
+    }
     return _b.Ppr.getPpr(
       textFrame: textStyle?.textFrame != null ? textStyle.textFrame : null,
       keepLines: doNotUseGlobalStyle
@@ -486,22 +496,18 @@ class DocXBuilder {
       paragraphBorders: doNotUseGlobalStyle
           ? style.paragraphBorders
           : style.paragraphBorders ?? _globalTextStyle.paragraphBorders,
-      paragraphIndent: !includeTabsAndIndent
-          ? null
-          : doNotUseGlobalStyle
-              ? style.paragraphIndent
-              : style.paragraphIndent ?? _globalTextStyle.paragraphIndent,
+      paragraphIndent: doNotUseGlobalStyle
+          ? style.paragraphIndent
+          : style.paragraphIndent ?? _globalTextStyle.paragraphIndent,
       paragraphShading: doNotUseGlobalStyle
           ? style.paragraphShading
           : style.paragraphShading ?? _globalTextStyle.paragraphShading,
       spacing: doNotUseGlobalStyle
           ? style.paragraphSpacing
           : style.paragraphSpacing ?? _globalTextStyle.paragraphSpacing,
-      tabs: !includeTabsAndIndent
-          ? null
-          : doNotUseGlobalStyle
-              ? style.tabs
-              : style.tabs ?? _globalTextStyle.tabs,
+      tabs: doNotUseGlobalStyle
+          ? style.tabs
+          : style.tabs ?? _globalTextStyle.tabs,
       textAlignment: doNotUseGlobalStyle
           ? style.textAlignment
           : style.textAlignment ?? _globalTextStyle.textAlignment,
@@ -509,6 +515,12 @@ class DocXBuilder {
           ? style.verticalTextAlignment
           : style.verticalTextAlignment ??
               _globalTextStyle.verticalTextAlignment,
+      numberingList: doNotUseGlobalStyle
+          ? style.numberingList
+          : style.numberingList ?? _globalTextStyle.numberingList,
+      numberLevelInList: doNotUseGlobalStyle
+          ? style.numberLevelInList
+          : style.numberLevelInList ?? _globalTextStyle.numberLevelInList,
     );
   }
 
@@ -596,7 +608,7 @@ class DocXBuilder {
   }
 
   /// AddText adds lines of text to the document.
-  /// It uses the global text styling defined by setGlobalDocxTextStyle.
+  /// By default, it uses the global text styling. This can be changed by providing a [textStyle] and/or setting [doNotUseGlobalStyle] to false.
   /// This function always adds a new paragraph to the document.
   ///
   /// If [lineOrPageBreak] is given, then a LineBreak will be added at the end of the text.
@@ -606,24 +618,25 @@ class DocXBuilder {
   /// If given, [complexField] adds a complex field, such as page and date, e.g. ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
   void addText(
     String text, {
+    TextStyle textStyle,
+    bool doNotUseGlobalStyle = false,
     LineBreak lineOrPageBreak,
     bool addTab = false,
     String hyperlinkTo,
     ComplexField complexField,
-    TextFrame textFrame,
-    NumberingList numberingList,
-    int numberLevelInList,
   }) {
     if (!_bufferClosed) {
       _docx.write(_getCachedAddText(
         text,
+        textStyle: textStyle,
+        doNotUseGlobalStyle: doNotUseGlobalStyle,
         lineOrPageBreak: lineOrPageBreak,
         addTab: addTab,
         hyperlinkTo: hyperlinkTo,
         complexField: complexField,
-        textFrame: textFrame,
-        numberingList: numberingList,
-        numberLevelInList: numberLevelInList,
+        // textFrame: textFrame,
+        // numberingList: numberingList,
+        // numberLevelInList: numberLevelInList,
       ));
       // _addToCharCounters(text);
       // _parCount++;
@@ -650,31 +663,33 @@ class DocXBuilder {
           {@required Table table, @required List<TableRow> tableRows}) =>
       table.tableRows = tableRows;
 
+  /// Assigning a table to tableCell.xmlContent directly is also possible.
   void insertTableInTableCell(
           {@required Table table, @required TableCell tableCell}) =>
       tableCell.xmlContent = table.getXml();
 
+  /// Inserts text into the given [tableCell]. The result is similar as if addText() was used.
+  ///
+  /// See addText() for more info.
   void insertTextInTableCell({
     @required TableCell tableCell,
     @required String text,
+    TextStyle textStyle,
     LineBreak lineOrPageBreak,
     bool addTab = false,
     String hyperlinkTo,
     ComplexField complexField,
-    TextFrame textFrame,
-    NumberingList numberingList,
-    int numberLevelInList,
+    bool doNotUseGlobalStyle = false,
   }) {
     if (!_bufferClosed) {
       tableCell.xmlContent = _getCachedAddText(
         text,
+        textStyle: textStyle,
         lineOrPageBreak: lineOrPageBreak,
         addTab: addTab,
         hyperlinkTo: hyperlinkTo,
         complexField: complexField,
-        textFrame: textFrame,
-        numberingList: numberingList,
-        numberLevelInList: numberLevelInList,
+        doNotUseGlobalStyle: doNotUseGlobalStyle,
       );
       // _addToCharCounters(text);
       // _parCount++;
@@ -684,35 +699,22 @@ class DocXBuilder {
   /// Writes XML text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
   String _getCachedAddText(
     String text, {
+    TextStyle textStyle,
     LineBreak lineOrPageBreak,
     bool addTab = false,
     String hyperlinkTo,
     ComplexField complexField,
-    TextFrame textFrame,
-    NumberingList numberingList,
-    int numberLevelInList,
+    bool doNotUseGlobalStyle = false,
   }) {
     final StringBuffer cached = StringBuffer();
     final String tab =
         globalTextStyle.tabs != null && addTab ? '<w:r><w:tab/></w:r>' : '';
     final String lineBreak =
         lineOrPageBreak != null ? lineOrPageBreak.getXml() : '';
-
-    String numlist = '';
-    if (numberingList != null) {
-      _includeNumberingXml = true;
-      final int numId = numberingList == NumberingList.bullet
-          ? 1
-          : numberingList == NumberingList.numbered ? 2 : 3;
-      numlist =
-          '<w:numPr><w:ilvl w:val="${numberLevelInList ?? 0}"/><w:numId w:val="$numId"/></w:numPr>';
-    }
-
-    String ppr = textFrame == null
-        ? _getParagraphStyleAsString()
-        : _getParagraphStyleAsString()
-            .replaceFirst('</w:pPr>', '${textFrame.getXml()}</w:pPr>');
-    ppr = ppr.replaceFirst('</w:pPr>', '$numlist</w:pPr>');
+    final TextStyle style =
+        textStyle ?? (doNotUseGlobalStyle ? TextStyle() : _globalTextStyle);
+    final String ppr = _getParagraphStyleAsString(
+        textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle);
 
     if (complexField == null ||
         complexField.instructions == null ||
@@ -729,13 +731,13 @@ class DocXBuilder {
         '<w:p>$ppr',
         tab,
         openHyperlink,
-        '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
+        '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty, doNotUseGlobalStyle: doNotUseGlobalStyle)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
       ]);
     } else {
       cached.writeAll(<String>[
         '<w:p>$ppr',
         tab,
-        '<w:r>${_getTextStyleAsString()}<w:t xml:space="preserve">$text</w:t></w:r><w:r>${_getTextStyleAsString()}${complexField.getXml()}</w:r>$lineBreak</w:p>'
+        '<w:r>${_getTextStyleAsString(doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:t xml:space="preserve">$text</w:t></w:r><w:r>${_getTextStyleAsString(doNotUseGlobalStyle: doNotUseGlobalStyle)}${complexField.getXml()}</w:r>$lineBreak</w:p>'
       ]);
     }
     return cached.toString();
@@ -757,6 +759,8 @@ class DocXBuilder {
   /// If the custom textstyles contain a hyperlinkTo value that is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
   ///
   /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
+  ///
+  /// Mixed text can be displayed within a [textFrame] or as a list item in [numberingList] with depth [numberLevelInList].
   void addMixedText(
     List<String> text,
     List<TextStyle> textStyles, {
@@ -768,6 +772,9 @@ class DocXBuilder {
     bool addBreakAfterEveryItem = false,
     bool addTab = false,
     List<ComplexField> complexFields,
+    TextFrame textFrame,
+    NumberingList numberingList,
+    int numberLevelInList,
   }) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
       _docx.write(_getCachedAddMixedText(
@@ -781,12 +788,18 @@ class DocXBuilder {
         addBreakAfterEveryItem: addBreakAfterEveryItem,
         addTab: addTab,
         complexFields: complexFields,
+        textFrame: textFrame,
+        numberingList: numberingList,
+        numberLevelInList: numberLevelInList,
       ));
       // _addToCharCounters(t);
       // _parCount++;
     }
   }
 
+  /// Inserts mixed text into the given [tableCell]. The result is similar as if addMixedText() was used.
+  ///
+  /// See addMixedText() for more info.
   void insertMixedTextInTableCell({
     @required TableCell tableCell,
     @required List<String> text,
@@ -799,6 +812,9 @@ class DocXBuilder {
     bool addBreakAfterEveryItem = false,
     bool addTab = false,
     List<ComplexField> complexFields,
+    TextFrame textFrame,
+    NumberingList numberingList,
+    int numberLevelInList,
   }) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
       tableCell.xmlContent = _getCachedAddMixedText(
@@ -812,6 +828,9 @@ class DocXBuilder {
         addBreakAfterEveryItem: addBreakAfterEveryItem,
         addTab: addTab,
         complexFields: complexFields,
+        textFrame: textFrame,
+        numberingList: numberingList,
+        numberLevelInList: numberLevelInList,
       );
       // _addToCharCounters(t);
       // _parCount++;
@@ -830,6 +849,9 @@ class DocXBuilder {
     bool addTab = false,
     List<ComplexField> complexFields,
     TextAlignment textAlignment,
+    TextFrame textFrame,
+    NumberingList numberingList,
+    int numberLevelInList,
   }) {
     final StringBuffer d = StringBuffer();
     d.write('<w:p><w:pPr>');
@@ -838,7 +860,12 @@ class DocXBuilder {
           style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
     }
     d.write(_getParagraphStyleAsString(
-            textStyle: TextStyle(textAlignment: textAlignment),
+            textStyle: TextStyle(
+              textAlignment: textAlignment,
+              textFrame: textFrame,
+              numberingList: numberingList,
+              numberLevelInList: numberLevelInList,
+            ),
             doNotUseGlobalStyle: doNotUseGlobalTextStyle)
         .replaceFirst('<w:pPr>', ''));
 
@@ -1291,8 +1318,6 @@ class DocXBuilder {
     int heightEMU, {
     int tableWidthInTwips,
     bool captionAppearsBelowImage = true,
-    // Shading shadingCaption,
-    // Shading shadingImage,
     List<String> text,
     List<TextStyle> textStyles,
     String alternativeTextForImage = '',
@@ -1648,6 +1673,9 @@ class DocXBuilder {
       if (!_bufferClosed) {
         if (_includeNumberingXml) {
           _packager.addNumberingList();
+        }
+        if (addEmptyParagraphAtEndOfDocument) {
+          addText('', textStyle: TextStyle(), doNotUseGlobalStyle: true);
         }
         _docx.write(_getPageStyleAsString(style: _globalPageStyle));
         _docx.write('</w:body></w:document>');
