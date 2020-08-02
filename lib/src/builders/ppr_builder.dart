@@ -25,8 +25,6 @@ class Ppr {
     bool keepLines,
     bool keepNext,
     TextFrame textFrame,
-    NumberingList numberList,
-    int numberLevelInList,
   }) {
     final StringBuffer p = StringBuffer()..write('<w:pPr>');
     if (textFrame != null) {
@@ -37,13 +35,6 @@ class Ppr {
     }
     if (keepNext != null) {
       p.write('<w:keepNext val="$keepNext" />');
-    }
-    if (numberList != null) {
-      final int numId = numberList == NumberingList.bullet
-          ? 1
-          : numberList == NumberingList.numbered ? 2 : 3;
-      p.write(
-          '<w:numPr><w:ilvl w:val="${numberLevelInList ?? 0}"/><w:numId w:val="$numId"/></w:numPr>');
     }
     if (textAlignment != null) {
       p.write('<w:jc w:val="${getValueFromEnum(textAlignment)}" />');

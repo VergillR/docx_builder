@@ -11,8 +11,8 @@ import 'builders/index.dart' as _b;
 import 'package/packager.dart' as _p;
 import 'utils/constants/constants.dart' as _c;
 
-export './styles/style_classes/index.dart';
-export './styles/style_containers/index.dart';
+export 'styles/style_classes/index.dart';
+export 'styles/style_containers/index.dart';
 export 'styles/style_enums.dart';
 
 /// DocXBuilder is used to construct and create .docx files.
@@ -51,6 +51,7 @@ class DocXBuilder {
   Footer _evenPageFooter;
   bool _insertHeadersAndFootersInThisSection = false;
   String _customNumberingXml;
+  bool _includeNumberingXml = false;
 
   final String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -74,7 +75,6 @@ class DocXBuilder {
   void setCustomNumberingList({
     @required List<NumberFormat> numberFormatForEachLevel,
     @required List<String> charactersForEachLevel,
-    List<TextStyle> characterTextStyles,
     int tabSpace = 420,
     bool justifyToLeft = true,
     NumberingSuffix suffix,
@@ -93,11 +93,6 @@ class DocXBuilder {
         ...List<String>.generate(8, (index) => null),
       ].sublist(0, 8);
 
-      final List<TextStyle> styles = <TextStyle>[
-        ...characterTextStyles,
-        ...List<TextStyle>.generate(8, (index) => null),
-      ].sublist(0, 8);
-
       final String jc = justifyToLeft ? 'left' : 'right';
 
       final String suff =
@@ -109,28 +104,16 @@ class DocXBuilder {
         ..write(
             '<w:abstractNum w:abstractNumId="2"><w:multiLevelType w:val="multilevel"/>');
       for (int i = 0; i < formats.length; i++) {
-        String ppr = '<w:pPr></w:pPr>';
-        String rpr = '<w:rPr><w:rFonts w:hint="default"/></w:rPr>';
-        if (styles[i] != null) {
-          ppr = _getParagraphStyleAsString(
-                  textStyle: styles[i],
-                  doNotUseGlobalStyle: true,
-                  includeTabsAndIndent: false)
-              .replaceFirst('<w:pPr>',
-                  '<w:pPr><w:tabs><w:tab w:val="left" w:pos="${tabSpace * (i + 1)}"/></w:tabs><w:ind w:left="${tabSpace * (i + 1)}" w:leftChars="0" w:hanging="$tabSpace" w:firstLineChars="0"/>');
-          rpr = _getTextStyleAsString(
-            style: styles[i],
-            doNotUseGlobalStyle: true,
-            styleAsHyperlink: false,
-          );
-        }
-
+        final String ppr =
+            '<w:pPr><w:tabs><w:tab w:val="left" w:pos="${tabSpace * (i + 1)}"/></w:tabs><w:ind w:left="${tabSpace * (i + 1)}" w:leftChars="0" w:hanging="$tabSpace" w:firstLineChars="0"/></w:pPr>';
+        const String rpr = '<w:rPr><w:rFonts w:hint="default"/></w:rPr>';
         if (formats[i] != null) {
           c.write(
-              '<w:lvl w:ilvl="$i" w:tentative="0"><w:start w:val="1"/>$suff$lgl<w:numFt w:val="${formats[i]}"/><w:lvlText w:val="${chars[i] ?? "%${i + 1}"}"/><w:lvlJc w:val="$jc"/>$ppr$rpr</w:lvl>');
+              '<w:lvl w:ilvl="$i" w:tentative="0"><w:start w:val="1"/>$suff$lgl<w:numFt w:val="${getValueFromEnum(formats[i])}"/><w:lvlText w:val="${chars[i] ?? "%${i + 1}"}"/><w:lvlJc w:val="$jc"/>$ppr$rpr</w:lvl>');
         }
       }
       c.write('</w:abstractNum>');
+      _customNumberingXml = c.toString();
     }
   }
 
@@ -526,12 +509,6 @@ class DocXBuilder {
           ? style.verticalTextAlignment
           : style.verticalTextAlignment ??
               _globalTextStyle.verticalTextAlignment,
-      numberList: doNotUseGlobalStyle
-          ? style.numberList
-          : style.numberList ?? _globalTextStyle.numberList,
-      numberLevelInList: doNotUseGlobalStyle
-          ? style.numberLevelInList
-          : style.numberLevelInList ?? _globalTextStyle.numberLevelInList,
     );
   }
 
@@ -634,6 +611,8 @@ class DocXBuilder {
     String hyperlinkTo,
     ComplexField complexField,
     TextFrame textFrame,
+    NumberingList numberingList,
+    int numberLevelInList,
   }) {
     if (!_bufferClosed) {
       _docx.write(_getCachedAddText(
@@ -643,6 +622,8 @@ class DocXBuilder {
         hyperlinkTo: hyperlinkTo,
         complexField: complexField,
         textFrame: textFrame,
+        numberingList: numberingList,
+        numberLevelInList: numberLevelInList,
       ));
       // _addToCharCounters(text);
       // _parCount++;
@@ -681,6 +662,8 @@ class DocXBuilder {
     String hyperlinkTo,
     ComplexField complexField,
     TextFrame textFrame,
+    NumberingList numberingList,
+    int numberLevelInList,
   }) {
     if (!_bufferClosed) {
       tableCell.xmlContent = _getCachedAddText(
@@ -690,6 +673,8 @@ class DocXBuilder {
         hyperlinkTo: hyperlinkTo,
         complexField: complexField,
         textFrame: textFrame,
+        numberingList: numberingList,
+        numberLevelInList: numberLevelInList,
       );
       // _addToCharCounters(text);
       // _parCount++;
@@ -704,6 +689,8 @@ class DocXBuilder {
     String hyperlinkTo,
     ComplexField complexField,
     TextFrame textFrame,
+    NumberingList numberingList,
+    int numberLevelInList,
   }) {
     final StringBuffer cached = StringBuffer();
     final String tab =
@@ -711,10 +698,21 @@ class DocXBuilder {
     final String lineBreak =
         lineOrPageBreak != null ? lineOrPageBreak.getXml() : '';
 
-    final String ppr = textFrame == null
+    String numlist = '';
+    if (numberingList != null) {
+      _includeNumberingXml = true;
+      final int numId = numberingList == NumberingList.bullet
+          ? 1
+          : numberingList == NumberingList.numbered ? 2 : 3;
+      numlist =
+          '<w:numPr><w:ilvl w:val="${numberLevelInList ?? 0}"/><w:numId w:val="$numId"/></w:numPr>';
+    }
+
+    String ppr = textFrame == null
         ? _getParagraphStyleAsString()
         : _getParagraphStyleAsString()
             .replaceFirst('</w:pPr>', '${textFrame.getXml()}</w:pPr>');
+    ppr = ppr.replaceFirst('</w:pPr>', '$numlist</w:pPr>');
 
     if (complexField == null ||
         complexField.instructions == null ||
@@ -1648,7 +1646,9 @@ class DocXBuilder {
   }) async {
     try {
       if (!_bufferClosed) {
-        _packager.addNumberingList();
+        if (_includeNumberingXml) {
+          _packager.addNumberingList();
+        }
         _docx.write(_getPageStyleAsString(style: _globalPageStyle));
         _docx.write('</w:body></w:document>');
         _bufferClosed = true;
@@ -1664,6 +1664,7 @@ class DocXBuilder {
         documentDescription: documentDescription ?? '',
         documentCreator: documentCreator ?? '',
         customNumberingXml: _customNumberingXml,
+        includeNumberingXml: _includeNumberingXml,
       );
       return f;
     } catch (e) {
@@ -1686,6 +1687,7 @@ class DocXBuilder {
     _evenPageFooter = null;
     _insertHeadersAndFootersInThisSection = false;
     _customNumberingXml = null;
+    _includeNumberingXml = false;
     // _charCount = 0;
     // _charCountWithSpaces = 0;
     // _parCount = 0;
