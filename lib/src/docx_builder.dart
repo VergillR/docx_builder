@@ -45,10 +45,14 @@ class DocXBuilder {
   String _documentBackgroundColor;
   String get documentBackgroundColor => _documentBackgroundColor;
 
-  TextStyle _globalTextStyle = TextStyle();
-  TextStyle get globalTextStyle => _globalTextStyle;
-  PageStyle _globalPageStyle = PageStyle().getDefaultPageStyle();
-  PageStyle get globalPageStyle => _globalPageStyle;
+  /// The global style for text. Except for HighlightColor, colors are in 'RRGGBB' format.
+  /// The global text style can be overridden by giving addText and addMixedText a textStyle.
+  /// The hyperlinkTo property of the global text style are never used as this makes no sense. Instead, hyperlinks can be added manually with addText or addMixedText.
+  TextStyle globalTextStyle = TextStyle();
+
+  /// The global page style, such as orientation, size, and page borders.
+  /// This page style determines the final SectPr directly inside the body tag of the document.
+  PageStyle globalPageStyle = PageStyle().getDefaultPageStyle();
 
   Header _firstPageHeader;
   Header _oddPageHeader;
@@ -75,54 +79,6 @@ class DocXBuilder {
   final String bulletSquare = '▪';
   final String bulletSquareWhite = '▫';
   final String bulletWhite = '◦';
-
-  /// A custom numbering list can be set once for the entire document.
-  ///
-  /// Maximum level of depth is 8.
-  void setCustomNumberingList({
-    @required List<NumberFormat> numberFormatForEachLevel,
-    @required List<String> charactersForEachLevel,
-    int tabSpace = 420,
-    bool justifyToLeft = true,
-    NumberingSuffix suffix,
-    bool isLgl = false,
-  }) {
-    if (_customNumberingXml == null &&
-        numberFormatForEachLevel != null &&
-        charactersForEachLevel != null) {
-      final List<NumberFormat> formats = <NumberFormat>[
-        ...numberFormatForEachLevel,
-        ...List<NumberFormat>.generate(8, (index) => null),
-      ].sublist(0, 8);
-
-      final List<String> chars = <String>[
-        ...charactersForEachLevel,
-        ...List<String>.generate(8, (index) => null),
-      ].sublist(0, 8);
-
-      final String jc = justifyToLeft ? 'left' : 'right';
-
-      final String suff =
-          suffix != null ? '<w:suff w:val="${getValueFromEnum(suffix)}"/>' : '';
-
-      final String lgl = isLgl ?? false ? '<w:isLgl/>' : '';
-
-      final StringBuffer c = StringBuffer()
-        ..write(
-            '<w:abstractNum w:abstractNumId="2"><w:multiLevelType w:val="multilevel"/>');
-      for (int i = 0; i < formats.length; i++) {
-        final String ppr =
-            '<w:pPr><w:tabs><w:tab w:val="left" w:pos="${tabSpace * (i + 1)}"/></w:tabs><w:ind w:left="${tabSpace * (i + 1)}" w:leftChars="0" w:hanging="$tabSpace" w:firstLineChars="0"/></w:pPr>';
-        const String rpr = '<w:rPr><w:rFonts w:hint="default"/></w:rPr>';
-        if (formats[i] != null) {
-          c.write(
-              '<w:lvl w:ilvl="$i" w:tentative="0"><w:start w:val="1"/>$suff$lgl<w:numFt w:val="${getValueFromEnum(formats[i])}"/><w:lvlText w:val="${chars[i] ?? "%${i + 1}"}"/><w:lvlJc w:val="$jc"/>$ppr$rpr</w:lvl>');
-        }
-      }
-      c.write('</w:abstractNum>');
-      _customNumberingXml = c.toString();
-    }
-  }
 
   /// Convert EMUs to Twips (twentieth of point).
   int convertEMUToTwips(int emu) => (emu / 635).round();
@@ -182,11 +138,53 @@ class DocXBuilder {
   // Blank page can also be achieved with sectPr, sectType.nextPage and then create a new section which prompts a new page
   // void addBlankPageA4() => _docx.write(_c.blankPageA4);
 
-  // ignore: use_setters_to_change_properties
-  /// Sets the global page style, such as orientation, size, and page borders.
-  /// This page style can only be set once as the final SectPr directly inside the body tag of the document.
-  /// When adding custom section properties to a paragraph, make sure that paragraph is NOT the last paragraph of the document or else the document will be malformed.
-  void setGlobalPageStyle(PageStyle pageStyle) => _globalPageStyle = pageStyle;
+  /// A custom numbering list can be set once for the entire document.
+  ///
+  /// Maximum level of depth is 8.
+  void setCustomNumberingList({
+    @required List<NumberFormat> numberFormatForEachLevel,
+    @required List<String> charactersForEachLevel,
+    int tabSpace = 420,
+    bool justifyToLeft = true,
+    NumberingSuffix suffix,
+    bool isLgl = false,
+  }) {
+    if (_customNumberingXml == null &&
+        numberFormatForEachLevel != null &&
+        charactersForEachLevel != null) {
+      final List<NumberFormat> formats = <NumberFormat>[
+        ...numberFormatForEachLevel,
+        ...List<NumberFormat>.generate(8, (index) => null),
+      ].sublist(0, 8);
+
+      final List<String> chars = <String>[
+        ...charactersForEachLevel,
+        ...List<String>.generate(8, (index) => null),
+      ].sublist(0, 8);
+
+      final String jc = justifyToLeft ? 'left' : 'right';
+
+      final String suff =
+          suffix != null ? '<w:suff w:val="${getValueFromEnum(suffix)}"/>' : '';
+
+      final String lgl = isLgl ?? false ? '<w:isLgl/>' : '';
+
+      final StringBuffer c = StringBuffer()
+        ..write(
+            '<w:abstractNum w:abstractNumId="2"><w:multiLevelType w:val="multilevel"/>');
+      for (int i = 0; i < formats.length; i++) {
+        final String ppr =
+            '<w:pPr><w:tabs><w:tab w:val="left" w:pos="${tabSpace * (i + 1)}"/></w:tabs><w:ind w:left="${tabSpace * (i + 1)}" w:leftChars="0" w:hanging="$tabSpace" w:firstLineChars="0"/></w:pPr>';
+        const String rpr = '<w:rPr><w:rFonts w:hint="default"/></w:rPr>';
+        if (formats[i] != null) {
+          c.write(
+              '<w:lvl w:ilvl="$i" w:tentative="0"><w:start w:val="1"/>$suff$lgl<w:numFt w:val="${getValueFromEnum(formats[i])}"/><w:lvlText w:val="${chars[i] ?? "%${i + 1}"}"/><w:lvlJc w:val="$jc"/>$ppr$rpr</w:lvl>');
+        }
+      }
+      c.write('</w:abstractNum>');
+      _customNumberingXml = c.toString();
+    }
+  }
 
   /// The [type] determines where the header will appear: for odd pages (also called default header), first page (also called title page header) or even pages. When a header is set, it cannot be changed or removed afterwards as additional files and references are immediately written to the cache directory upon creation.
   ///
@@ -407,55 +405,55 @@ class DocXBuilder {
     String spr = _b.SectPr.getSpr(
       cols: doNotUseGlobalStyle
           ? pageStyle.cols
-          : pageStyle.cols ?? _globalPageStyle.cols,
+          : pageStyle.cols ?? globalPageStyle.cols,
       colsHaveSeparator: doNotUseGlobalStyle
           ? pageStyle.colsHaveSeparator
-          : pageStyle.colsHaveSeparator ?? _globalPageStyle.colsHaveSeparator,
+          : pageStyle.colsHaveSeparator ?? globalPageStyle.colsHaveSeparator,
       colsHaveEqualWidth: doNotUseGlobalStyle
           ? pageStyle.colsHaveEqualWidth
-          : pageStyle.colsHaveEqualWidth ?? _globalPageStyle.colsHaveEqualWidth,
+          : pageStyle.colsHaveEqualWidth ?? globalPageStyle.colsHaveEqualWidth,
       sectType: doNotUseGlobalStyle
           ? pageStyle.sectType
-          : pageStyle.sectType ?? _globalPageStyle.sectType,
+          : pageStyle.sectType ?? globalPageStyle.sectType,
       pageSzHeight: doNotUseGlobalStyle
           ? pageStyle.pageSzHeight
-          : pageStyle.pageSzHeight ?? _globalPageStyle.pageSzHeight,
+          : pageStyle.pageSzHeight ?? globalPageStyle.pageSzHeight,
       pageSzWidth: doNotUseGlobalStyle
           ? pageStyle.pageSzWidth
-          : pageStyle.pageSzWidth ?? _globalPageStyle.pageSzWidth,
+          : pageStyle.pageSzWidth ?? globalPageStyle.pageSzWidth,
       pageOrientation: doNotUseGlobalStyle
           ? pageStyle.pageOrientation
-          : pageStyle.pageOrientation ?? _globalPageStyle.pageOrientation,
+          : pageStyle.pageOrientation ?? globalPageStyle.pageOrientation,
       sectVerticalAlign: doNotUseGlobalStyle
           ? pageStyle.sectVerticalAlign
-          : pageStyle.sectVerticalAlign ?? _globalPageStyle.sectVerticalAlign,
+          : pageStyle.sectVerticalAlign ?? globalPageStyle.sectVerticalAlign,
       pageBorders: doNotUseGlobalStyle
           ? pageStyle.pageBorders
-          : pageStyle.pageBorders ?? _globalPageStyle.pageBorders,
+          : pageStyle.pageBorders ?? globalPageStyle.pageBorders,
       pageBorderDisplay: doNotUseGlobalStyle
           ? pageStyle.pageBorderDisplay
-          : pageStyle.pageBorderDisplay ?? _globalPageStyle.pageBorderDisplay,
+          : pageStyle.pageBorderDisplay ?? globalPageStyle.pageBorderDisplay,
       pageBorderOffsetBasedOnText: doNotUseGlobalStyle
           ? pageStyle.pageBorderOffsetBasedOnText
           : pageStyle.pageBorderOffsetBasedOnText ??
-              _globalPageStyle.pageBorderOffsetBasedOnText,
+              globalPageStyle.pageBorderOffsetBasedOnText,
       pageBorderIsRenderedAboveText: doNotUseGlobalStyle
           ? pageStyle.pageBorderIsRenderedAboveText
           : pageStyle.pageBorderIsRenderedAboveText ??
-              _globalPageStyle.pageBorderIsRenderedAboveText,
+              globalPageStyle.pageBorderIsRenderedAboveText,
       pageNumberingFormat: doNotUseGlobalStyle
           ? pageStyle.pageNumberingFormat
           : pageStyle.pageNumberingFormat ??
-              _globalPageStyle.pageNumberingFormat,
+              globalPageStyle.pageNumberingFormat,
       pageNumberingStart: doNotUseGlobalStyle
           ? pageStyle.pageNumberingStart
-          : pageStyle.pageNumberingStart ?? _globalPageStyle.pageNumberingStart,
+          : pageStyle.pageNumberingStart ?? globalPageStyle.pageNumberingStart,
       lineNumbering: doNotUseGlobalStyle
           ? pageStyle.lineNumbering
-          : pageStyle.lineNumbering ?? _globalPageStyle.lineNumbering,
+          : pageStyle.lineNumbering ?? globalPageStyle.lineNumbering,
       pageMargin: doNotUseGlobalStyle
           ? pageStyle.pageMargin
-          : pageStyle.pageMargin ?? _globalPageStyle.pageMargin,
+          : pageStyle.pageMargin ?? globalPageStyle.pageMargin,
     );
     if (_insertHeadersAndFootersInThisSection) {
       spr = _addHeadersAndFootersToSectPr(spr);
@@ -463,12 +461,6 @@ class DocXBuilder {
     }
     return spr;
   }
-
-  // ignore: use_setters_to_change_properties
-  /// Sets the global style for text. Except for HighlightColor, colors are in 'RRGGBB' format.
-  /// The global text style can be overridden by addMixedText with its own styling rules.
-  /// The hyperlinkTo and textFrame properties of the global text style are never used as this makes no sense. Hyperlinks and textframes can be added manually with addText or addMixedText.
-  void setGlobalTextStyle(TextStyle textStyle) => _globalTextStyle = textStyle;
 
   /// Obtain the XML string of the paragraph style, such as text alignment.
   /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
@@ -485,42 +477,41 @@ class DocXBuilder {
       textFrame: textStyle?.textFrame != null ? textStyle.textFrame : null,
       keepLines: doNotUseGlobalStyle
           ? style.keepLines
-          : style.keepLines ?? _globalTextStyle.keepLines,
+          : style.keepLines ?? globalTextStyle.keepLines,
       keepNext: doNotUseGlobalStyle
           ? style.keepNext
-          : style.keepNext ?? _globalTextStyle.keepNext,
+          : style.keepNext ?? globalTextStyle.keepNext,
       paragraphBorderOnAllSides: doNotUseGlobalStyle
           ? style.paragraphBorderOnAllSides
           : style.paragraphBorderOnAllSides ??
-              _globalTextStyle.paragraphBorderOnAllSides,
+              globalTextStyle.paragraphBorderOnAllSides,
       paragraphBorders: doNotUseGlobalStyle
           ? style.paragraphBorders
-          : style.paragraphBorders ?? _globalTextStyle.paragraphBorders,
+          : style.paragraphBorders ?? globalTextStyle.paragraphBorders,
       paragraphIndent: doNotUseGlobalStyle
           ? style.paragraphIndent
-          : style.paragraphIndent ?? _globalTextStyle.paragraphIndent,
+          : style.paragraphIndent ?? globalTextStyle.paragraphIndent,
       paragraphShading: doNotUseGlobalStyle
           ? style.paragraphShading
-          : style.paragraphShading ?? _globalTextStyle.paragraphShading,
+          : style.paragraphShading ?? globalTextStyle.paragraphShading,
       spacing: doNotUseGlobalStyle
           ? style.paragraphSpacing
-          : style.paragraphSpacing ?? _globalTextStyle.paragraphSpacing,
-      tabs: doNotUseGlobalStyle
-          ? style.tabs
-          : style.tabs ?? _globalTextStyle.tabs,
+          : style.paragraphSpacing ?? globalTextStyle.paragraphSpacing,
+      tabs:
+          doNotUseGlobalStyle ? style.tabs : style.tabs ?? globalTextStyle.tabs,
       textAlignment: doNotUseGlobalStyle
           ? style.textAlignment
-          : style.textAlignment ?? _globalTextStyle.textAlignment,
+          : style.textAlignment ?? globalTextStyle.textAlignment,
       verticalTextAlignment: doNotUseGlobalStyle
           ? style.verticalTextAlignment
           : style.verticalTextAlignment ??
-              _globalTextStyle.verticalTextAlignment,
+              globalTextStyle.verticalTextAlignment,
       numberingList: doNotUseGlobalStyle
           ? style.numberingList
-          : style.numberingList ?? _globalTextStyle.numberingList,
+          : style.numberingList ?? globalTextStyle.numberingList,
       numberLevelInList: doNotUseGlobalStyle
           ? style.numberLevelInList
-          : style.numberLevelInList ?? _globalTextStyle.numberLevelInList,
+          : style.numberLevelInList ?? globalTextStyle.numberLevelInList,
     );
   }
 
@@ -535,75 +526,75 @@ class DocXBuilder {
       styleAsHyperlink: styleAsHyperlink,
       bold: doNotUseGlobalStyle
           ? textStyle.bold
-          : textStyle.bold ?? _globalTextStyle.bold,
+          : textStyle.bold ?? globalTextStyle.bold,
       caps: doNotUseGlobalStyle
           ? textStyle.caps
-          : textStyle.caps ?? _globalTextStyle.caps,
+          : textStyle.caps ?? globalTextStyle.caps,
       doubleStrike: doNotUseGlobalStyle
           ? textStyle.doubleStrike
-          : textStyle.doubleStrike ?? _globalTextStyle.doubleStrike,
+          : textStyle.doubleStrike ?? globalTextStyle.doubleStrike,
       fontColor: doNotUseGlobalStyle
           ? textStyle.fontColor
-          : textStyle.fontColor ?? _globalTextStyle.fontColor,
+          : textStyle.fontColor ?? globalTextStyle.fontColor,
       fontName: doNotUseGlobalStyle
           ? textStyle.fontName
-          : textStyle.fontName ?? _globalTextStyle.fontName,
+          : textStyle.fontName ?? globalTextStyle.fontName,
       fontNameComplexScript: doNotUseGlobalStyle
           ? textStyle.fontNameComplexScript
           : textStyle.fontNameComplexScript ??
-              _globalTextStyle.fontNameComplexScript,
+              globalTextStyle.fontNameComplexScript,
       fontSize: doNotUseGlobalStyle
           ? textStyle.fontSize
-          : textStyle.fontSize ?? _globalTextStyle.fontSize,
+          : textStyle.fontSize ?? globalTextStyle.fontSize,
       highlightColor: doNotUseGlobalStyle
           ? textStyle.highlightColor
-          : textStyle.highlightColor ?? _globalTextStyle.highlightColor,
+          : textStyle.highlightColor ?? globalTextStyle.highlightColor,
       italic: doNotUseGlobalStyle
           ? textStyle.italic
-          : textStyle.italic ?? _globalTextStyle.italic,
+          : textStyle.italic ?? globalTextStyle.italic,
       rtlText: doNotUseGlobalStyle
           ? textStyle.rtlText
-          : textStyle.rtlText ?? _globalTextStyle.rtlText,
+          : textStyle.rtlText ?? globalTextStyle.rtlText,
       shading: doNotUseGlobalStyle
           ? textStyle.shading
-          : textStyle.shading ?? _globalTextStyle.shading,
+          : textStyle.shading ?? globalTextStyle.shading,
       smallCaps: doNotUseGlobalStyle
           ? textStyle.smallCaps
-          : textStyle.smallCaps ?? _globalTextStyle.smallCaps,
+          : textStyle.smallCaps ?? globalTextStyle.smallCaps,
       strike: doNotUseGlobalStyle
           ? textStyle.strike
-          : textStyle.strike ?? _globalTextStyle.strike,
+          : textStyle.strike ?? globalTextStyle.strike,
       textArt: doNotUseGlobalStyle
           ? textStyle.textArt
-          : textStyle.textArt ?? _globalTextStyle.textArt,
+          : textStyle.textArt ?? globalTextStyle.textArt,
       underline: doNotUseGlobalStyle
           ? textStyle.underline
-          : textStyle.underline ?? _globalTextStyle.underline,
+          : textStyle.underline ?? globalTextStyle.underline,
       underlineColor: doNotUseGlobalStyle
           ? textStyle.underlineColor
-          : textStyle.underlineColor ?? _globalTextStyle.underlineColor,
+          : textStyle.underlineColor ?? globalTextStyle.underlineColor,
       vanish: doNotUseGlobalStyle
           ? textStyle.vanish
-          : textStyle.vanish ?? _globalTextStyle.vanish,
+          : textStyle.vanish ?? globalTextStyle.vanish,
       vertAlign: doNotUseGlobalStyle
           ? textStyle.vertAlign
-          : textStyle.vertAlign ?? _globalTextStyle.vertAlign,
+          : textStyle.vertAlign ?? globalTextStyle.vertAlign,
       spacing: doNotUseGlobalStyle
           ? textStyle.textSpacing
-          : textStyle.textSpacing ?? _globalTextStyle.textSpacing,
+          : textStyle.textSpacing ?? globalTextStyle.textSpacing,
       stretchOrCompressInPercentage: doNotUseGlobalStyle
           ? textStyle.stretchOrCompressInPercentage
           : textStyle.stretchOrCompressInPercentage ??
-              _globalTextStyle.stretchOrCompressInPercentage,
+              globalTextStyle.stretchOrCompressInPercentage,
       kern: doNotUseGlobalStyle
           ? textStyle.kern
-          : textStyle.kern ?? _globalTextStyle.kern,
+          : textStyle.kern ?? globalTextStyle.kern,
       fitText: doNotUseGlobalStyle
           ? textStyle.fitText
-          : textStyle.fitText ?? _globalTextStyle.fitText,
+          : textStyle.fitText ?? globalTextStyle.fitText,
       effect: doNotUseGlobalStyle
           ? textStyle.textEffect
-          : textStyle.textEffect ?? _globalTextStyle.textEffect,
+          : textStyle.textEffect ?? globalTextStyle.textEffect,
     );
   }
 
@@ -663,7 +654,7 @@ class DocXBuilder {
           {@required Table table, @required List<TableRow> tableRows}) =>
       table.tableRows = tableRows;
 
-  /// Assigning a table to tableCell.xmlContent directly is also possible.
+  /// A complete table can be inserted into a table cell.
   void insertTableInTableCell(
           {@required Table table, @required TableCell tableCell}) =>
       tableCell.xmlContent = table.getXml();
@@ -712,7 +703,7 @@ class DocXBuilder {
     final String lineBreak =
         lineOrPageBreak != null ? lineOrPageBreak.getXml() : '';
     final TextStyle style =
-        textStyle ?? (doNotUseGlobalStyle ? TextStyle() : _globalTextStyle);
+        textStyle ?? (doNotUseGlobalStyle ? TextStyle() : globalTextStyle);
     final String ppr = _getParagraphStyleAsString(
         textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle);
 
@@ -1677,7 +1668,7 @@ class DocXBuilder {
         if (addEmptyParagraphAtEndOfDocument) {
           addText('', textStyle: TextStyle(), doNotUseGlobalStyle: true);
         }
-        _docx.write(_getPageStyleAsString(style: _globalPageStyle));
+        _docx.write(_getPageStyleAsString(style: globalPageStyle));
         _docx.write('</w:body></w:document>');
         _bufferClosed = true;
       }
@@ -1702,11 +1693,11 @@ class DocXBuilder {
 
   /// Deletes all data and cache, so a new document can be created (or when DocXBuilder is no longer needed).
   /// This function also destroys the source file produced by createDocxFile so be sure to save or process the source file before calling clear.
-  void clear({bool resetDocX = true}) {
+  void clear({bool resetBuffer = true}) {
     _docx.clear();
     _documentBackgroundColor = null;
-    _globalPageStyle = null;
-    _globalTextStyle = null;
+    globalPageStyle = null;
+    globalTextStyle = null;
     _firstPageHeader = null;
     _oddPageHeader = null;
     _evenPageHeader = null;
@@ -1722,7 +1713,7 @@ class DocXBuilder {
     _headerCounter = 1;
     _footerCounter = 1;
     _packager.destroyCache();
-    if (resetDocX) {
+    if (resetBuffer) {
       _initDocX();
     }
   }

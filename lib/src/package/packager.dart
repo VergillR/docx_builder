@@ -100,7 +100,7 @@ class Packager {
   }
 
   /// Bundles all files and outputs the file if successful.
-  /// The file is in the cache, so user has to store or send it right away before the cache is cleared.
+  /// The file is stored in cache, so the user has to save or send it before the cache is cleared.
   Future<File> bundle(
     String documentXml, {
     // int chars,
@@ -160,7 +160,7 @@ class Packager {
       );
       return docxFile;
     } catch (e) {
-      throw StateError('DOCX BUILDER ERROR: $e');
+      throw StateError('$e');
     }
   }
 
