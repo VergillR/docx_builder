@@ -363,6 +363,7 @@ class DocXBuilder {
             rId: 'rId${_packager.rIdCount}', taggedText: contents);
       }
     }
+    _debugString = contents;
     _packager.addHeaderOrFooter(counter, contents,
         isHeader: isHeader, evenPage: allowEvenPages);
   }

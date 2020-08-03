@@ -15,5 +15,5 @@ class DocxTab extends Style {
 
   @override
   String getXml() =>
-      '<w:tab w:val="${getValueFromEnum(style)}" w:leader="${getValueFromEnum(leader)}" pos="$position" />';
+      '<w:tab w:val="${getValueFromEnum(style)}" w:leader="${getValueFromEnum(leader)}" w:pos="$position" />';
 }
