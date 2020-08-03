@@ -39,6 +39,7 @@ class DocXBuilder {
   /// If you know the last paragraph does not have its own section rules and you do not want an empty line at the end of the document, you can set this value to false.
   bool addEmptyParagraphAtEndOfDocument = true;
 
+  /// If bookmarks were added anywhere in the document (e.g. addText('Bookmarked!', setBookmarkName: 'bookmark1')), they will be added here.
   Set<String> bookmarks = <String>{};
 
   TextStyle hyperlinkTextStyle;
@@ -144,7 +145,7 @@ class DocXBuilder {
     }
   }
 
-  // Blank page can also be achieved with sectPr, sectType.nextPage and then create a new section which prompts a new page
+  // Blank page can also be added with sectPr, sectType.nextPage and then create a new section which inserts a new page
   // void addBlankPageA4() => _docx.write(_c.blankPageA4);
 
   /// A custom numbering list can be set once for the entire document.
@@ -633,14 +634,17 @@ class DocXBuilder {
 
   /// AddText adds lines of text to the document.
   /// By default, it uses the global text styling. This can be changed by providing a [textStyle] and/or setting [doNotUseGlobalStyle] to false.
+  /// If the text is supposed to be a list item, pass a textStyle which has a numberingList (which decides the general look of the list) and optionally a numberLevelInList (which decides the depth and indentation of the item; 0 by default).
+  ///
   /// This function always adds a new paragraph to the document.
   ///
   /// If [lineOrPageBreak] is given, then a LineBreak will be added at the end of the text.
-  /// If globalTextStyle has a non-empty Tabs list, then a tab can be added in front of the text by setting [addTab] to true.
+  /// If the textStyle has a non-empty Tabs list, then a tab can be added in front of the text by setting [addTab] to true.
   ///
-  /// The fields complexField, hyperlinkTo and setBookmarkName are mutually exclusive, so only one can be set at a given time.
+  /// In addText, the fields complexField, hyperlinkTo and setBookmarkName are mutually exclusive.
+  ///
   /// If given, [complexField] adds a complex field, such as page and date, e.g. ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. Or for an internal hyperlink: ComplexField(instructions: ' HYPERLINK \\l &quot;bookmark1&quot; ').
-  /// If [hyperlinkTo] is not null or empty (e.g. "https://www.flutter.dev"), then the text becomes a hyperlink. If the hyperlinkTo has an internal destination (a bookmark) then prefix the destination with a '#' sign, e.g. "#bookmark1". The global textstyle's hyperlinkTo is always ignored.
+  /// If [hyperlinkTo] is not null or empty (e.g. "https://www.flutter.dev"), then the text becomes a hyperlink. If the hyperlinkTo has an internal destination (a bookmark) then prefix the destination with a '#' sign, e.g. "#bookmark1". (The globalTextStyle's hyperlinkTo is always ignored)
   /// If provided, [setBookmarkName] creates a bookmark with the given name which can be used as a target for internal hyperlinks.
   void addText(
     String text, {
@@ -1746,8 +1750,10 @@ class DocXBuilder {
         documentCreator: documentCreator ?? '',
         customNumberingXml: _customNumberingXml,
         includeNumberingXml: _includeNumberingXml,
-        hyperlinkStylingXml: _getTextStyleAsString(
-            style: hyperlinkTextStyle, doNotUseGlobalStyle: true),
+        hyperlinkStylingXml: hyperlinkTextStyle != null
+            ? _getTextStyleAsString(
+                style: hyperlinkTextStyle, doNotUseGlobalStyle: true)
+            : null,
       );
       return f;
     } catch (e) {
@@ -1760,6 +1766,8 @@ class DocXBuilder {
   void clear({bool resetBuffer = true}) {
     _docx.clear();
     _documentBackgroundColor = null;
+    bookmarks.clear();
+    hyperlinkTextStyle = null;
     globalTextStyle = TextStyle();
     globalPageStyle = PageStyle().getDefaultPageStyle();
     _firstPageHeader = null;

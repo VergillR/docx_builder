@@ -145,7 +145,7 @@ class Packager {
       File('$_dirPathToWord/settings.xml').writeAsStringSync(SettingsXml()
           .getSettingsXml(useEvenHeaders: _addEvenAndOddHeadersInSettings));
       File('$_dirPathToWord/styles.xml').writeAsStringSync(WordStylesXml()
-          .getWordStylesXml(hyperlinkStylingXml: hyperlinkStylingXml));
+          .getWordStylesXml(hyperlinkStylingXml: hyperlinkStylingXml ?? ''));
       if (includeNumberingXml) {
         File('$_dirPathToWord/numbering.xml').writeAsStringSync(Numbering()
             .getNumberingXml(customNumberingXml: customNumberingXml ?? ''));

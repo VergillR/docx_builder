@@ -3,8 +3,8 @@ import 'package:docx_builder/src/utils/constants/constants.dart';
 class WordStylesXml {
   WordStylesXml();
 
-  String getWordStylesXml({String hyperlinkStylingXml}) {
-    final String style = hyperlinkStylingXml?.isNotEmpty ?? false
+  String getWordStylesXml({String hyperlinkStylingXml = ''}) {
+    final String style = hyperlinkStylingXml.isNotEmpty
         ? hyperlinkStylingXml
         : '<w:rPr><w:color w:val="000080"/><w:u w:val="single"/></w:rPr>';
     const String openTag =
