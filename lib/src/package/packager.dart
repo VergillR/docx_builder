@@ -112,6 +112,7 @@ class Packager {
     String documentCreator,
     String customNumberingXml,
     bool includeNumberingXml = false,
+    String hyperlinkStylingXml,
   }) async {
     try {
       final String filename = 'D${DateTime.now().millisecondsSinceEpoch}.docx';
@@ -143,8 +144,8 @@ class Packager {
           .writeAsStringSync(FontTable().getFontTableXml());
       File('$_dirPathToWord/settings.xml').writeAsStringSync(SettingsXml()
           .getSettingsXml(useEvenHeaders: _addEvenAndOddHeadersInSettings));
-      File('$_dirPathToWord/styles.xml')
-          .writeAsStringSync(WordStylesXml().getWordStylesXml());
+      File('$_dirPathToWord/styles.xml').writeAsStringSync(WordStylesXml()
+          .getWordStylesXml(hyperlinkStylingXml: hyperlinkStylingXml));
       if (includeNumberingXml) {
         File('$_dirPathToWord/numbering.xml').writeAsStringSync(Numbering()
             .getNumberingXml(customNumberingXml: customNumberingXml ?? ''));

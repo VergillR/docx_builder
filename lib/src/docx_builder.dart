@@ -15,16 +15,20 @@ export 'styles/style_classes/index.dart';
 export 'styles/style_containers/index.dart';
 export 'styles/style_enums.dart';
 
-/// DocXBuilder is used to construct and create .docx files.
+/// DocXBuilder is used to create docx files by using OOXML.
+/// Global styling is set with setDocumentBackgroundColor, setGlobalTextStyle and setGlobalPageStyle.
 ///
-/// Add global styling with setGlobalDocxTextStyle, setGlobalDocxPageStyle and setDocumentBackgroundColor.
+/// Write text to the document with addText or addMixedText. These functions add a paragraph of text with both visual (e.g. font size, color, font weight) and complex styling (e.g. numbered list, text frame, complex fields).
 ///
-/// Add text to the document with addText or addMixedText.
-/// AddText uses the global styling.
-/// AddMixedText overrides global styles with its own custom styling rules (if provided).
+/// Creating a table is done in 4 steps: make table cells that have content like images and text; make table rows that have table cells; make a table that has table rows; when a table is complete, attach the table to the document.
+/// Except for attachTable, all table functions start with "insert" (e.g. insertTextInTableCell).
 ///
-/// CreateDocXFile() is used to create the .docx file.
-/// When done, clear() is used to destroy the cache.
+/// OOXML defines 2 types of images: inline and anchor.
+/// An inline image is placed at the cursor's current position as if it was a large area of text. An anchor image is a floating image and can be placed anywhere you like on the page.
+/// Except for addAnchorImage, all image functions involve inline images (e.g. addImage, addImages, insertImageInTableCell).
+///
+/// CreateDocXFile is used to create the .docx file.
+/// After creating the docx file, clear() is used to destroy the cache.
 class DocXBuilder {
   _p.Packager _packager;
   final StringBuffer _docx = StringBuffer();
@@ -35,23 +39,28 @@ class DocXBuilder {
   /// If you know the last paragraph does not have its own section rules and you do not want an empty line at the end of the document, you can set this value to false.
   bool addEmptyParagraphAtEndOfDocument = true;
 
+  Set<String> bookmarks = <String>{};
+
+  TextStyle hyperlinkTextStyle;
+
   bool _bufferClosed = false;
   // int _charCount = 0;
   // int _charCountWithSpaces = 0;
   // int _parCount = 0;
   int _headerCounter = 1;
   int _footerCounter = 1;
+  int _anchorCounter = 0;
 
   String _documentBackgroundColor;
   String get documentBackgroundColor => _documentBackgroundColor;
 
   /// The global style for text. Except for HighlightColor, colors are in 'RRGGBB' format.
   /// The global text style can be overridden by giving addText and addMixedText a textStyle.
-  /// The hyperlinkTo property of the global text style are never used as this makes no sense. Instead, hyperlinks can be added manually with addText or addMixedText.
+  /// The hyperlinkTo property of the global text style is always ignored. Instead, hyperlinks should be added manually with addText or addMixedText.
   TextStyle globalTextStyle = TextStyle();
 
   /// The global page style, such as orientation, size, and page borders.
-  /// This page style determines the final SectPr directly inside the body tag of the document.
+  /// This page style determines the content of the final Sections Properties inside the body tag of the document.
   PageStyle globalPageStyle = PageStyle().getDefaultPageStyle();
 
   Header _firstPageHeader;
@@ -279,22 +288,23 @@ class DocXBuilder {
         final String t = text[i] ?? '';
         final ComplexField f = cf[i];
         if (f == null || f.instructions == null || f.includeSeparate == null) {
+          bool styleAsHyperlink = false;
           String closeHyperlink = '';
           String openHyperlink = '';
           if (textStyles[i] != null &&
               textStyles[i].hyperlinkTo != null &&
               textStyles[i].hyperlinkTo.isNotEmpty) {
-            _packager.addHyperlink(textStyles[i].hyperlinkTo);
-            closeHyperlink = '</w:hyperlink>';
-            openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+            final tags =
+                _getOpenAndCloseHyperlinkTags(textStyles[i].hyperlinkTo);
+            openHyperlink = tags[0];
+            closeHyperlink = tags[1];
+            styleAsHyperlink = true;
           }
           b.writeAll(<String>[
             openHyperlink,
             '<w:r>',
             _getTextStyleAsString(
-                styleAsHyperlink: textStyles[i] != null &&
-                    textStyles[i].hyperlinkTo != null &&
-                    textStyles[i].hyperlinkTo.isNotEmpty,
+                styleAsHyperlink: styleAsHyperlink,
                 style: textStyles[i],
                 doNotUseGlobalStyle: doNotUseGlobalTextStyle),
             '<w:t xml:space="preserve">$t</w:t></w:r>$closeHyperlink',
@@ -398,7 +408,7 @@ class DocXBuilder {
   }
 
   /// Obtain the XML string of the page style.
-  /// If no style is given, then the globalDocxPageStyle is used.
+  /// If no style is given, then the globalPageStyle is used.
   String _getPageStyleAsString(
       {PageStyle style, bool doNotUseGlobalStyle = false}) {
     final PageStyle pageStyle = style ?? PageStyle();
@@ -463,8 +473,7 @@ class DocXBuilder {
   }
 
   /// Obtain the XML string of the paragraph style, such as text alignment.
-  /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
-  /// Textframes cannot be set global.
+  /// If no style is given, then the globalTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
   String _getParagraphStyleAsString({
     TextStyle textStyle,
     bool doNotUseGlobalStyle = false,
@@ -516,7 +525,7 @@ class DocXBuilder {
   }
 
   /// Obtain the XML string of the text style.
-  /// If no style is given, then the globalDocxTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
+  /// If no style is given, then the globalTextStyle is used (unless [doNotUseGlobalStyle] is set to true).
   String _getTextStyleAsString(
       {TextStyle style,
       bool doNotUseGlobalStyle = false,
@@ -598,15 +607,41 @@ class DocXBuilder {
     );
   }
 
+  List<String> _getOpenAndCloseHyperlinkTags(String hyperlinkTo) {
+    String openHyperlink = '';
+    String closeHyperlink = '';
+    if (!hyperlinkTo.startsWith('#')) {
+      _packager.addHyperlink(hyperlinkTo);
+    }
+    closeHyperlink = '</w:hyperlink>';
+    final String linkHyperlink = hyperlinkTo.startsWith('#')
+        ? 'w:anchor="${hyperlinkTo.substring(1)}"'
+        : 'r:id="rId${_packager.rIdCount - 1}"';
+    openHyperlink = '<w:hyperlink $linkHyperlink>';
+    // openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
+    return [openHyperlink, closeHyperlink];
+  }
+
+  List<String> _getOpenAndCloseBookmarkTags(String name) {
+    final String openTag =
+        '<w:bookmarkStart w:id="$_anchorCounter" w:name="$name"/>';
+    final String closeTag = '<w:bookmarkEnd w:id="$_anchorCounter"/>';
+    bookmarks.add(name);
+    _anchorCounter++;
+    return [openTag, closeTag];
+  }
+
   /// AddText adds lines of text to the document.
   /// By default, it uses the global text styling. This can be changed by providing a [textStyle] and/or setting [doNotUseGlobalStyle] to false.
   /// This function always adds a new paragraph to the document.
   ///
   /// If [lineOrPageBreak] is given, then a LineBreak will be added at the end of the text.
-  /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the text by setting [addTab] to true.
+  /// If globalTextStyle has a non-empty Tabs list, then a tab can be added in front of the text by setting [addTab] to true.
   ///
-  /// If [hyperlinkTo] is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
-  /// If given, [complexField] adds a complex field, such as page and date, e.g. ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
+  /// The fields complexField, hyperlinkTo and setBookmarkName are mutually exclusive, so only one can be set at a given time.
+  /// If given, [complexField] adds a complex field, such as page and date, e.g. ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. Or for an internal hyperlink: ComplexField(instructions: ' HYPERLINK \\l &quot;bookmark1&quot; ').
+  /// If [hyperlinkTo] is not null or empty (e.g. "https://www.flutter.dev"), then the text becomes a hyperlink. If the hyperlinkTo has an internal destination (a bookmark) then prefix the destination with a '#' sign, e.g. "#bookmark1". The global textstyle's hyperlinkTo is always ignored.
+  /// If provided, [setBookmarkName] creates a bookmark with the given name which can be used as a target for internal hyperlinks.
   void addText(
     String text, {
     TextStyle textStyle,
@@ -614,6 +649,7 @@ class DocXBuilder {
     LineBreak lineOrPageBreak,
     bool addTab = false,
     String hyperlinkTo,
+    String setBookmarkName,
     ComplexField complexField,
   }) {
     if (!_bufferClosed) {
@@ -625,6 +661,7 @@ class DocXBuilder {
         addTab: addTab,
         hyperlinkTo: hyperlinkTo,
         complexField: complexField,
+        setBookmarkName: setBookmarkName,
         // textFrame: textFrame,
         // numberingList: numberingList,
         // numberLevelInList: numberLevelInList,
@@ -632,6 +669,220 @@ class DocXBuilder {
       // _addToCharCounters(text);
       // _parCount++;
     }
+  }
+
+  /// Writes XML text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
+  String _getCachedAddText(
+    String text, {
+    TextStyle textStyle,
+    LineBreak lineOrPageBreak,
+    bool addTab = false,
+    String hyperlinkTo,
+    String setBookmarkName,
+    ComplexField complexField,
+    bool doNotUseGlobalStyle = false,
+  }) {
+    final StringBuffer cached = StringBuffer();
+    final String tab =
+        globalTextStyle.tabs != null && addTab ? '<w:r><w:tab/></w:r>' : '';
+    final String lineBreak =
+        lineOrPageBreak != null ? lineOrPageBreak.getXml() : '';
+    final TextStyle style =
+        textStyle ?? (doNotUseGlobalStyle ? TextStyle() : globalTextStyle);
+    final String ppr = _getParagraphStyleAsString(
+        textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle);
+
+    if (complexField == null ||
+        complexField.instructions == null ||
+        complexField.includeSeparate == null) {
+      bool styleAsHyperlink = false;
+      String closeHyperlink = '';
+      String openHyperlink = '';
+      if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
+        final tags = _getOpenAndCloseHyperlinkTags(hyperlinkTo);
+        openHyperlink = tags[0];
+        closeHyperlink = tags[1];
+        styleAsHyperlink = true;
+      }
+      if (openHyperlink.isEmpty &&
+          setBookmarkName != null &&
+          setBookmarkName.isNotEmpty) {
+        final tags = _getOpenAndCloseBookmarkTags(setBookmarkName);
+        openHyperlink = tags[0];
+        closeHyperlink = tags[1];
+      }
+
+      cached.writeAll(<String>[
+        '<w:p>$ppr',
+        tab,
+        openHyperlink,
+        '<w:r>${_getTextStyleAsString(style: style, styleAsHyperlink: styleAsHyperlink, doNotUseGlobalStyle: doNotUseGlobalStyle)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
+      ]);
+    } else {
+      cached.writeAll(<String>[
+        '<w:p>$ppr',
+        tab,
+        '<w:r>${_getTextStyleAsString(style: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:t xml:space="preserve">$text</w:t></w:r><w:r>${complexField.getXml()}</w:r>$lineBreak</w:p>'
+      ]);
+    }
+    return cached.toString();
+  }
+
+  /// AddMixedText adds lines of text that do NOT have the same styling as each other or with the global text style.
+  /// Unless [doNotUseTextGlobalStyle] is set to true, global text styling will be used for any values not provided (i.e. null values) by custom styling rules.
+  /// Given lists should have equal lengths. Page style is optional and is used for custom section styling. If [doNotUsePageGlobalStyle] is set to false, global page styling will be used for any values not provided (i.e. null values) by the custom page styling.
+  /// Note that the last paragraph of the document should NOT have any custom section styling!
+  /// Except for HighlightColor, colors are in 'RRGGBB' format.
+  ///
+  /// Lists can hold null values. For text: null implies no text; for textStyles: null implies use of globalTextStyle. [textAlignment] for the entire text should be set as an argument in the function instead of in the individual textStyles.
+  ///
+  /// This function always adds a new paragraph to the document.
+  ///
+  /// If [lineOrPageBreak] is given, then a LineBreak will be added after every item (if [addBreakAfterEveryItem] is true) or only after the last item on the [text] list (if [addBreakAfterEveryItem] is false, which is default).
+  /// If globalTextStyle has a non-empty Tabs list, then a tab can be added in front of the first text item by setting [addTab] to true.
+  ///
+  /// If the custom textstyles contain a hyperlinkTo value that is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
+  ///
+  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
+  ///
+  /// Mixed text can be displayed within a [textFrame] or as a list item in [numberingList] with depth [numberLevelInList].
+  void addMixedText(
+    List<String> text,
+    List<TextStyle> textStyles, {
+    TextAlignment textAlignment,
+    PageStyle pageStyle,
+    bool doNotUseGlobalTextStyle = false,
+    bool doNotUseGlobalPageStyle = true,
+    LineBreak lineOrPageBreak,
+    bool addBreakAfterEveryItem = false,
+    bool addTab = false,
+    List<ComplexField> complexFields,
+    TextFrame textFrame,
+    String setBookmarkName,
+    NumberingList numberingList,
+    int numberLevelInList,
+  }) {
+    if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
+      _docx.write(_getCachedAddMixedText(
+        text,
+        textStyles,
+        textAlignment: textAlignment,
+        pageStyle: pageStyle,
+        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+        lineOrPageBreak: lineOrPageBreak,
+        addBreakAfterEveryItem: addBreakAfterEveryItem,
+        addTab: addTab,
+        complexFields: complexFields,
+        textFrame: textFrame,
+        setBookmarkName: setBookmarkName,
+        numberingList: numberingList,
+        numberLevelInList: numberLevelInList,
+      ));
+      // _addToCharCounters(t);
+      // _parCount++;
+    }
+  }
+
+  /// Writes XML mixed text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
+  String _getCachedAddMixedText(
+    List<String> text,
+    List<TextStyle> textStyles, {
+    PageStyle pageStyle,
+    bool doNotUseGlobalTextStyle = false,
+    bool doNotUseGlobalPageStyle = true,
+    LineBreak lineOrPageBreak,
+    bool addBreakAfterEveryItem = false,
+    bool addTab = false,
+    List<ComplexField> complexFields,
+    TextAlignment textAlignment,
+    TextFrame textFrame,
+    String setBookmarkName,
+    NumberingList numberingList,
+    int numberLevelInList,
+  }) {
+    final StringBuffer d = StringBuffer();
+    d.write('<w:p><w:pPr>');
+    if (pageStyle != null) {
+      d.write(_getPageStyleAsString(
+          style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
+    }
+    d.write(_getParagraphStyleAsString(
+            textStyle: TextStyle(
+              textAlignment: textAlignment,
+              textFrame: textFrame,
+              numberingList: numberingList,
+              numberLevelInList: numberLevelInList,
+            ),
+            doNotUseGlobalStyle: doNotUseGlobalTextStyle)
+        .replaceFirst('<w:pPr>', ''));
+
+    final String multiBreak = lineOrPageBreak != null && addBreakAfterEveryItem
+        ? lineOrPageBreak.getXml()
+        : '';
+
+    String openBookmarkTag = '';
+    String closeBookmarkTag = '';
+    if (setBookmarkName != null && setBookmarkName.isNotEmpty) {
+      final tags = _getOpenAndCloseBookmarkTags(setBookmarkName);
+      openBookmarkTag = tags[0];
+      closeBookmarkTag = tags[1];
+    }
+
+    if (globalTextStyle.tabs != null && addTab) {
+      d.write('<w:r><w:tab/></w:r>');
+    }
+    d.write(openBookmarkTag);
+    final List<ComplexField> cf =
+        complexFields != null && complexFields.length == text.length
+            ? complexFields
+            : List<ComplexField>.generate(text.length, (index) => null);
+
+    for (int i = 0; i < text.length; i++) {
+      final String t = text[i] ?? '';
+      final ComplexField f = cf[i];
+      if (f == null || f.instructions == null || f.includeSeparate == null) {
+        bool styleAsHyperlink = false;
+        String closeHyperlink = '';
+        String openHyperlink = '';
+        if (textStyles[i] != null &&
+            textStyles[i].hyperlinkTo != null &&
+            textStyles[i].hyperlinkTo.isNotEmpty) {
+          final tags = _getOpenAndCloseHyperlinkTags(textStyles[i].hyperlinkTo);
+          openHyperlink = tags[0];
+          closeHyperlink = tags[1];
+          styleAsHyperlink = true;
+        }
+        d.writeAll(<String>[
+          openHyperlink,
+          '<w:r>',
+          _getTextStyleAsString(
+              styleAsHyperlink: styleAsHyperlink,
+              style: textStyles[i],
+              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+          '<w:t xml:space="preserve">$t</w:t></w:r>$multiBreak$closeHyperlink',
+        ]);
+      } else {
+        d.writeAll(<String>[
+          '<w:r>',
+          _getTextStyleAsString(
+              style: textStyles[i],
+              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+          '<w:t xml:space="preserve">$t</w:t></w:r><w:r>${_getTextStyleAsString(style: textStyles[i], doNotUseGlobalStyle: doNotUseGlobalTextStyle)}${f.getXml()}</w:r>$multiBreak',
+        ]);
+      }
+
+      // _addToCharCounters(t);
+    }
+
+    final String singleBreak =
+        lineOrPageBreak != null && !addBreakAfterEveryItem
+            ? lineOrPageBreak.getXml()
+            : '';
+
+    d.write('$closeBookmarkTag$singleBreak</w:p>');
+
+    return d.toString();
   }
 
   /// When the table has been finalized, attach it to the document at the cursor's current position. A table should contain a list of column widths and have at least 1 table row. Rows can contain zero or more table cells.
@@ -669,6 +920,7 @@ class DocXBuilder {
     LineBreak lineOrPageBreak,
     bool addTab = false,
     String hyperlinkTo,
+    String setBookmarkName,
     ComplexField complexField,
     bool doNotUseGlobalStyle = false,
   }) {
@@ -679,111 +931,11 @@ class DocXBuilder {
         lineOrPageBreak: lineOrPageBreak,
         addTab: addTab,
         hyperlinkTo: hyperlinkTo,
+        setBookmarkName: setBookmarkName,
         complexField: complexField,
         doNotUseGlobalStyle: doNotUseGlobalStyle,
       );
       // _addToCharCounters(text);
-      // _parCount++;
-    }
-  }
-
-  /// Writes XML text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
-  String _getCachedAddText(
-    String text, {
-    TextStyle textStyle,
-    LineBreak lineOrPageBreak,
-    bool addTab = false,
-    String hyperlinkTo,
-    ComplexField complexField,
-    bool doNotUseGlobalStyle = false,
-  }) {
-    final StringBuffer cached = StringBuffer();
-    final String tab =
-        globalTextStyle.tabs != null && addTab ? '<w:r><w:tab/></w:r>' : '';
-    final String lineBreak =
-        lineOrPageBreak != null ? lineOrPageBreak.getXml() : '';
-    final TextStyle style =
-        textStyle ?? (doNotUseGlobalStyle ? TextStyle() : globalTextStyle);
-    final String ppr = _getParagraphStyleAsString(
-        textStyle: style, doNotUseGlobalStyle: doNotUseGlobalStyle);
-
-    if (complexField == null ||
-        complexField.instructions == null ||
-        complexField.includeSeparate == null) {
-      String closeHyperlink = '';
-      String openHyperlink = '';
-      if (hyperlinkTo != null && hyperlinkTo.isNotEmpty) {
-        _packager.addHyperlink(hyperlinkTo);
-        closeHyperlink = '</w:hyperlink>';
-        openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
-      }
-
-      cached.writeAll(<String>[
-        '<w:p>$ppr',
-        tab,
-        openHyperlink,
-        '<w:r>${_getTextStyleAsString(styleAsHyperlink: openHyperlink.isNotEmpty, doNotUseGlobalStyle: doNotUseGlobalStyle)}${text.startsWith(' ') || text.endsWith(' ') ? '<w:t xml:space="preserve">' : '<w:t>'}$text</w:t></w:r>$lineBreak$closeHyperlink</w:p>'
-      ]);
-    } else {
-      cached.writeAll(<String>[
-        '<w:p>$ppr',
-        tab,
-        '<w:r>${_getTextStyleAsString(doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:t xml:space="preserve">$text</w:t></w:r><w:r>${_getTextStyleAsString(doNotUseGlobalStyle: doNotUseGlobalStyle)}${complexField.getXml()}</w:r>$lineBreak</w:p>'
-      ]);
-    }
-    return cached.toString();
-  }
-
-  /// AddMixedText adds lines of text that do NOT have the same styling as each other or with the global text style.
-  /// Unless [doNotUseTextGlobalStyle] is set to true, global text styling will be used for any values not provided (i.e. null values) by custom styling rules.
-  /// Given lists should have equal lengths. Page style is optional and is used for custom section styling. If [doNotUsePageGlobalStyle] is set to false, global page styling will be used for any values not provided (i.e. null values) by the custom page styling.
-  /// Note that the last paragraph of the document should NOT have any custom section styling!
-  /// Except for HighlightColor, colors are in 'RRGGBB' format.
-  ///
-  /// Lists can hold null values. For text: null implies no text; for textStyles: null implies use of globalDocxTextStyle. [textAlignment] for the entire text should be set as an argument in the function instead of in the individual textStyles.
-  ///
-  /// This function always adds a new paragraph to the document.
-  ///
-  /// If [lineOrPageBreak] is given, then a LineBreak will be added after every item (if [addBreakAfterEveryItem] is true) or only after the last item on the [text] list (if [addBreakAfterEveryItem] is false, which is default).
-  /// If globalDocxTextStyle has a non-empty Tabs list, then a tab can be added in front of the first text item by setting [addTab] to true.
-  ///
-  /// If the custom textstyles contain a hyperlinkTo value that is not null or empty, then the text will be a hyperlink and direct to [hyperlinkTo]. The global textstyle's hyperlinkTo is always ignored.
-  ///
-  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
-  ///
-  /// Mixed text can be displayed within a [textFrame] or as a list item in [numberingList] with depth [numberLevelInList].
-  void addMixedText(
-    List<String> text,
-    List<TextStyle> textStyles, {
-    TextAlignment textAlignment,
-    PageStyle pageStyle,
-    bool doNotUseGlobalTextStyle = false,
-    bool doNotUseGlobalPageStyle = true,
-    LineBreak lineOrPageBreak,
-    bool addBreakAfterEveryItem = false,
-    bool addTab = false,
-    List<ComplexField> complexFields,
-    TextFrame textFrame,
-    NumberingList numberingList,
-    int numberLevelInList,
-  }) {
-    if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
-      _docx.write(_getCachedAddMixedText(
-        text,
-        textStyles,
-        textAlignment: textAlignment,
-        pageStyle: pageStyle,
-        doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
-        doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
-        lineOrPageBreak: lineOrPageBreak,
-        addBreakAfterEveryItem: addBreakAfterEveryItem,
-        addTab: addTab,
-        complexFields: complexFields,
-        textFrame: textFrame,
-        numberingList: numberingList,
-        numberLevelInList: numberLevelInList,
-      ));
-      // _addToCharCounters(t);
       // _parCount++;
     }
   }
@@ -804,6 +956,7 @@ class DocXBuilder {
     bool addTab = false,
     List<ComplexField> complexFields,
     TextFrame textFrame,
+    String setBookmarkName,
     NumberingList numberingList,
     int numberLevelInList,
   }) {
@@ -819,6 +972,7 @@ class DocXBuilder {
         addBreakAfterEveryItem: addBreakAfterEveryItem,
         addTab: addTab,
         complexFields: complexFields,
+        setBookmarkName: setBookmarkName,
         textFrame: textFrame,
         numberingList: numberingList,
         numberLevelInList: numberLevelInList,
@@ -826,98 +980,6 @@ class DocXBuilder {
       // _addToCharCounters(t);
       // _parCount++;
     }
-  }
-
-  /// Writes XML mixed text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
-  String _getCachedAddMixedText(
-    List<String> text,
-    List<TextStyle> textStyles, {
-    PageStyle pageStyle,
-    bool doNotUseGlobalTextStyle = false,
-    bool doNotUseGlobalPageStyle = true,
-    LineBreak lineOrPageBreak,
-    bool addBreakAfterEveryItem = false,
-    bool addTab = false,
-    List<ComplexField> complexFields,
-    TextAlignment textAlignment,
-    TextFrame textFrame,
-    NumberingList numberingList,
-    int numberLevelInList,
-  }) {
-    final StringBuffer d = StringBuffer();
-    d.write('<w:p><w:pPr>');
-    if (pageStyle != null) {
-      d.write(_getPageStyleAsString(
-          style: pageStyle, doNotUseGlobalStyle: doNotUseGlobalPageStyle));
-    }
-    d.write(_getParagraphStyleAsString(
-            textStyle: TextStyle(
-              textAlignment: textAlignment,
-              textFrame: textFrame,
-              numberingList: numberingList,
-              numberLevelInList: numberLevelInList,
-            ),
-            doNotUseGlobalStyle: doNotUseGlobalTextStyle)
-        .replaceFirst('<w:pPr>', ''));
-
-    final String multiBreak = lineOrPageBreak != null && addBreakAfterEveryItem
-        ? lineOrPageBreak.getXml()
-        : '';
-
-    if (globalTextStyle.tabs != null && addTab) {
-      d.write('<w:r><w:tab/></w:r>');
-    }
-
-    final List<ComplexField> cf =
-        complexFields != null && complexFields.length == text.length
-            ? complexFields
-            : List<ComplexField>.generate(text.length, (index) => null);
-
-    for (int i = 0; i < text.length; i++) {
-      final String t = text[i] ?? '';
-      final ComplexField f = cf[i];
-      if (f == null || f.instructions == null || f.includeSeparate == null) {
-        String closeHyperlink = '';
-        String openHyperlink = '';
-        if (textStyles[i] != null &&
-            textStyles[i].hyperlinkTo != null &&
-            textStyles[i].hyperlinkTo.isNotEmpty) {
-          _packager.addHyperlink(textStyles[i].hyperlinkTo);
-          closeHyperlink = '</w:hyperlink>';
-          openHyperlink = '<w:hyperlink r:id="rId${_packager.rIdCount - 1}">';
-        }
-        d.writeAll(<String>[
-          openHyperlink,
-          '<w:r>',
-          _getTextStyleAsString(
-              styleAsHyperlink: textStyles[i] != null &&
-                  textStyles[i].hyperlinkTo != null &&
-                  textStyles[i].hyperlinkTo.isNotEmpty,
-              style: textStyles[i],
-              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-          '<w:t xml:space="preserve">$t</w:t></w:r>$multiBreak$closeHyperlink',
-        ]);
-      } else {
-        d.writeAll(<String>[
-          '<w:r>',
-          _getTextStyleAsString(
-              style: textStyles[i],
-              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
-          '<w:t xml:space="preserve">$t</w:t></w:r><w:r>${_getTextStyleAsString(style: textStyles[i], doNotUseGlobalStyle: doNotUseGlobalTextStyle)}${f.getXml()}</w:r>$multiBreak',
-        ]);
-      }
-
-      // _addToCharCounters(t);
-    }
-
-    final String singleBreak =
-        lineOrPageBreak != null && !addBreakAfterEveryItem
-            ? lineOrPageBreak.getXml()
-            : '';
-
-    d.write('$singleBreak</w:p>');
-
-    return d.toString();
   }
 
   /// AddAnchorImage inserts an anchor image from a file positioned at the absolute offset coordinates on the page (in EMU), indicated by [horizontalOffsetEMU] and [verticalOffsetEMU]. If both offsets are 0, the anchor image will be placed at the start (left side of the line) of the cursor's current position in the document. Positive offsets push the image to the right and bottom. Negative offsets push the image to the left and top.
@@ -1302,7 +1364,7 @@ class DocXBuilder {
   ///
   /// [tableWidthInTwips] determines the width of the table (measured in twips). If omitted, the width of the image will be used as table width.
   /// [captionAppearsBelowImage] determines if the caption is displayed above (false) or below (true; default) the image.
-  /// [hyperlinkTo] applies to the image, not the caption. If the caption needs to be a hyperlink, you can use the textStyle.hyperlinkTo or add the complexField(instructions: 'HYPERLINK https://www.yyy.zzz/').
+  /// [hyperlinkTo] applies to the image, not the caption. If the caption needs to be a hyperlink, you can use the textStyle.hyperlinkTo.
   void addImageWithCaption(
     File imageFile,
     int widthEMU,
@@ -1684,6 +1746,8 @@ class DocXBuilder {
         documentCreator: documentCreator ?? '',
         customNumberingXml: _customNumberingXml,
         includeNumberingXml: _includeNumberingXml,
+        hyperlinkStylingXml: _getTextStyleAsString(
+            style: hyperlinkTextStyle, doNotUseGlobalStyle: true),
       );
       return f;
     } catch (e) {
@@ -1696,8 +1760,8 @@ class DocXBuilder {
   void clear({bool resetBuffer = true}) {
     _docx.clear();
     _documentBackgroundColor = null;
-    globalPageStyle = null;
-    globalTextStyle = null;
+    globalTextStyle = TextStyle();
+    globalPageStyle = PageStyle().getDefaultPageStyle();
     _firstPageHeader = null;
     _oddPageHeader = null;
     _evenPageHeader = null;
@@ -1712,6 +1776,7 @@ class DocXBuilder {
     // _parCount = 0;
     _headerCounter = 1;
     _footerCounter = 1;
+    _anchorCounter = 0;
     _packager.destroyCache();
     if (resetBuffer) {
       _initDocX();
