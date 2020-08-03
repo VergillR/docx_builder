@@ -33,6 +33,8 @@ class DocXBuilder {
   _p.Packager _packager;
   final StringBuffer _docx = StringBuffer();
 
+  String _debugString;
+
   /// OOXML does not allow the last paragraph in the document to have its own section properties; instead, they should be placed directly in the body of the document.
   /// To prevent problems with this rule, docxBuilder adds an empty paragraph (i.e. a last paragraph without section properties) at the end of the document.
   ///
@@ -46,6 +48,7 @@ class DocXBuilder {
   /// If this map is not empty, when createDocx is called, the packager will create and include the file "comments.xml" and all necessary references.
   Map<int, String> comments = <int, String>{};
 
+  /// The hyperlink styling is by default equivalent to TextStyle(color: '000080', underline: Underline.single), but you can set another textStyle to change it.
   TextStyle hyperlinkTextStyle;
 
   bool _bufferClosed = false;
@@ -734,6 +737,7 @@ class DocXBuilder {
         '<w:r>${_getTextStyleAsString(style: style, doNotUseGlobalStyle: doNotUseGlobalStyle)}<w:t xml:space="preserve">$text</w:t></w:r><w:r>${complexField.getXml()}</w:r>$lineBreak</w:p>'
       ]);
     }
+    _debugString = cached.toString();
     return cached.toString();
   }
 
@@ -891,6 +895,7 @@ class DocXBuilder {
 
     d.write('$closeBookmarkTag$singleBreak</w:p>');
 
+    _debugString = d.toString();
     return d.toString();
   }
 
@@ -898,6 +903,7 @@ class DocXBuilder {
   ///
   /// Similar to headers and footers, tables will only become visible after being attached to the document.
   void attachTable(Table table) {
+    _debugString = table.getXml();
     if (!_bufferClosed) {
       _docx.write(table.getXml());
     }
@@ -1217,11 +1223,16 @@ class DocXBuilder {
         const String openR = '<w:r>';
         const String closeR = '</w:r>';
 
-        return '$openParagraph$openPpr$openR<w:drawing><wp:anchor behindDoc="$behindDocument" distT="$distT" distB="$distB" distL="$distL" distR="$distR" simplePos="$simplePos" locked="$locked" layoutInCell="$layoutInCell" allowOverlap="$allowOverlap" relativeHeight="$relativeHeight"><wp:simplePos x="$simplePosX" y="$simplePosY" /><wp:positionH relativeFrom="${getValueFromEnum(horizontalPositionRelativeBase)}"><wp:align>${getValueFromEnum(anchorImageHorizontalAlignment)}</wp:align><wp:posOffset>$horizontalOffsetEMU</wp:posOffset></wp:positionH><wp:positionV relativeFrom="${getValueFromEnum(verticalPositionRelativeBase)}"><wp:align>${getValueFromEnum(anchorImageVerticalAlignment)}</wp:align><wp:posOffset>$verticalOffsetEMU</wp:posOffset></wp:positionV><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:${getValueFromEnum(anchorImageAreaWrap)} wrapText="${getValueFromEnum(anchorImageTextWrap)}"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect" noChangeArrowheads="$noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto">$xfrm</pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>$closeR$closeParagraph';
+        final r =
+            '$openParagraph$openPpr$openR<w:drawing><wp:anchor behindDoc="$behindDocument" distT="$distT" distB="$distB" distL="$distL" distR="$distR" simplePos="$simplePos" locked="$locked" layoutInCell="$layoutInCell" allowOverlap="$allowOverlap" relativeHeight="$relativeHeight"><wp:simplePos x="$simplePosX" y="$simplePosY" /><wp:positionH relativeFrom="${getValueFromEnum(horizontalPositionRelativeBase)}"><wp:align>${getValueFromEnum(anchorImageHorizontalAlignment)}</wp:align><wp:posOffset>$horizontalOffsetEMU</wp:posOffset></wp:positionH><wp:positionV relativeFrom="${getValueFromEnum(verticalPositionRelativeBase)}"><wp:align>${getValueFromEnum(anchorImageVerticalAlignment)}</wp:align><wp:posOffset>$verticalOffsetEMU</wp:posOffset></wp:positionV><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:${getValueFromEnum(anchorImageAreaWrap)} wrapText="${getValueFromEnum(anchorImageTextWrap)}"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect" noChangeArrowheads="$noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto">$xfrm</pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>$closeR$closeParagraph';
+        _debugString = r;
+        return r;
       } else {
+        _debugString = '';
         return '';
       }
     } else {
+      _debugString = '';
       return '';
     }
   }
@@ -1609,6 +1620,7 @@ class DocXBuilder {
       }
     }
     s.write('</w:r></w:p>');
+    _debugString = s.toString();
     tableCell.xmlContent = s.toString();
   }
 
@@ -1717,6 +1729,7 @@ class DocXBuilder {
             '$openParagraph$openPpr$openR<w:drawing><wp:inline><wp:extent cx="$widthEMU" cy="$heightEMU"/><wp:effectExtent l="$effectExtentL" t="$effectExtentT" r="$effectExtentR" b="$effectExtentB"/><wp:docPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage">$hyperlink</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="$mediaIdCount" name="Image$mediaIdCount" descr="$alternativeTextForImage"></pic:cNvPr><pic:cNvPicPr><a:picLocks noChangeAspect="$noChangeAspect" noMove="$noMove" noResize="$noResize" noSelect="$noSelect" noChangeArrowheads="$noChangeArrowheads"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId$mediaIdCount"></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto">$xfrm</pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>$closeR$closeParagraph');
       }
     }
+    _debugString = d.toString();
     return d.toString();
   }
 
@@ -1733,8 +1746,10 @@ class DocXBuilder {
         timestamp ?? getUtcTimestampFromDateTime(DateTime.now());
     comments[_commentCounter] =
         '<w:comment w:id="$_commentCounter" w:author="$author" w:date="$datetime" w:initials="$initials"><w:p><w:pPr><w:rPr></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:hint="default"/></w:rPr><w:t>$message</w:t></w:r></w:p></w:comment>';
-    _docx.write(
-        '<w:p><w:r><w:commentReference w:id="$_commentCounter"/></w:r></w:p>');
+    final comment =
+        '<w:p><w:r><w:commentReference w:id="$_commentCounter"/></w:r></w:p>';
+    _debugString = comment;
+    _docx.write(comment);
     _commentCounter++;
   }
 
@@ -1789,6 +1804,7 @@ class DocXBuilder {
   /// This function also destroys the source file produced by createDocxFile so be sure to save or process the source file before calling clear.
   void clear({bool resetBuffer = true}) {
     _docx.clear();
+    _debugString = null;
     _documentBackgroundColor = null;
     bookmarks.clear();
     comments.clear();
@@ -1816,4 +1832,6 @@ class DocXBuilder {
       _initDocX();
     }
   }
+
+  String debugBuffer() => _debugString;
 }
