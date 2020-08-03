@@ -1,7 +1,7 @@
 import 'package:docx_builder/src/utils/constants/constants.dart';
 
-class Numbering {
-  Numbering();
+class NumberingXml {
+  NumberingXml();
 
   String getNumberingXml({String customNumberingXml = ''}) {
     final String customTag = customNumberingXml.isNotEmpty

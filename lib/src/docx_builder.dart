@@ -42,6 +42,10 @@ class DocXBuilder {
   /// If bookmarks were added anywhere in the document (e.g. addText('Bookmarked!', setBookmarkName: 'bookmark1')), they will be added here.
   Set<String> bookmarks = <String>{};
 
+  /// If comments were added anywhere in the document with the function attachComment, they will be added here.
+  /// If this map is not empty, when createDocx is called, the packager will create and include the file "comments.xml" and all necessary references.
+  Map<int, String> comments = <int, String>{};
+
   TextStyle hyperlinkTextStyle;
 
   bool _bufferClosed = false;
@@ -51,6 +55,7 @@ class DocXBuilder {
   int _headerCounter = 1;
   int _footerCounter = 1;
   int _anchorCounter = 0;
+  int _commentCounter = 0;
 
   String _documentBackgroundColor;
   String get documentBackgroundColor => _documentBackgroundColor;
@@ -1715,6 +1720,24 @@ class DocXBuilder {
     return d.toString();
   }
 
+  /// Attaches a comment at the cursor's current position in the document with the provided [message]; the fields [author] and [initials] can also be given.
+  ///
+  /// If provided, [timestamp] should be in the UTC format, e.g. "2020-07-28T20:32:56Z". If [timestamp] is omitted, the current date and time is used.
+  void attachComment({
+    String author = 'Unknown',
+    String message = '',
+    String timestamp,
+    String initials = '',
+  }) {
+    final String datetime =
+        timestamp ?? getUtcTimestampFromDateTime(DateTime.now());
+    comments[_commentCounter] =
+        '<w:comment w:id="$_commentCounter" w:author="$author" w:date="$datetime" w:initials="$initials"><w:p><w:pPr><w:rPr></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:hint="default"/></w:rPr><w:t>$message</w:t></w:r></w:p></w:comment>';
+    _docx.write(
+        '<w:p><w:r><w:commentReference w:id="$_commentCounter"/></w:r></w:p>');
+    _commentCounter++;
+  }
+
   /// Create the .docx file with the content stored in the buffer of DocXBuilder. This also closes the buffer.
   ///
   /// If provided, [documentTitle], [documentSubject], [documentDescription] and [documentCreator] can be registered in the document.
@@ -1750,6 +1773,7 @@ class DocXBuilder {
         documentCreator: documentCreator ?? '',
         customNumberingXml: _customNumberingXml,
         includeNumberingXml: _includeNumberingXml,
+        comments: comments,
         hyperlinkStylingXml: hyperlinkTextStyle != null
             ? _getTextStyleAsString(
                 style: hyperlinkTextStyle, doNotUseGlobalStyle: true)
@@ -1767,6 +1791,7 @@ class DocXBuilder {
     _docx.clear();
     _documentBackgroundColor = null;
     bookmarks.clear();
+    comments.clear();
     hyperlinkTextStyle = null;
     globalTextStyle = TextStyle();
     globalPageStyle = PageStyle().getDefaultPageStyle();
@@ -1785,6 +1810,7 @@ class DocXBuilder {
     _headerCounter = 1;
     _footerCounter = 1;
     _anchorCounter = 0;
+    _commentCounter = 0;
     _packager.destroyCache();
     if (resetBuffer) {
       _initDocX();

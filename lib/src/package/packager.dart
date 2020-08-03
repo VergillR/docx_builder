@@ -48,6 +48,13 @@ class Packager {
     Directory(_dirPathToWordRels).createSync(recursive: true);
   }
 
+  void addCommentsRef() {
+    _contentOverrideRefs.add(
+        '<Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/>');
+    _references['rId${_rIdCount++}'] =
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" Target="comments.xml"';
+  }
+
   void addNumberingList() {
     _contentOverrideRefs.add(
         '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>');
@@ -112,6 +119,7 @@ class Packager {
     String documentCreator,
     String customNumberingXml,
     bool includeNumberingXml = false,
+    Map<int, String> comments,
     String hyperlinkStylingXml,
   }) async {
     try {
@@ -123,6 +131,11 @@ class Packager {
       final Directory sourceDirectory =
           Directory('${cacheDirectory.path}/$cacheDocXBuilder/$src');
 
+      if (comments?.isNotEmpty ?? false) {
+        addCommentsRef();
+        File('$_dirPathToWord/comments.xml').writeAsStringSync(
+            CommentsXml().getCommentsXml(comments: comments));
+      }
       File('$_dirPathToDocProps/app.xml')
           .writeAsStringSync(AppXml().getAppXml());
       File('$_dirPathToDocProps/core.xml').writeAsStringSync(
@@ -141,13 +154,13 @@ class Packager {
           .writeAsStringSync(DocumentXmlRels().getDocumentXmlRels(_references));
       File('$_dirPathToWord/document.xml').writeAsStringSync(documentXml);
       File('$_dirPathToWord/fontTable.xml')
-          .writeAsStringSync(FontTable().getFontTableXml());
+          .writeAsStringSync(FontTableXml().getFontTableXml());
       File('$_dirPathToWord/settings.xml').writeAsStringSync(SettingsXml()
           .getSettingsXml(useEvenHeaders: _addEvenAndOddHeadersInSettings));
       File('$_dirPathToWord/styles.xml').writeAsStringSync(WordStylesXml()
           .getWordStylesXml(hyperlinkStylingXml: hyperlinkStylingXml ?? ''));
       if (includeNumberingXml) {
-        File('$_dirPathToWord/numbering.xml').writeAsStringSync(Numbering()
+        File('$_dirPathToWord/numbering.xml').writeAsStringSync(NumberingXml()
             .getNumberingXml(customNumberingXml: customNumberingXml ?? ''));
       }
 
