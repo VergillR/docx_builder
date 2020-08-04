@@ -82,9 +82,9 @@ docx.addText(
 
 docx.addMixedText(
   <String>[
-    "This is normal text with ",
-    "a link to the Flutter website ",
-    "as an example.",
+    "This is normal text with a ",
+    "link to the Flutter website",
+    " as an example.",
   ],
   // this is a list of text styles
   // null means that global style should be used
@@ -244,3 +244,7 @@ docx.clear();
 ### Extra
 
 DocXBuilder has a lot of options available for OOXML. It is impossible to explain them all on one page. Read the documentation and feel free to experiment with different settings and functions!
+
+### License
+
+Mozilla Public License Version 2.0.
