@@ -196,7 +196,7 @@ class DocXBuilder {
 
       final StringBuffer c = StringBuffer()
         ..write(
-            '<w:abstractNum w:abstractNumId="2"><w:multiLevelType w:val="multilevel"/>');
+            '<w:abstractNum w:abstractNumId="2"><w:multiLevelType w:val="hybridMultilevel"/>');
       for (int i = 0; i < formats.length; i++) {
         final String ppr =
             '<w:pPr><w:tabs><w:tab w:val="left" w:pos="${tabSpace * (i + 1)}"/></w:tabs><w:ind w:left="${tabSpace * (i + 1)}" w:leftChars="0" w:hanging="$tabSpace" w:firstLineChars="0"/></w:pPr>';
@@ -215,15 +215,26 @@ class DocXBuilder {
   ///
   /// Headers are not visible until they have been attached to the document by calling attachHeadersAndFooters.
   ///
+  /// Some properties of the style can only be set once in a paragraph, e.g. [textAlignment] and [paragraphBorders].
+  /// Pass these properties here as a direct argument instead of providing them in a textStyle (where they will get ignored).
+  ///
   /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
   ///
-  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
+  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date.
+  /// For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
   void setHeader(
     HeaderType headerType,
     List<String> text,
     List<TextStyle> textStyles, {
     bool doNotUseGlobalTextStyle = true,
     List<ComplexField> complexFields,
+    List<ParagraphBorder> paragraphBorders,
+    PIndent paragraphIndent,
+    Shading paragraphShading,
+    PSpacing paragraphSpacing,
+    List<DocxTab> tabs,
+    TextAlignment textAlignment,
+    VerticalTextAlignment verticalTextAlignment,
   }) {
     if (!_bufferClosed) {
       final List<TextStyle> styles = text.length == textStyles.length
@@ -235,6 +246,13 @@ class DocXBuilder {
         textStyles: styles,
         doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
         complexFields: complexFields,
+        paragraphBorders: paragraphBorders,
+        paragraphIndent: paragraphIndent,
+        paragraphShading: paragraphShading,
+        paragraphSpacing: paragraphSpacing,
+        tabs: tabs,
+        textAlignment: textAlignment,
+        verticalTextAlignment: verticalTextAlignment,
       );
     }
   }
@@ -243,15 +261,26 @@ class DocXBuilder {
   ///
   /// Footers are not visible until they have been attached to the document by calling attachHeadersAndFooters.
   ///
+  /// Some properties of the style can only be set once in a paragraph, e.g. [textAlignment] and [paragraphBorders].
+  /// Pass these properties here as a direct argument instead of providing them in a textStyle (where they will get ignored).
+  ///
   /// Make sure the lists [text] and [textStyles] have the same length or else the textStyles will be treated as null.
   ///
-  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
+  /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date.
+  /// For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number.
   void setFooter(
     FooterType footerType,
     List<String> text,
     List<TextStyle> textStyles, {
     bool doNotUseGlobalTextStyle = true,
     List<ComplexField> complexFields,
+    List<ParagraphBorder> paragraphBorders,
+    PIndent paragraphIndent,
+    Shading paragraphShading,
+    PSpacing paragraphSpacing,
+    List<DocxTab> tabs,
+    TextAlignment textAlignment,
+    VerticalTextAlignment verticalTextAlignment,
   }) {
     if (!_bufferClosed) {
       final List<TextStyle> styles = text.length == textStyles.length
@@ -263,6 +292,13 @@ class DocXBuilder {
         textStyles: styles,
         doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
         complexFields: complexFields,
+        paragraphBorders: paragraphBorders,
+        paragraphIndent: paragraphIndent,
+        paragraphShading: paragraphShading,
+        paragraphSpacing: paragraphSpacing,
+        tabs: tabs,
+        textAlignment: textAlignment,
+        verticalTextAlignment: verticalTextAlignment,
       );
     }
   }
@@ -280,19 +316,37 @@ class DocXBuilder {
     }
   }
 
-  void _initHeaderOrFooter(
-      {HeaderType headerType,
-      FooterType footerType,
-      List<String> text,
-      List<TextStyle> textStyles,
-      List<ComplexField> complexFields,
-      bool doNotUseGlobalTextStyle = false}) {
+  void _initHeaderOrFooter({
+    HeaderType headerType,
+    FooterType footerType,
+    List<String> text,
+    List<TextStyle> textStyles,
+    List<ComplexField> complexFields,
+    List<ParagraphBorder> paragraphBorders,
+    PIndent paragraphIndent,
+    Shading paragraphShading,
+    PSpacing paragraphSpacing,
+    List<DocxTab> tabs,
+    TextAlignment textAlignment,
+    VerticalTextAlignment verticalTextAlignment,
+    bool doNotUseGlobalTextStyle = false,
+  }) {
     final bool isHeader = headerType != null;
 
     final StringBuffer b = StringBuffer();
     if (text.isNotEmpty && text.length == textStyles.length) {
       b.write('<w:p><w:pPr>');
-      b.write(_getParagraphStyleAsString(doNotUseGlobalStyle: true)
+      b.write(_getParagraphStyleAsString(
+              textStyle: TextStyle(
+                paragraphBorders: paragraphBorders,
+                paragraphIndent: paragraphIndent,
+                paragraphShading: paragraphShading,
+                paragraphSpacing: paragraphSpacing,
+                tabs: tabs,
+                textAlignment: textAlignment,
+                verticalTextAlignment: verticalTextAlignment,
+              ),
+              doNotUseGlobalStyle: true)
           .replaceFirst('<w:pPr>', ''));
 
       final List<ComplexField> cf =

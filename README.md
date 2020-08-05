@@ -1,14 +1,19 @@
 # DocX Builder
 
-This is a package for making DocX files with OOXML for Flutter.
-You can make .docx files with html+css by simply changing the .html file extension to .docx.
+Docx Builder is a Flutter/Dart package for making DocX files with OOXML (Office Open XML).
+
+You can make .docx files with html+css by simply changing the .html file extension to docx. Word processors should be able to read this.
+Summernote (and Html Editor on pub.dev) are great ways to generate html code for text. This code can then be used as docx file.
+Given the complexity of OOXML, it is logical that using html+css is the preferred way for creating docx files.
+
 This might not be an option however in some cases, for example:
 
 - you do not have or want to use html+css
-- you need to be sure the document looks uniform and exactly the way as described (word processors can show unpredictable and different results for the same html file)
+- you need to be sure the document acts and conforms exactly to the official OOXML specification
+- you do not like having to include the image files as separate files next to the docx file
 - you need some features html+css do not offer, e.g. add headers/footers/comments/certain dynamic information like page numbers.
 
-This package can then be used.
+This package can be used for these edge cases.
 
 ## Getting started
 
@@ -26,14 +31,13 @@ Then import it:
 import 'package:path_provider/path_provider.dart';
 import 'package:docx_builder/docx_builder.dart' as dx;
 
-// initialize DocXBuilder by giving it a cache directory to store temporary files
-
 final tempDir = await getTemporaryDirectory();
 
+// initialize DocXBuilder by giving it a cache directory to store temporary files
 final docx = dx.DocXBuilder(tempDir);
 ```
 
-If you are using a background color, headers, footers or global styles, you can set them up now. For example:
+If you want to use a background color, headers, footers or global styles, you can set them up now. For example:
 
 ```dart
 docx.setDocumentBackgroundColor('AABBFF');
@@ -54,21 +58,19 @@ docx.setFooter(
   [
     dx.TextStyle(
       fontSize: 12,
-      bold: true,
-      italic: true,
-      textAlignment: dx.TextAlignment.center,
       fontColor: 'DFDFDF',
       highlightColor: dx.HighlightColor.darkBlue,
     ),
   ],
   doNotUseGlobalTextStyle: true,
+  textAlignment: dx.TextAlignment.center,
   complexFields: [ dx.ComplexField(instructions: ' PAGE ')],
 );
 
 docx.attachHeadersAndFooters();
 ```
 
-Adding text is done with either addText (all text use the same style) or addMixedText (text can use different styles).
+Adding text is done with either addText (all text has the same style) or addMixedText (each section of text can use its own style).
 
 ```dart
 docx.addText(
@@ -84,7 +86,7 @@ docx.addMixedText(
   <String>[
     "This is normal text with a ",
     "link to the Flutter website",
-    " as an example.",
+    " and italic text as an example of mixed text.",
   ],
   // this is a list of text styles
   // null means that global style should be used
@@ -93,7 +95,9 @@ docx.addMixedText(
     dx.TextStyle(
       hyperlinkTo: 'https://www.flutter.dev',
     ),
-    null,
+    dx.TextStyle(
+      italic: true,
+    ),
   ],
 );
 ```
@@ -102,7 +106,7 @@ Images can be added with addImage, addImageWithCaption, addImages or addAnchorIm
 
 ```dart
 docx.addImage(
-  File('${appDir.path}/test.jpg'),
+  File('pathToYourAppOrTempDir/test.jpg'),
   2600000,
   3000000,
   alternativeTextForImage: 'The user can click on this image to go to the Flutter website',
@@ -142,12 +146,8 @@ docx.insertMixedTextInTableCell(
       'tc4 cell.'
     ],
     textStyles: [
-      dx.TextStyle(bold: true),
-      dx.TextStyle(
-        bold: true,
-        italic: true,
-        highlightColor: dx.HighlightColor.darkGreen,
-      ),
+      dx.TextStyle(bold: true, highlightColor: dx.HighlightColor.yellow,),
+      dx.TextStyle(textArt: dx.TextArtStyle.emboss),
     ],
     doNotUseGlobalTextStyle: true);
 final dx.TableCell tc5 = dx.TableCell(
@@ -155,8 +155,8 @@ final dx.TableCell tc5 = dx.TableCell(
         dx.TableCellProperties(gridSpan: 2));
 docx.insertImagesInTableCell(
   imageFiles: [
-    File('${appDir.path}/test1.jpg'),
-    File('${appDir.path}/test2.jpg'),
+    File('pathToYourAppOrTempDir/test1.jpg'),
+    File('pathToYourAppOrTempDir/test2.jpg'),
   ],
   widthEMU: 2600000,
   heightEMU: 3000000,
@@ -167,10 +167,7 @@ final dx.TableRow row1 =
     dx.TableRow(tableCells: [tc1, tc1, tc2]);
 final dx.TableRow row2 =
     dx.TableRow(tableCells: [tc3, tc3, tc3]);
-final dx.TableRow row3 = dx.TableRow(tableCells: [
-  tc4,
-  tc5,
-]);
+final dx.TableRow row3 = dx.TableRow(tableCells: [ tc4, tc5 ]);
 
 final dx.Table table = dx.Table(
   gridColumnWidths: [2000, 2500, 3300],
@@ -243,7 +240,7 @@ docx.clear();
 
 ### Extra
 
-DocXBuilder has a lot of options available for OOXML. It is impossible to explain them all on one page. Read the documentation and feel free to experiment with different settings and functions!
+DocXBuilder has a lot of options available for OOXML. It is impossible to explain them all on one page. Read the documentation and feel free to experiment with the different settings and functions.
 
 ### License
 

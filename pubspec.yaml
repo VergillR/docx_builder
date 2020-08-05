@@ -1,6 +1,6 @@
 name: docx_builder
 description: DocX builder package to create docx files for Flutter by using OOXML.
-version: 0.0.1
+version: 1.0.0
 author: Vergill Lemmert
 
 environment:
