@@ -29,6 +29,8 @@ class PageStyle {
   final int pageNumberingStart;
   final LineNumbering lineNumbering;
   final PageMargin pageMargin;
+  final PageNumberingFormat footnoteNumberingFormat;
+  final PageNumberingFormat endnoteNumberingFormat;
 
   PageStyle({
     this.cols,
@@ -47,6 +49,8 @@ class PageStyle {
     this.pageNumberingStart,
     this.lineNumbering,
     this.pageMargin,
+    this.footnoteNumberingFormat,
+    this.endnoteNumberingFormat,
   });
 
   PageStyle getDefaultPageStyle() => PageStyle(

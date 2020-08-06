@@ -69,6 +69,36 @@ class Packager {
         'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"';
   }
 
+  bool addEndnotes(String contents) {
+    try {
+      final String fullPathFile = '$_dirPathToWord/endnotes.xml';
+      final String totalContent = '$endnotesXml$contents</w:endnotes>';
+      File(fullPathFile).writeAsStringSync(totalContent);
+      _contentOverrideRefs.add(
+          '<Override PartName="/word/endnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml"/>');
+      _references['rId${_rIdCount++}'] =
+          'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes" Target="endnotes.xml"';
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  bool addFootnotes(String contents) {
+    try {
+      final String fullPathFile = '$_dirPathToWord/footnotes.xml';
+      final String totalContent = '$footnotesXml$contents</w:footnotes>';
+      File(fullPathFile).writeAsStringSync(totalContent);
+      _contentOverrideRefs.add(
+          '<Override PartName="/word/footnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/>');
+      _references['rId${_rIdCount++}'] =
+          'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" Target="footnotes.xml"';
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   bool addHeaderOrFooter(int counter, String contents,
       {bool isHeader = true, bool evenPage = false}) {
     try {
@@ -127,6 +157,8 @@ class Packager {
     String customNumberingXml,
     bool includeNumberingXml = false,
     Map<int, String> comments,
+    StringBuffer footnotes,
+    StringBuffer endnotes,
     String hyperlinkStylingXml,
   }) async {
     try {
@@ -137,6 +169,14 @@ class Packager {
           .createSync(recursive: false);
       final Directory sourceDirectory =
           Directory('${cacheDirectory.path}/$cacheDocXBuilder/$src');
+
+      if (footnotes != null) {
+        addFootnotes(footnotes.toString());
+      }
+
+      if (endnotes != null) {
+        addEndnotes(endnotes.toString());
+      }
 
       if (comments?.isNotEmpty ?? false) {
         addCommentsRef();

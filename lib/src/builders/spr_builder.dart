@@ -29,6 +29,8 @@ class SectPr {
     int pageNumberingStart,
     LineNumbering lineNumbering,
     PageMargin pageMargin,
+    PageNumberingFormat footnoteNumberingFormat,
+    PageNumberingFormat endnoteNumberingFormat,
   }) {
     final StringBuffer s = StringBuffer()..write('<w:sectPr>');
 
@@ -107,6 +109,15 @@ class SectPr {
 
     if (lineNumbering != null) {
       s.write(lineNumbering.getXml());
+    }
+
+    if (footnoteNumberingFormat != null) {
+      s.write(
+          '<w:footnotePr><w:numFmt w:val="${getValueFromEnum(footnoteNumberingFormat)}"/></footnotePr>');
+    }
+    if (endnoteNumberingFormat != null) {
+      s.write(
+          '<w:endnotePr><w:numFmt w:val="${getValueFromEnum(endnoteNumberingFormat)}"/></endnotePr>');
     }
 
     s.write('</w:sectPr>');

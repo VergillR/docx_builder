@@ -5,7 +5,9 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
+export 'endnote.dart';
 export 'footer.dart';
+export 'footnote.dart';
 export 'header.dart';
 export 'pagestyle.dart';
 export 'textstyle.dart';

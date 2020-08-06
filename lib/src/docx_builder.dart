@@ -89,6 +89,11 @@ class DocXBuilder {
   String _customNumberingXml;
   bool _includeNumberingXml = false;
 
+  int _footnoteCounter = 2;
+  int _endnoteCounter = 2;
+  StringBuffer footnotesBuffer = StringBuffer();
+  StringBuffer endnotesBuffer = StringBuffer();
+
   final String mimetype =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
@@ -478,6 +483,69 @@ class DocXBuilder {
     }
   }
 
+  /// If footNote is not null, create a footnote, else create an endnote
+  void _includeFootNoteOrEndNote({
+    Footnote footnote,
+    Endnote endnote,
+    // bool isFootNote,
+    // List<String> text,
+    // List<TextStyle> textStyles, {
+    // bool addTab,
+    // List<ComplexField> complexFields,
+    // TextAlignment textAlignment,
+    // String setBookmarkName,
+    // NumberingList numberingList,
+    // int numberLevelInList,
+  }) {
+    if (!_bufferClosed) {
+      if (footnote != null &&
+          footnote.text != null &&
+          footnote.textStyles != null) {
+        String cached = _getCachedAddMixedText(
+            footnote.text, footnote.textStyles,
+            doNotUseGlobalTextStyle: true,
+            addTab: footnote.addTab,
+            complexFields: footnote.complexFields,
+            textAlignment: footnote.textAlignment,
+            setBookmarkName: footnote.setBookmarkName,
+            numberingList: footnote.numberingList,
+            numberLevelInList: footnote.numberLevelInList);
+        cached = cached.replaceFirst('</w:rPr></w:r>',
+            '</w:rPr><w:footnoteRef/></w:r><w:r><w:t xml:space="preserve"> </w:t></w:r>');
+        final String n =
+            '<w:footnote w:id="$_footnoteCounter">$cached</w:footnote>';
+        _footnoteCounter++;
+        footnotesBuffer.write(n);
+      } else if (endnote != null &&
+          endnote.text != null &&
+          endnote.textStyles != null) {
+        String cached = _getCachedAddMixedText(endnote.text, endnote.textStyles,
+            doNotUseGlobalTextStyle: true,
+            addTab: endnote.addTab,
+            complexFields: endnote.complexFields,
+            textAlignment: endnote.textAlignment,
+            setBookmarkName: endnote.setBookmarkName,
+            numberingList: endnote.numberingList,
+            numberLevelInList: endnote.numberLevelInList);
+        cached = cached.replaceFirst('</w:rPr></w:r>',
+            '</w:rPr><w:endnoteRef/></w:r><w:r><w:t xml:space="preserve"> </w:t></w:r>');
+        final String n =
+            '<w:endnote w:id="$_endnoteCounter">$cached</w:endnote>';
+        _endnoteCounter++;
+        endnotesBuffer.write(n);
+      }
+      // if (isFootNote) {
+      //   cached = cached.replaceFirst('</w:p>',
+      //       '<w:r><w:rPr></w:rPr><w:footnoteReference w:id="${_footnoteCounter++}"/></w:r></w:p>');
+      //   footnotes.write(cached);
+      // } else {
+      //   cached = cached.replaceFirst('</w:p>',
+      //       '<w:r><w:rPr></w:rPr><w:endnoteReference w:id="${_endnoteCounter++}"/></w:r></w:p>');
+      //   endnotes.write(cached);
+      // }
+    }
+  }
+
   /// Obtain the XML string of the page style.
   /// If no style is given, then the globalPageStyle is used.
   String _getPageStyleAsString(
@@ -535,6 +603,14 @@ class DocXBuilder {
       pageMargin: doNotUseGlobalStyle
           ? pageStyle.pageMargin
           : pageStyle.pageMargin ?? globalPageStyle.pageMargin,
+      footnoteNumberingFormat: doNotUseGlobalStyle
+          ? pageStyle.footnoteNumberingFormat
+          : pageStyle.footnoteNumberingFormat ??
+              globalPageStyle.footnoteNumberingFormat,
+      endnoteNumberingFormat: doNotUseGlobalStyle
+          ? pageStyle.endnoteNumberingFormat
+          : pageStyle.endnoteNumberingFormat ??
+              globalPageStyle.endnoteNumberingFormat,
     );
     if (_insertHeadersAndFootersInThisSection) {
       spr = _addHeadersAndFootersToSectPr(spr);
@@ -716,6 +792,8 @@ class DocXBuilder {
   /// If given, [complexField] adds a complex field, such as page and date, e.g. ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. Or for an internal hyperlink: ComplexField(instructions: ' HYPERLINK \\l &quot;bookmark1&quot; ').
   /// If [hyperlinkTo] is not null or empty (e.g. "https://www.flutter.dev"), then the text becomes a hyperlink. If the hyperlinkTo has an internal destination (a bookmark) then prefix the destination with a '#' sign, e.g. "#bookmark1". (The globalTextStyle's hyperlinkTo is always ignored)
   /// If provided, [setBookmarkName] creates a bookmark with the given name which can be used as a target for internal hyperlinks.
+  ///
+  /// If [footnotes] or [endnotes] are provided, ensure that each item has the properties text and textStyles not set to null (or else they will get ignored). Text cannot have both footnotes and endnotes.
   void addText(
     String text, {
     TextStyle textStyle,
@@ -725,9 +803,20 @@ class DocXBuilder {
     String hyperlinkTo,
     String setBookmarkName,
     ComplexField complexField,
+    List<Footnote> footnotes,
+    List<Endnote> endnotes,
   }) {
     if (!_bufferClosed) {
-      _docx.write(_getCachedAddText(
+      // if (isFootNote) {
+      //   cached = cached.replaceFirst('</w:p>',
+      //       '<w:r><w:rPr></w:rPr><w:footnoteReference w:id="${_footnoteCounter++}"/></w:r></w:p>');
+      //   footnotes.write(cached);
+      // } else {
+      //   cached = cached.replaceFirst('</w:p>',
+      //       '<w:r><w:rPr></w:rPr><w:endnoteReference w:id="${_endnoteCounter++}"/></w:r></w:p>');
+      //   endnotes.write(cached);
+      // }
+      String cached = _getCachedAddText(
         text,
         textStyle: textStyle,
         doNotUseGlobalStyle: doNotUseGlobalStyle,
@@ -736,10 +825,34 @@ class DocXBuilder {
         hyperlinkTo: hyperlinkTo,
         complexField: complexField,
         setBookmarkName: setBookmarkName,
-        // textFrame: textFrame,
-        // numberingList: numberingList,
-        // numberLevelInList: numberLevelInList,
-      ));
+      );
+
+      if (footnotes != null) {
+        String rep = '';
+        for (int i = 0; i < footnotes.length; i++) {
+          final n = footnotes[i];
+          if (n.text != null && n.textStyles != null) {
+            rep +=
+                '<w:r><w:rPr></w:rPr><w:footnoteReference w:id="$_footnoteCounter"/></w:r></w:p>';
+            _includeFootNoteOrEndNote(footnote: n);
+          }
+        }
+        cached = cached.replaceFirst('</w:p>', rep);
+      } else if (endnotes != null) {
+        String rep = '';
+        for (int i = 0; i < endnotes.length; i++) {
+          final n = endnotes[i];
+          if (n.text != null && n.textStyles != null) {
+            rep +=
+                '<w:r><w:rPr></w:rPr><w:endnoteReference w:id="$_endnoteCounter"/></w:r></w:p>';
+            _includeFootNoteOrEndNote(endnote: n);
+          }
+        }
+        cached = cached.replaceFirst('</w:p>', rep);
+      }
+      _debugString = cached;
+      _docx.write(cached);
+
       // _addToCharCounters(text);
       // _parCount++;
     }
@@ -821,6 +934,8 @@ class DocXBuilder {
   /// If given, [complexFields] should have the same length as [text] and includes complex fields, such as page and date. For example, ComplexField(instructions: 'PAGE') instructs the word processor to insert the current page number. A complexField cannot be added if hyperlinkTo is not null.
   ///
   /// Mixed text can be displayed within a [textFrame] or as a list item in [numberingList] with depth [numberLevelInList].
+  ///
+  /// If [footnotes] or [endnotes] are provided, ensure that each item has the properties text and textStyles not set to null (or else they will get ignored). Text cannot have both footnotes and endnotes.
   void addMixedText(
     List<String> text,
     List<TextStyle> textStyles, {
@@ -836,9 +951,28 @@ class DocXBuilder {
     String setBookmarkName,
     NumberingList numberingList,
     int numberLevelInList,
+    List<Footnote> footnotes,
+    List<Endnote> endnotes,
   }) {
     if (!_bufferClosed && text.isNotEmpty && text.length == textStyles.length) {
-      _docx.write(_getCachedAddMixedText(
+      // _docx.write(_getCachedAddMixedText(
+      //   text,
+      //   textStyles,
+      //   textAlignment: textAlignment,
+      //   pageStyle: pageStyle,
+      //   doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+      //   doNotUseGlobalPageStyle: doNotUseGlobalPageStyle,
+      //   lineOrPageBreak: lineOrPageBreak,
+      //   addBreakAfterEveryItem: addBreakAfterEveryItem,
+      //   addTab: addTab,
+      //   complexFields: complexFields,
+      //   textFrame: textFrame,
+      //   setBookmarkName: setBookmarkName,
+      //   numberingList: numberingList,
+      //   numberLevelInList: numberLevelInList,
+      // ));
+
+      String cached = _getCachedAddMixedText(
         text,
         textStyles,
         textAlignment: textAlignment,
@@ -853,7 +987,34 @@ class DocXBuilder {
         setBookmarkName: setBookmarkName,
         numberingList: numberingList,
         numberLevelInList: numberLevelInList,
-      ));
+      );
+
+      if (footnotes != null) {
+        String rep = '';
+        for (int i = 0; i < footnotes.length; i++) {
+          final n = footnotes[i];
+          if (n.text != null && n.textStyles != null) {
+            rep +=
+                '<w:r><w:rPr></w:rPr><w:footnoteReference w:id="$_footnoteCounter"/></w:r></w:p>';
+            _includeFootNoteOrEndNote(footnote: n);
+          }
+        }
+        cached = cached.replaceFirst('</w:p>', rep);
+      } else if (endnotes != null) {
+        String rep = '';
+        for (int i = 0; i < endnotes.length; i++) {
+          final n = endnotes[i];
+          if (n.text != null && n.textStyles != null) {
+            rep +=
+                '<w:r><w:rPr></w:rPr><w:endnoteReference w:id="$_endnoteCounter"/></w:r></w:p>';
+            _includeFootNoteOrEndNote(endnote: n);
+          }
+        }
+        cached = cached.replaceFirst('</w:p>', rep);
+      }
+      _debugString = cached;
+      _docx.write(cached);
+
       // _addToCharCounters(t);
       // _parCount++;
     }
@@ -1850,6 +2011,8 @@ class DocXBuilder {
         customNumberingXml: _customNumberingXml,
         includeNumberingXml: _includeNumberingXml,
         comments: comments,
+        footnotes: _footnoteCounter > 2 ? footnotesBuffer : null,
+        endnotes: _endnoteCounter > 2 ? endnotesBuffer : null,
         hyperlinkStylingXml: hyperlinkTextStyle != null
             ? _getTextStyleAsString(
                 style: hyperlinkTextStyle, doNotUseGlobalStyle: true)
@@ -1888,6 +2051,10 @@ class DocXBuilder {
     _footerCounter = 1;
     _anchorCounter = 0;
     _commentCounter = 0;
+    _footnoteCounter = 2;
+    _endnoteCounter = 2;
+    footnotesBuffer.clear();
+    endnotesBuffer.clear();
     _packager.destroyCache();
     if (resetBuffer) {
       _initDocX();
