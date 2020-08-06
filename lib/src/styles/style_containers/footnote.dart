@@ -24,7 +24,7 @@ class Footnote {
     this.id,
     this.text,
     this.textStyles,
-    this.addTab,
+    this.addTab = true,
     this.complexFields,
     this.textAlignment,
     this.setBookmarkName,

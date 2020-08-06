@@ -11,7 +11,7 @@ This might not be an option however in some cases, for example:
 - you do not have or want to use html+css
 - you need to be sure the document acts and conforms exactly to the official OOXML specification
 - you do not like having to include the image files as separate files next to the docx file
-- you need some features html+css do not offer, e.g. add headers/footers/comments/certain dynamic information like page numbers.
+- you need some features html+css do not offer, e.g. add headers/footers/footnotes/endnotes/comments/certain dynamic information like page numbers.
 
 This package can be used for these edge cases.
 
@@ -40,7 +40,7 @@ final docx = dx.DocXBuilder(tempDir);
 If you want to use a background color, headers, footers or global styles, you can set them up now. For example:
 
 ```dart
-docx.setDocumentBackgroundColor('AABBFF');
+docx.setDocumentBackgroundColor('DDDDFF');
 
 docx.globalTextStyle = dx.TextStyle(
     fontSize: 20,

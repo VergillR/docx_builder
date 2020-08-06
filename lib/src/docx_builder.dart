@@ -487,62 +487,50 @@ class DocXBuilder {
   void _includeFootNoteOrEndNote({
     Footnote footnote,
     Endnote endnote,
-    // bool isFootNote,
-    // List<String> text,
-    // List<TextStyle> textStyles, {
-    // bool addTab,
-    // List<ComplexField> complexFields,
-    // TextAlignment textAlignment,
-    // String setBookmarkName,
-    // NumberingList numberingList,
-    // int numberLevelInList,
+    bool doNotUseGlobalTextStyle = true,
   }) {
     if (!_bufferClosed) {
       if (footnote != null &&
           footnote.text != null &&
           footnote.textStyles != null) {
-        String cached = _getCachedAddMixedText(
-            footnote.text, footnote.textStyles,
-            doNotUseGlobalTextStyle: true,
-            addTab: footnote.addTab,
-            complexFields: footnote.complexFields,
-            textAlignment: footnote.textAlignment,
-            setBookmarkName: footnote.setBookmarkName,
-            numberingList: footnote.numberingList,
-            numberLevelInList: footnote.numberLevelInList);
-        cached = cached.replaceFirst('</w:rPr></w:r>',
-            '</w:rPr><w:footnoteRef/></w:r><w:r><w:t xml:space="preserve"> </w:t></w:r>');
+        final String alignment = footnote.textAlignment != null
+            ? '<w:jc w:val="${getValueFromEnum(footnote.textAlignment)}"/>'
+            : '';
+        final String cached = _getCachedAddMixedTextForFootnotesAndEndnotes(
+          footnote.text,
+          footnote.textStyles,
+          doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+          addTab: footnote.addTab,
+          complexFields: footnote.complexFields,
+          setBookmarkName: footnote.setBookmarkName,
+          numberingList: footnote.numberingList,
+          numberLevelInList: footnote.numberLevelInList,
+        );
         final String n =
-            '<w:footnote w:id="$_footnoteCounter">$cached</w:footnote>';
+            '<w:footnote w:id="$_footnoteCounter"><w:p><w:pPr>$alignment<w:rPr></w:rPr></w:pPr><w:r><w:rPr></w:rPr><w:footnoteRef/></w:r>$cached</w:p></w:footnote>';
         _footnoteCounter++;
         footnotesBuffer.write(n);
       } else if (endnote != null &&
           endnote.text != null &&
           endnote.textStyles != null) {
-        String cached = _getCachedAddMixedText(endnote.text, endnote.textStyles,
-            doNotUseGlobalTextStyle: true,
-            addTab: endnote.addTab,
-            complexFields: endnote.complexFields,
-            textAlignment: endnote.textAlignment,
-            setBookmarkName: endnote.setBookmarkName,
-            numberingList: endnote.numberingList,
-            numberLevelInList: endnote.numberLevelInList);
-        cached = cached.replaceFirst('</w:rPr></w:r>',
-            '</w:rPr><w:endnoteRef/></w:r><w:r><w:t xml:space="preserve"> </w:t></w:r>');
+        final String alignment = endnote.textAlignment != null
+            ? '<w:jc w:val="${getValueFromEnum(endnote.textAlignment)}"/>'
+            : '';
+        final String cached = _getCachedAddMixedTextForFootnotesAndEndnotes(
+          endnote.text,
+          endnote.textStyles,
+          doNotUseGlobalTextStyle: doNotUseGlobalTextStyle,
+          addTab: endnote.addTab,
+          complexFields: endnote.complexFields,
+          setBookmarkName: endnote.setBookmarkName,
+          numberingList: endnote.numberingList,
+          numberLevelInList: endnote.numberLevelInList,
+        );
         final String n =
-            '<w:endnote w:id="$_endnoteCounter">$cached</w:endnote>';
+            '<w:endnote w:id="$_endnoteCounter"><w:p><w:pPr>$alignment<w:rPr></w:rPr></w:pPr><w:r><w:rPr></w:rPr><w:endnoteRef/></w:r>$cached</w:p></w:endnote>';
         _endnoteCounter++;
         endnotesBuffer.write(n);
       }
-      // if (isFootNote) {
-      //   cached = cached.replaceFirst('</w:p>',
-      //       '<w:r><w:rPr></w:rPr><w:footnoteReference w:id="${_footnoteCounter++}"/></w:r></w:p>');
-      //   footnotes.write(cached);
-      // } else {
-      //   cached = cached.replaceFirst('</w:p>',
-      //       '<w:r><w:rPr></w:rPr><w:endnoteReference w:id="${_endnoteCounter++}"/></w:r></w:p>');
-      //   endnotes.write(cached);
-      // }
     }
   }
 
@@ -833,22 +821,22 @@ class DocXBuilder {
           final n = footnotes[i];
           if (n.text != null && n.textStyles != null) {
             rep +=
-                '<w:r><w:rPr></w:rPr><w:footnoteReference w:id="$_footnoteCounter"/></w:r></w:p>';
+                '<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:footnoteReference w:id="$_footnoteCounter"/></w:r>';
             _includeFootNoteOrEndNote(footnote: n);
           }
         }
-        cached = cached.replaceFirst('</w:p>', rep);
+        cached = cached.replaceFirst('</w:p>', '$rep</w:p>');
       } else if (endnotes != null) {
         String rep = '';
         for (int i = 0; i < endnotes.length; i++) {
           final n = endnotes[i];
           if (n.text != null && n.textStyles != null) {
             rep +=
-                '<w:r><w:rPr></w:rPr><w:endnoteReference w:id="$_endnoteCounter"/></w:r></w:p>';
+                '<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:endnoteReference w:id="$_endnoteCounter"/></w:r>';
             _includeFootNoteOrEndNote(endnote: n);
           }
         }
-        cached = cached.replaceFirst('</w:p>', rep);
+        cached = cached.replaceFirst('</w:p>', '$rep</w:p>');
       }
       _debugString = cached;
       _docx.write(cached);
@@ -995,22 +983,22 @@ class DocXBuilder {
           final n = footnotes[i];
           if (n.text != null && n.textStyles != null) {
             rep +=
-                '<w:r><w:rPr></w:rPr><w:footnoteReference w:id="$_footnoteCounter"/></w:r></w:p>';
+                '<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:footnoteReference w:id="$_footnoteCounter"/></w:r>';
             _includeFootNoteOrEndNote(footnote: n);
           }
         }
-        cached = cached.replaceFirst('</w:p>', rep);
+        cached = cached.replaceFirst('</w:p>', '$rep</w:p>');
       } else if (endnotes != null) {
         String rep = '';
         for (int i = 0; i < endnotes.length; i++) {
           final n = endnotes[i];
           if (n.text != null && n.textStyles != null) {
             rep +=
-                '<w:r><w:rPr></w:rPr><w:endnoteReference w:id="$_endnoteCounter"/></w:r></w:p>';
+                '<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:endnoteReference w:id="$_endnoteCounter"/></w:r>';
             _includeFootNoteOrEndNote(endnote: n);
           }
         }
-        cached = cached.replaceFirst('</w:p>', rep);
+        cached = cached.replaceFirst('</w:p>', '$rep</w:p>');
       }
       _debugString = cached;
       _docx.write(cached);
@@ -1018,6 +1006,79 @@ class DocXBuilder {
       // _addToCharCounters(t);
       // _parCount++;
     }
+  }
+
+  /// CachedAddMixedText function that does not add p and pPr.
+  String _getCachedAddMixedTextForFootnotesAndEndnotes(
+    List<String> text,
+    List<TextStyle> textStyles, {
+    bool addTab = true,
+    List<ComplexField> complexFields,
+    String setBookmarkName,
+    NumberingList numberingList,
+    int numberLevelInList,
+    bool doNotUseGlobalTextStyle = true,
+  }) {
+    final StringBuffer d = StringBuffer();
+
+    String openBookmarkTag = '';
+    String closeBookmarkTag = '';
+    if (setBookmarkName != null && setBookmarkName.isNotEmpty) {
+      final tags = _getOpenAndCloseBookmarkTags(setBookmarkName);
+      openBookmarkTag = tags[0];
+      closeBookmarkTag = tags[1];
+    }
+
+    if (globalTextStyle.tabs != null && addTab) {
+      d.write('<w:r><w:tab/></w:r>');
+    }
+    d.write(openBookmarkTag);
+    final List<ComplexField> cf =
+        complexFields != null && complexFields.length == text.length
+            ? complexFields
+            : List<ComplexField>.generate(text.length, (index) => null);
+
+    for (int i = 0; i < text.length; i++) {
+      final String t = text[i] ?? '';
+      final ComplexField f = cf[i];
+      if (f == null || f.instructions == null || f.includeSeparate == null) {
+        bool styleAsHyperlink = false;
+        String closeHyperlink = '';
+        String openHyperlink = '';
+        if (textStyles[i] != null &&
+            textStyles[i].hyperlinkTo != null &&
+            textStyles[i].hyperlinkTo.isNotEmpty) {
+          final tags = _getOpenAndCloseHyperlinkTags(textStyles[i].hyperlinkTo);
+          openHyperlink = tags[0];
+          closeHyperlink = tags[1];
+          styleAsHyperlink = true;
+        }
+        d.writeAll(<String>[
+          openHyperlink,
+          '<w:r>',
+          _getTextStyleAsString(
+              styleAsHyperlink: styleAsHyperlink,
+              style: textStyles[i],
+              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+          '<w:t xml:space="preserve">$t</w:t></w:r>$closeHyperlink',
+        ]);
+      } else {
+        d.writeAll(<String>[
+          '<w:r>',
+          _getTextStyleAsString(
+              style: textStyles[i],
+              doNotUseGlobalStyle: doNotUseGlobalTextStyle),
+          '<w:t xml:space="preserve">$t</w:t></w:r><w:r>${_getTextStyleAsString(style: textStyles[i], doNotUseGlobalStyle: doNotUseGlobalTextStyle)}${f.getXml()}</w:r>',
+        ]);
+      }
+
+      // _addToCharCounters(t);
+    }
+
+    d.write('$closeBookmarkTag');
+
+    _debugString = d.toString();
+    return d.toString();
   }
 
   /// Writes XML mixed text to cache; This data can then either be written to a stringbuffer or used as content for table cells.
